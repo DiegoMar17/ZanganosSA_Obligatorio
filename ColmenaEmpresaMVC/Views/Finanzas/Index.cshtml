@@ -1,0 +1,47 @@
+@model IEnumerable<ColmenaEmpresa.Models.RegistroFinanciero>
+@{
+    ViewData["Title"] = "Finanzas";
+    ViewData["Subtitle"] = "Balance de operación 2024–25";
+}
+
+@section Actions {
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Registro</a>
+}
+
+<div class="fin-stats">
+    <div class="stat-card"><div class="stat-lbl">Total ingresos</div><div class="stat-val c-green">$@ViewBag.TotalIngresos</div></div>
+    <div class="stat-card"><div class="stat-lbl">Gastos e inversiones</div><div class="stat-val c-amber">$@ViewBag.TotalGastos</div></div>
+    <div class="stat-card"><div class="stat-lbl">Balance general</div><div class="stat-val c-green">$@ViewBag.Balance</div><div class="stat-meta" style="color:var(--green)">✓ Rentable</div></div>
+</div>
+
+<div class="tbl-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+                <th class="td-r">Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (item.TipoMovimiento == "ingreso") { <span class="pill p-green">↑ Ingreso</span> }
+                        else if (item.TipoMovimiento == "gasto") { <span class="pill p-red">↓ Gasto</span> }
+                        else { <span class="pill p-amber">◆ Inversión</span> }
+                    </td>
+                    <td class="td-1">@item.Categoria</td>
+                    <td>@item.Descripcion</td>
+                    <td>@item.Fecha.ToString("dd MMM yy")</td>
+                    <td class="td-r" style="color:var(--@(item.TipoMovimiento == "ingreso" ? "green" : item.TipoMovimiento == "gasto" ? "red" : "amber"));font-weight:700;font-size:15px">
+                        $@item.Monto
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

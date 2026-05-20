@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "Calendario";
+    ViewData["Subtitle"] = "Agenda visual de actividades";
+}
+
+@section Actions {
+    <button class="btn btn-primary btn-sm" onclick="toast('Nueva actividad agendada ✓')">+ Agendar</button>
+}
+
+<div class="cal-layout">
+    <div class="cal-main">
+        <div class="cal-header">
+            <div class="cal-month">Abril 2024</div>
+            <div class="cal-nav">
+                <button class="cal-nav-btn">‹</button>
+                <button class="cal-nav-btn">•</button>
+                <button class="cal-nav-btn">›</button>
+            </div>
+        </div>
+        <div class="cal-grid-head">
+            <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mié</div>
+            <div class="cal-day-name">Jue</div><div class="cal-day-name">Vie</div>
+            <div class="cal-day-name">Sáb</div><div class="cal-day-name">Dom</div>
+        </div>
+        <div class="cal-grid" id="cal-grid">
+            @* El grid se genera vía JS en site.js como en el original *@
+        </div>
+    </div>
+    <div class="cal-sidebar-panel">
+        <div class="cal-sp-hd">
+            <div class="cal-sp-title">Actividades del día</div>
+            <div class="cal-sp-date" id="cal-sel-date">Hoy — 22 de abril</div>
+        </div>
+        <div class="cal-ev-list" id="cal-ev-list">
+            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--blue)"></div><div class="cal-ev-info"><div class="cal-ev-title">Visita — El Eucaliptal</div><div class="cal-ev-meta">10:00 · Inspección completa</div></div></div>
+            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--amber)"></div><div class="cal-ev-info"><div class="cal-ev-title">Tratamiento Varroa</div><div class="cal-ev-meta">Colmenas C-47, C-82</div></div></div>
+            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--gold)"></div><div class="cal-ev-info"><div class="cal-ev-title">Preparar centrífuga</div><div class="cal-ev-meta">Tarea — Galpón principal</div></div></div>
+        </div>
+        <div class="cal-legend">
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--blue)"></div>Visita</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--gold)"></div>Cosecha</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--amber)"></div>Tarea</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--red)"></div>Sanidad</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Inicializar el calendario al cargar la vista
+        if (typeof buildCal === 'function') buildCal();
+    </script>
+}

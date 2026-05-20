@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Mi Perfil";
+    ViewData["Subtitle"] = "Datos y preferencias";
+}
+
+<div class="profile-layout">
+    <div>
+        <div class="profile-card mb-6">
+            <div class="profile-cover">
+                <div class="profile-avatar-wrap">👨‍🌾</div>
+            </div>
+            <div class="profile-body">
+                <div class="profile-name">Carlos Bentancur</div>
+                <div class="profile-role">Apicultor · Montevideo, Uruguay</div>
+                <div class="profile-stats">
+                    <div class="ps-item"><div class="ps-val">12</div><div class="ps-lbl">Apiarios</div></div>
+                    <div class="ps-item"><div class="ps-val">148</div><div class="ps-lbl">Colmenas</div></div>
+                    <div class="ps-item"><div class="ps-val">8</div><div class="ps-lbl">Temporadas</div></div>
+                    <div class="ps-item"><div class="ps-val">2.4t</div><div class="ps-lbl">Última cosecha</div></div>
+                </div>
+                <button class="btn btn-sm" style="width:100%" onclick="toast('Foto de perfil actualizada ✓')">✏ Editar perfil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-right">
+        <div class="profile-section">
+            <div class="ps-hd">Datos personales</div>
+            <div class="ps-body">
+                <div class="fg mb-4">
+                    <div class="fgrp"><div class="flbl">Nombre completo</div><input class="fc" value="Carlos Bentancur"></div>
+                    <div class="fgrp"><div class="flbl">Correo electrónico</div><input class="fc" value="carlos@apicola.uy" type="email"></div>
+                    <div class="fgrp"><div class="flbl">Teléfono</div><input class="fc" value="+598 99 123 456" type="tel"></div>
+                    <div class="fgrp"><div class="flbl">Departamento</div><select class="fc"><option>Montevideo</option><option>Canelones</option></select></div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="toast('Datos guardados ✓')">Guardar cambios</button>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <div class="ps-hd">Preferencias de la app</div>
+            <div class="ps-body">
+                <div class="pref-row"><div class="pref-info"><div class="pref-title">Tema de la interfaz</div><div class="pref-desc">Oscuro o claro</div></div><button class="btn btn-sm" onclick="toggleTheme()">Cambiar tema</button></div>
+                <div class="pref-row">
+                    <div class="pref-info"><div class="pref-title">Idioma</div><div class="pref-desc">Español (Uruguay)</div></div>
+                    <select class="fc" style="width:140px"><option>Español (UY)</option><option>Español (AR)</option><option>English</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="danger-zone">
+            <div class="dz-title">⚠ Zona peligrosa</div>
+            <div class="dz-desc">Estas acciones son irreversibles. Procedé con cuidado.</div>
+            <div style="display:flex;gap:10px">
+                <button class="btn btn-sm btn-danger" onclick="toast('Exportando datos...')">⬇ Exportar datos</button>
+                <button class="btn btn-sm btn-danger" onclick="toast('Acción irreversible')">🗑 Eliminar cuenta</button>
+            </div>
+        </div>
+    </div>
+</div>

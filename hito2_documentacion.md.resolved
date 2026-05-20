@@ -1,0 +1,186 @@
+# Hito 2 – Documentación de Requerimientos
+## ColmenaEmpresa – Sistema de Gestión Apícola
+
+---
+
+## 1. Actores Involucrados
+
+El sistema involucra distintos perfiles de usuarios y partes interesadas que interactúan con la plataforma de forma directa o indirecta.
+
+| Actor | Tipo | Descripción |
+|---|---|---|
+| **Apicultor / Productor** | Usuario principal | Es el responsable operativo de los apiarios. Registra inspecciones, controla el estado sanitario de las colmenas, planifica traslados y consulta el dashboard. |
+| **Encargado de Apiario** | Usuario secundario | Persona a cargo de un punto físico específico. Puede registrar datos de campo y consultar el estado de sus colmenas asignadas. |
+| **Administrador del Sistema** | Usuario administrativo | Gestiona los datos maestros (apiarios, colmenas), configura el sistema y tiene acceso completo a todos los módulos. |
+| **Veterinario / Asesor Sanitario** | Actor externo | Consulta o recibe reportes sobre controles sanitarios. No opera el sistema directamente pero puede ser destinatario de la información exportada. |
+| **Organismo de Control** | Actor externo | Entidades reguladoras (MGAP en Uruguay) que pueden requerir trazabilidad sanitaria y productiva de los apiarios. |
+
+---
+
+## 2. Lista de Necesidades
+
+Las siguientes necesidades fueron identificadas a partir del análisis del dominio apícola y los módulos ya implementados:
+
+1. Contar con un registro centralizado de todos los apiarios y sus colmenas.
+2. Poder hacer seguimiento del estado de salud de cada colmena mediante un sistema de semáforo (verde, amarillo, rojo).
+3. Registrar las inspecciones realizadas con los datos observados en campo.
+4. Gestionar eventos de transhumancia (traslados) con origen, destino, fecha y estado.
+5. Llevar un control sanitario de tratamientos aplicados a colmenas y su resultado.
+6. Registrar y visualizar la producción de miel por cosecha.
+7. Contar con un inventario de materiales e insumos apícolas.
+8. Tener una vista consolidada (dashboard) con indicadores clave del establecimiento.
+9. Planificar y agendar tareas futuras dentro del sistema.
+10. Registrar ingresos y egresos asociados a la actividad apícola.
+11. Acceder al sistema desde dispositivos con distintos tamaños de pantalla.
+12. Que la información sea consistente y esté protegida frente a ingresos incorrectos.
+
+---
+
+## 3. User Stories
+
+Las historias de usuario están redactadas desde la perspectiva del actor principal (apicultor) y los demás actores identificados.
+
+---
+
+### Módulo: Apiarios y Colmenas
+
+> **US-01** – Como apicultor, quiero registrar un nuevo apiario con su ubicación geográfica y características del entorno, para tener un mapa claro de mis puntos productivos.
+
+> **US-02** – Como apicultor, quiero ver un listado de todas mis colmenas con su estado (semáforo de color), para identificar rápidamente cuáles requieren atención.
+
+> **US-03** – Como apicultor, quiero registrar el tipo de colmena, su origen y el estado de la reina, para contar con información precisa de cada unidad productiva.
+
+---
+
+### Módulo: Inspecciones
+
+> **US-04** – Como encargado de apiario, quiero registrar una inspección indicando la colmena revisada, la fecha, y las observaciones realizadas, para dejar constancia de cada visita.
+
+> **US-05** – Como apicultor, quiero consultar el historial de inspecciones de una colmena, para analizar su evolución en el tiempo.
+
+---
+
+### Módulo: Sanidad
+
+> **US-06** – Como apicultor, quiero registrar controles sanitarios con el tipo de tratamiento, dosis y resultado, para cumplir con los requisitos de trazabilidad.
+
+> **US-07** – Como asesor sanitario, quiero acceder a los reportes de controles aplicados, para hacer el seguimiento del estado sanitario del establecimiento.
+
+---
+
+### Módulo: Transhumancia
+
+> **US-08** – Como apicultor, quiero registrar un evento de traslado indicando el apiario de origen, el de destino, la cantidad de colmenas y la fecha, para planificar y monitorear los movimientos de mis colmenas.
+
+> **US-09** – Como apicultor, quiero actualizar el estado de un traslado (planificado → en curso → completado), para reflejar el avance real de la operación.
+
+---
+
+### Módulo: Producción e Inventario
+
+> **US-10** – Como apicultor, quiero registrar cosechas con la cantidad de miel obtenida y el apiario correspondiente, para analizar la productividad a lo largo del tiempo.
+
+> **US-11** – Como apicultor, quiero gestionar mi inventario de insumos (alzas, marcos, indumentaria, productos sanitarios), para saber cuándo reabastecer materiales.
+
+---
+
+### Módulo: Finanzas y Dashboard
+
+> **US-12** – Como apicultor, quiero registrar ingresos y egresos relacionados a la actividad, para tener un panorama económico básico del emprendimiento.
+
+> **US-13** – Como apicultor, quiero ver un dashboard con el total de colmenas, inspecciones pendientes, alertas activas y producción de los últimos meses, para tomar decisiones rápidas sin navegar por todos los módulos.
+
+---
+
+## 4. Lista de Objetivos
+
+### Objetivos Generales
+
+- **OG-01:** Desarrollar una aplicación web que centralice la gestión operativa de un establecimiento apícola, sustituyendo el uso de planillas y registros en papel.
+- **OG-02:** Brindar al productor información en tiempo real sobre el estado sanitario, productivo y logístico de sus colmenas y apiarios.
+
+### Objetivos Específicos
+
+- **OE-01:** Implementar el registro y seguimiento de apiarios y colmenas con identificación por código único.
+- **OE-02:** Proveer un sistema de semáforo visual para priorizar la atención sobre colmenas en estado crítico.
+- **OE-03:** Registrar inspecciones de campo con sus observaciones asociadas a cada colmena.
+- **OE-04:** Gestionar controles sanitarios incluyendo tratamientos, dosis y resultados.
+- **OE-05:** Administrar eventos de transhumancia con seguimiento de estado y progreso.
+- **OE-06:** Registrar cosechas y producción de miel vinculadas a apiarios específicos.
+- **OE-07:** Gestionar el inventario de materiales e insumos del establecimiento.
+- **OE-08:** Ofrecer un módulo de finanzas para el control básico de ingresos y egresos.
+- **OE-09:** Presentar un dashboard con indicadores clave que facilite la toma de decisiones.
+- **OE-10:** Garantizar una interfaz usable, responsiva y accesible desde distintos dispositivos.
+
+---
+
+## 5. Requerimientos Funcionales y No Funcionales
+
+### 5.1 Requerimientos Funcionales
+
+| ID | Módulo | Descripción |
+|---|---|---|
+| RF-01 | Apiarios | El sistema debe permitir crear, visualizar, editar y eliminar apiarios. Cada apiario debe tener nombre, departamento, ubicación, flora, acceso, fuente de agua y capacidad. |
+| RF-02 | Colmenas | El sistema debe permitir crear, visualizar, editar y eliminar colmenas. Cada colmena debe estar asociada a un apiario y tener código, tipo, origen, estado de reina, cantidad de alzas y marcos con cría. |
+| RF-03 | Colmenas | El sistema debe asignar automáticamente un estado de semáforo (verde/amarillo/rojo) a cada colmena según los datos ingresados. |
+| RF-04 | Inspecciones | El sistema debe permitir registrar inspecciones asociadas a una colmena, incluyendo fecha, colmena revisada y observaciones. |
+| RF-05 | Inspecciones | El sistema debe listar todas las inspecciones con filtro por apiario o colmena. |
+| RF-06 | Sanidad | El sistema debe permitir registrar controles sanitarios con tipo de control, colmenas afectadas, tratamiento, dosis, resultado y estado. |
+| RF-07 | Transhumancia | El sistema debe permitir registrar traslados de colmenas indicando apiario de origen, apiario de destino, cantidad de colmenas, distancia, fecha de salida y motivo. |
+| RF-08 | Transhumancia | El sistema debe permitir actualizar el estado de un traslado y su porcentaje de avance. |
+| RF-09 | Producción | El sistema debe permitir registrar cosechas con fecha, apiario, colmenas involucradas, kilos de miel y datos de calidad. |
+| RF-10 | Inventario | El sistema debe permitir gestionar un inventario de ítems con nombre, categoría, cantidad actual y cantidad mínima. |
+| RF-11 | Inventario | El sistema debe alertar visualmente cuando un ítem de inventario esté por debajo del mínimo establecido. |
+| RF-12 | Finanzas | El sistema debe permitir registrar movimientos financieros clasificados como ingreso o egreso, con fecha, monto, categoría y descripción. |
+| RF-13 | Dashboard | El sistema debe mostrar un panel resumen con: total de colmenas, total de apiarios, inspecciones pendientes, estado del semáforo sanitario, alertas activas y producción mensual de los últimos meses. |
+| RF-14 | Planificación | El sistema debe permitir registrar tareas o eventos futuros asociados al establecimiento. |
+
+---
+
+### 5.2 Requerimientos No Funcionales
+
+| ID | Categoría | Descripción |
+|---|---|---|
+| RNF-01 | Usabilidad | La interfaz debe ser intuitiva y no requerir capacitación específica para usuarios con conocimientos básicos de computación. |
+| RNF-02 | Usabilidad | El sistema debe contar con un diseño responsivo que se adapte correctamente a pantallas de escritorio y dispositivos móviles. |
+| RNF-03 | Rendimiento | Las páginas principales del sistema deben cargar en menos de 3 segundos bajo condiciones normales de uso. |
+| RNF-04 | Mantenibilidad | El código debe seguir una arquitectura MVC (Modelo-Vista-Controlador) con clara separación de responsabilidades. |
+| RNF-05 | Mantenibilidad | Los modelos deben estar documentados con comentarios XML para facilitar el mantenimiento futuro. |
+| RNF-06 | Confiabilidad | El sistema debe validar los datos ingresados en los formularios antes de procesar cualquier operación de creación o edición. |
+| RNF-07 | Escalabilidad | El diseño del sistema debe permitir incorporar nuevos módulos sin necesidad de refactorizar los ya existentes. |
+| RNF-08 | Compatibilidad | La aplicación debe funcionar correctamente en los navegadores modernos más utilizados: Chrome, Firefox y Edge. |
+| RNF-09 | Portabilidad | El sistema debe poder desplegarse en entornos Windows y Linux utilizando el runtime de .NET. |
+| RNF-10 | Seguridad | El sistema debe restringir el acceso a los módulos de gestión únicamente a usuarios autenticados. |
+
+---
+
+## 6. Elección de Metodología
+
+### Metodología Seleccionada: **Scrum adaptado (ágil)**
+
+Para el desarrollo de ColmenaEmpresa se optó por aplicar una metodología ágil basada en los principios de **Scrum**, adaptada al contexto académico del equipo de trabajo.
+
+### Justificación
+
+La naturaleza iterativa del proyecto hizo que Scrum fuera la opción más adecuada por las siguientes razones:
+
+- **Requerimientos en evolución:** Desde las primeras etapas del proyecto, los requerimientos no estaban completamente definidos. La posibilidad de ir incorporando módulos de forma incremental (apiarios → colmenas → inspecciones → sanidad → producción) permitió validar funcionalidades en cada ciclo.
+- **Retroalimentación constante:** Al trabajar con sprints cortos de una a dos semanas, el equipo pudo revisar el avance con regularidad y ajustar prioridades según las necesidades que iban surgiendo.
+- **Gestión del backlog:** El uso de un backlog de producto permitió organizar y priorizar las user stories según su valor e impacto, dejando para iteraciones posteriores aquellas funcionalidades de menor urgencia.
+- **Simplicidad de roles:** En el contexto del equipo, un mismo integrante puede asumir múltiples responsabilidades (desarrollador, tester, product owner), lo cual es compatible con la flexibilidad que propone Scrum adaptado.
+
+### Alternativas Consideradas
+
+- **Cascada (Waterfall):** Descartada porque requiere que todos los requerimientos estén definidos al inicio, lo cual no era viable dado que el dominio apícola fue siendo comprendido de forma progresiva durante el desarrollo.
+- **Kanban puro:** Considerado como complemento visual para el tablero de tareas, pero insuficiente por sí solo para estructurar las entregas en hitos académicos con fechas definidas.
+
+### Artefactos Utilizados
+
+- **Product Backlog:** lista priorizada de todas las funcionalidades a desarrollar.
+- **Sprint Backlog:** subconjunto de tareas seleccionadas para cada iteración.
+- **Incremento funcional:** al finalizar cada sprint se obtuvo una versión del sistema con nuevas funcionalidades operativas.
+- **Revisión de sprint:** instancia de validación interna del equipo para verificar que lo desarrollado cumple con los criterios de aceptación definidos.
+
+---
+
+*Documento generado como parte de la segunda entrega del Obligatorio General – Semestre 3.*

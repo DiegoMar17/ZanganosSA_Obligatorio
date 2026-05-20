@@ -1,0 +1,51 @@
+@model IEnumerable<ColmenaEmpresa.Models.Colmena>
+@{
+    ViewData["Title"] = "Colmenas";
+    var resumen = ViewBag.Resumen;
+    ViewData["Subtitle"] = resumen.Total + " colmenas activas";
+}
+
+@section Actions {
+    <button class="btn btn-primary btn-sm">+ Nueva colmena</button>
+}
+
+<div class="g4 mb-6">
+    <div class="stat-card"><div class="stat-lbl">Total colmenas</div><div class="stat-val c-gold">@resumen.Total</div></div>
+    <div class="stat-card"><div class="stat-lbl">En producción</div><div class="stat-val c-green">@resumen.EnProduccion</div></div>
+    <div class="stat-card"><div class="stat-lbl">En tratamiento</div><div class="stat-val c-amber">@resumen.EnTratamiento</div></div>
+    <div class="stat-card"><div class="stat-lbl">Sin reina</div><div class="stat-val c-red">@resumen.SinReina</div></div>
+</div>
+
+<div class="tbl-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Apiario</th>
+                <th>Última visita</th>
+                <th>Reina</th>
+                <th>Estado</th>
+                <th>Alzas</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="td-1">@item.Codigo</td>
+                    <td>@item.ApiarioNombre</td>
+                    <td>@(item.UltimaVisita.HasValue ? "Hace " + (DateTime.Now - item.UltimaVisita.Value).Days + " días" : "—")</td>
+                    <td>
+                        @if (item.EstadoReina == "vista") { <span style="color:var(--green)">✓ Vista</span> }
+                        else if (item.EstadoReina == "no_vista") { <span style="color:var(--amber)">? No vista</span> }
+                        else { <span style="color:var(--red)">✗ Ausente</span> }
+                    </td>
+                    <td><span class="pill p-@item.EstadoSemaforo">@item.EstadoSemaforo</span></td>
+                    <td class="td-1">@item.CantidadAlzas</td>
+                    <td><button class="btn btn-xs btn-icon">👁</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,42 @@
+@model IEnumerable<ColmenaEmpresa.Models.Apiario>
+@{
+    ViewData["Title"] = "Apiarios";
+    ViewData["Subtitle"] = Model.Count() + " apiarios registrados";
+}
+
+@section Actions {
+    <button class="btn btn-primary btn-sm">+ Nuevo apiario</button>
+}
+
+<div class="map-ph mb-6">
+    <div class="map-ph-pins">📍 📍 📍 📍</div>
+    <div class="map-ph-lbl">Mapa interactivo — Leaflet + OpenStreetMap</div>
+    <div class="map-ph-sub">Coordenadas GPS de cada apiario registrado</div>
+</div>
+
+<div class="sec-head mb-4">
+    <div><div class="sec-title">Apiarios registrados</div></div>
+</div>
+
+<div class="apiary-grid">
+    @foreach (var item in Model)
+    {
+        <div class="apiary-card">
+            <div class="ap-header">
+                <div>
+                    <div class="ap-name">@item.Nombre</div>
+                    <div class="ap-loc">📍 @item.Departamento · @item.Ubicacion</div>
+                </div>
+                <div class="sem-dots">
+                    <div class="sm-dot" style="background:var(--@(item.EstadoSemaforo))"></div>
+                    <div class="sm-dot" style="background:var(--green)"></div>
+                    <div class="sm-dot" style="background:var(--green)"></div>
+                </div>
+            </div>
+            <div class="ap-footer">
+                <span class="pill p-@item.EstadoSemaforo">@(item.EstadoSemaforo == "red" ? "Insp. vencida" : item.EstadoSemaforo == "amber" ? "Visitar pronto" : "Al día")</span>
+                <div class="ap-stat" style="margin-left:auto"><span>🏠</span>@item.TotalColmenas colmenas</div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,43 @@
+@model IEnumerable<ColmenaEmpresa.Models.ControlSanitario>
+@{
+    ViewData["Title"] = "Sanidad";
+    ViewData["Subtitle"] = ViewBag.ControlesActivos + " controles activos";
+}
+
+@section Actions {
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Control sanitario</a>
+}
+
+<div class="g3 mb-6">
+    <div class="stat-card"><div class="stat-lbl">Controles activos</div><div class="stat-val c-amber">@ViewBag.ControlesActivos</div></div>
+    <div class="stat-card"><div class="stat-lbl">Varroa detectado</div><div class="stat-val c-red">@ViewBag.VarroaDetectado</div></div>
+    <div class="stat-card"><div class="stat-lbl">Tratados OK</div><div class="stat-val c-green">@ViewBag.TratadosOk</div></div>
+</div>
+
+<div class="tbl-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Colmena</th>
+                <th>Control</th>
+                <th>Resultado</th>
+                <th>Tratamiento</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="td-1">@item.ColmenasAfectadas</td>
+                    <td>@item.TipoControl</td>
+                    <td><span style="color:var(--@(item.Resultado == "positivo" ? "red" : "green"));font-weight:600">@item.Resultado</span></td>
+                    <td>@item.Tratamiento</td>
+                    <td>@item.Fecha.ToString("dd MMM yyyy")</td>
+                    <td><span class="pill p-@(item.Estado == "limpio" ? "green" : "amber")">@(item.Estado == "limpio" ? "Limpio" : "En tratamiento")</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
