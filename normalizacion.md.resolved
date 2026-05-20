@@ -1,0 +1,413 @@
+# Normalización — Sistema de Gestión de Salón
+
+## Datos de la Materia
+- **Proyecto:** ObligatorioGeneral — ColmenaEmpresa  
+- **Base de datos:** ObligatorioBSD  
+- **Fecha:** Mayo 2026  
+
+---
+
+## Esquema Original (Sin Normalizar)
+
+A continuación se listan las relaciones tal como fueron entregadas:
+
+| Relación | Atributos |
+|---|---|
+| Cliente | ID_C, Nom-C, Ape-C, Tel-C |
+| Profesional | ID_P, Nom-P, Especialidad, Disponibilidad |
+| Servicios | ID_S, Nom-S, Desc-S |
+| Turno | ID_T, Fecha, Hora, Estado, id-c, id_p, id_s, id-Ayudante |
+| Salón | ID_Salon, Dir-S, Tel-S, Nom-S, id-t |
+| Ciudad | ID-Ciudad, Nombre |
+| Productos | ID_Prod, nom-Producto, precio-Unitario, tipo, marca |
+| Stock | ID_Stock, cantidad, fecha-Vencimiento, ID-Producto, ID_Salon |
+| Pago | ID_Pago, Fecha_Pago, Monto, Metodo, ID_C, ID_Prom |
+| Promoción | ID_Prom, porcentaje-desc, fecha-Inicio, Fecha-Fin |
+| Valoración | ID_V, puntuacion, Comentario, Id_C |
+| Ayudante | Id-Ayudante, Nom-Ayudante, Ape-Ayudante, Cl-Ayudante |
+| Producto-Cliente | ID_Producto, ID_C |
+| Productos-Servicios-Profesional | ID_Producto, ID_S, ID_P |
+| Clientes-Productos | ID_Productos, ID_C |
+| Cliente-Pago | ID_C, ID_Pago |
+| Cliente-Profesional | ID_P, ID_C |
+| Turno-Servicio | ID_T, ID_S |
+| Salon-Ciudad | ID_Salon, ID_Ciudad |
+| Salón-Profesional | ID_Salon, ID_P |
+
+---
+
+## PRIMERA FORMA NORMAL (1FN)
+
+> **Definición:** Una relación está en 1FN si todos sus atributos son atómicos (no se repiten grupos ni valores multivaluados).
+
+### Análisis de violaciones 1FN
+
+#### ❌ `Turno (ID_T, Fecha, Hora, Estado, id-c, id_p, id_s, id-Ayudante)`
+**Problema:** El atributo `id_s` (ID del servicio) puede representar múltiples servicios por turno, lo cual viola la atomicidad. Además, `id-Ayudante` es un grupo repetido potencial.  
+**Acción:** Se separa la relación Turno de sus servicios mediante la tabla intermedia `Turno_Servicio`, y se extrae el ayudante con FK en Turno.
+
+#### ❌ `Salón (ID_Salon, Dir-S, Tel-S, Nom-S, id-t)`
+**Problema:** `id-t` es una FK a Turno dentro de Salón, lo que implica que un salón solo puede tener un turno. Esto es un grupo repetido inverso — deberían existir múltiples turnos por salón.  
+**Acción:** Se elimina `id-t` de Salón. La relación se maneja mediante una FK `Id_Salon` dentro de `Turno`.
+
+#### ⚠️ `Clientes_Productos` y `Producto_Cliente`
+**Problema:** Son **tablas duplicadas** que representan la misma relación (Producto ↔ Cliente). Esto viola el principio de no redundancia implícito en 1FN.  
+**Acción:** Se conserva una sola tabla intermedia: `Producto_Cliente(Id_Prod, Id_Clie)`.
+
+#### ⚠️ `Ayudante (Id-Ayu, Nom-Ayu, Ape-Ayu, Cl-Ayudante)`
+**Problema:** `Cl-Ayudante` no tiene semántica clara — puede referirse a una "clave" o "clase", lo cual podría ser un atributo compuesto o ambiguo.  
+**Acción:** Se renombra a `Categoria_Ayu` para dar claridad semántica. Se asume que es atómico.
+
+### ✅ Esquema en 1FN
+
+```
+Cliente        (Id_Clie, Nom_C, Ape_C, Tel_C)
+Profesional    (Id_P, Nom_P, Especialidad, Disponibilidad)
+Servicios      (Id_S, Nom_S, Desc_S)
+Turno          (Id_T, Fecha, Hora, Estado, Id_Clie, Id_P, Id_Ayu)
+Salon          (Id_Salon, Dir_Salon, Tel_Salon, Nom_Salon)
+Ciudad         (Id_Ciudad, Nom_Ciudad)
+Productos      (Id_Prod, Nom_Prod, Precio_Unitario, Tipo, Marca)
+Stock          (Id_Stock, Cantidad, Fecha_Venc, Id_Prod, Id_Salon)
+Promocion      (Id_Prom, Porcentaje_Desc, Fecha_Inicio, Fecha_Fin)
+Pago           (Id_Pago, Fecha_Pago, Monto, Metodo, Id_Clie, Id_Prom)
+Valoracion     (Id_V, Puntuacion, Comentario, Id_Clie)
+Ayudante       (Id_Ayu, Nom_Ayu, Ape_Ayu, Categoria_Ayu)
+
+-- Tablas de relación
+Turno_Servicio             (Id_T, Id_S)
+Salon_Ciudad               (Id_Salon, Id_Ciudad)
+Salon_Profesional          (Id_Salon, Id_P)
+Producto_Cliente           (Id_Prod, Id_Clie)
+Productos_Servicios_Prof   (Id_Prod, Id_S, Id_P)
+Cliente_Pago               (Id_Clie, Id_Pago)
+Cliente_Profesional        (Id_Clie, Id_P)
+```
+
+---
+
+## SEGUNDA FORMA NORMAL (2FN)
+
+> **Definición:** Una relación está en 2FN si está en 1FN y **todos los atributos no clave dependen funcionalmente de la clave primaria completa** (no de una parte de ella). Aplica solo a claves compuestas.
+
+### Análisis de dependencias parciales
+
+#### ❌ `Turno_Servicio (Id_T, Id_S)`
+Solo tiene PK compuesta, sin atributos descriptivos → **ya está en 2FN** (no hay atributos que dependan parcialmente).
+
+#### ❌ `Productos_Servicios_Profesional (Id_Prod, Id_S, Id_P)`
+PK compuesta de 3 atributos. No hay atributos descriptivos adicionales → **ya está en 2FN**.
+
+#### ❌ `Stock (Id_Stock, Cantidad, Fecha_Venc, Id_Prod, Id_Salon)`
+PK es `Id_Stock` (simple). `Cantidad` y `Fecha_Venc` dependen de `Id_Stock`. `Id_Prod` e `Id_Salon` son FKs → **ya está en 2FN**.
+
+#### ❌ `Pago (Id_Pago, Fecha_Pago, Monto, Metodo, Id_Clie, Id_Prom)`
+PK es `Id_Pago` (simple). Todos los atributos dependen de `Id_Pago` → **ya está en 2FN**.  
+> Nota: `Id_Clie` también aparece en `Cliente_Pago`. Si `Pago` ya tiene `Id_Clie`, la tabla `Cliente_Pago` es **redundante** → se elimina `Cliente_Pago`.
+
+#### ❌ `Valoracion (Id_V, Puntuacion, Comentario, Id_Clie)`
+PK es `Id_V` (simple). Todo depende de `Id_V` → **ya está en 2FN**.
+
+#### ✅ Resultado: Ninguna violación de 2FN detectada (todas las claves simples o tablas intermedias sin atributos descriptivos).
+
+### ✅ Esquema en 2FN
+
+```
+Cliente        (Id_Clie, Nom_C, Ape_C, Tel_C)
+Profesional    (Id_P, Nom_P, Especialidad, Disponibilidad)
+Servicios      (Id_S, Nom_S, Desc_S)
+Turno          (Id_T, Fecha, Hora, Estado, Id_Clie, Id_P, Id_Ayu)
+Salon          (Id_Salon, Dir_Salon, Tel_Salon, Nom_Salon)
+Ciudad         (Id_Ciudad, Nom_Ciudad)
+Productos      (Id_Prod, Nom_Prod, Precio_Unitario, Tipo, Marca)
+Stock          (Id_Stock, Cantidad, Fecha_Venc, Id_Prod, Id_Salon)
+Promocion      (Id_Prom, Porcentaje_Desc, Fecha_Inicio, Fecha_Fin)
+Pago           (Id_Pago, Fecha_Pago, Monto, Metodo, Id_Clie, Id_Prom)
+Valoracion     (Id_V, Puntuacion, Comentario, Id_Clie)
+Ayudante       (Id_Ayu, Nom_Ayu, Ape_Ayu, Categoria_Ayu)
+
+-- Tablas de relación
+Turno_Servicio             (Id_T, Id_S)
+Salon_Ciudad               (Id_Salon, Id_Ciudad)
+Salon_Profesional          (Id_Salon, Id_P)
+Producto_Cliente           (Id_Prod, Id_Clie)
+Productos_Servicios_Prof   (Id_Prod, Id_S, Id_P)
+Cliente_Profesional        (Id_Clie, Id_P)
+
+-- Eliminada: Cliente_Pago (redundante con Id_Clie en Pago)
+-- Eliminada: Clientes_Productos (duplicado de Producto_Cliente)
+```
+
+---
+
+## TERCERA FORMA NORMAL (3FN)
+
+> **Definición:** Una relación está en 3FN si está en 2FN y **no existen dependencias transitivas**: ningún atributo no clave depende de otro atributo no clave.
+
+### Análisis de dependencias transitivas
+
+#### ❌ `Productos (Id_Prod, Nom_Prod, Precio_Unitario, Tipo, Marca)`
+**Posible dependencia transitiva:**  
+`Marca → Tipo`  
+Si cada marca pertenece siempre al mismo tipo de producto (por ejemplo, "L'Oréal" siempre es "Capillar"), entonces:  
+`Id_Prod → Marca → Tipo`  
+Esto es una **dependencia transitiva**.  
+
+**Corrección:**
+```
+Productos  (Id_Prod, Nom_Prod, Precio_Unitario, Id_Marca)
+Marca      (Id_Marca, Nom_Marca, Tipo)
+```
+
+#### ❌ `Turno (Id_T, Fecha, Hora, Estado, Id_Clie, Id_P, Id_Ayu)`
+No se detecta dependencia transitiva entre atributos no clave. `Fecha`, `Hora`, `Estado` dependen directamente de `Id_T`. Las FKs son referencias a otras entidades → **no hay violación**.
+
+#### ❌ `Pago (Id_Pago, Fecha_Pago, Monto, Metodo, Id_Clie, Id_Prom)`
+`Monto` podría derivarse de `Id_Prom` (descuento aplicado). Sin embargo, el monto ya es el valor final pagado (post-descuento), por lo que **no es transitivo** — depende directamente del registro de pago.  
+→ **No hay violación.**
+
+#### ❌ `Ayudante (Id_Ayu, Nom_Ayu, Ape_Ayu, Categoria_Ayu)`
+Si `Categoria_Ayu` define un rango de especialización con más atributos (sueldo base, permisos, etc.), convendría extraerla. Pero como se presenta solo como un atributo simple → **se mantiene en 3FN por ahora.**
+
+#### ❌ `Salon (Id_Salon, Dir_Salon, Tel_Salon, Nom_Salon)`
+La dirección de un salón podría implicar una ciudad. Ya que la relación `Salon_Ciudad` existe como tabla intermedia, no hay transitiva interna en Salón → **no hay violación.**
+
+### ✅ Esquema Final en 3FN
+
+```
+Cliente        (Id_Clie, Nom_C, Ape_C, Tel_C)
+Profesional    (Id_P, Nom_P, Especialidad, Disponibilidad)
+Servicios      (Id_S, Nom_S, Desc_S)
+Turno          (Id_T, Fecha, Hora, Estado, Id_Clie, Id_P, Id_Ayu)
+Salon          (Id_Salon, Dir_Salon, Tel_Salon, Nom_Salon)
+Ciudad         (Id_Ciudad, Nom_Ciudad)
+Marca          (Id_Marca, Nom_Marca, Tipo)          ← NUEVA
+Productos      (Id_Prod, Nom_Prod, Precio_Unitario, Id_Marca)
+Stock          (Id_Stock, Cantidad, Fecha_Venc, Id_Prod, Id_Salon)
+Promocion      (Id_Prom, Porcentaje_Desc, Fecha_Inicio, Fecha_Fin)
+Pago           (Id_Pago, Fecha_Pago, Monto, Metodo, Id_Clie, Id_Prom)
+Valoracion     (Id_V, Puntuacion, Comentario, Id_Clie)
+Ayudante       (Id_Ayu, Nom_Ayu, Ape_Ayu, Categoria_Ayu)
+
+-- Tablas de relación (todas en 3FN por no tener atributos no clave)
+Turno_Servicio             (Id_T, Id_S)
+Salon_Ciudad               (Id_Salon, Id_Ciudad)
+Salon_Profesional          (Id_Salon, Id_P)
+Producto_Cliente           (Id_Prod, Id_Clie)
+Productos_Servicios_Prof   (Id_Prod, Id_S, Id_P)
+Cliente_Profesional        (Id_Clie, Id_P)
+```
+
+---
+
+## Resumen de Cambios Realizados
+
+| # | Forma Normal | Cambio |
+|---|---|---|
+| 1 | 1FN | Se eliminó `id-t` de `Salón` (grupo repetido inverso) |
+| 2 | 1FN | Se eliminó `id_s` del turno como atómico → ya existía `Turno_Servicio` |
+| 3 | 1FN | Se renombró `Cl-Ayudante` → `Categoria_Ayu` (atributo ambiguo) |
+| 4 | 1FN | Se fusionaron `Clientes_Productos` y `Producto_Cliente` (tablas duplicadas) |
+| 5 | 2FN | Se eliminó `Cliente_Pago` (redundante: `Pago` ya tiene `Id_Clie`) |
+| 6 | 3FN | Se extrajo `Marca` como entidad independiente para eliminar `Marca → Tipo` |
+
+---
+
+## Esquema Final Normalizado (3FN) — Diagrama de Dependencias
+
+```
+Cliente ──────────────────────┐
+  │                           │
+  ├──< Turno >── Profesional  │
+  │      │                    │
+  │      └──< Turno_Servicio >── Servicios
+  │                                │
+  │                          Productos_Servicios_Prof
+  │
+  ├──< Valoracion
+  ├──< Pago >── Promocion
+  ├──< Producto_Cliente >── Productos >── Marca
+  └──< Cliente_Profesional >── Profesional
+                                   │
+                              Salon_Profesional
+                                   │
+                                 Salon ──< Stock >── Productos
+                                   │
+                              Salon_Ciudad
+                                   │
+                                 Ciudad
+
+Ayudante ──FK──> Turno
+```
+
+---
+
+## Scripts SQL Corregidos y Normalizados
+
+```sql
+CREATE DATABASE ObligatorioBSD;
+GO
+USE ObligatorioBSD;
+GO
+
+-- ============================================================
+-- ENTIDADES INDEPENDIENTES
+-- ============================================================
+
+CREATE TABLE Ciudad (
+    Id_Ciudad   INTEGER         PRIMARY KEY,
+    Nom_Ciudad  VARCHAR(30)     NOT NULL
+);
+
+CREATE TABLE Clientes (
+    Id_Clie     INTEGER         PRIMARY KEY,
+    Nom_C       VARCHAR(30)     NOT NULL,
+    Ape_C       VARCHAR(30)     NOT NULL,
+    Tel_C       NUMERIC(12)     NOT NULL
+);
+
+CREATE TABLE Profesional (
+    Id_P            INTEGER         PRIMARY KEY,
+    Nom_P           VARCHAR(30)     NOT NULL,
+    Especialidad    VARCHAR(30)     NOT NULL,
+    Disponibilidad  VARCHAR(30)
+);
+
+CREATE TABLE Servicios (
+    Id_S    INTEGER         PRIMARY KEY,
+    Nom_S   VARCHAR(20)     NOT NULL,
+    Desc_S  VARCHAR(50)
+);
+
+CREATE TABLE Marca (
+    Id_Marca    INTEGER         PRIMARY KEY,
+    Nom_Marca   VARCHAR(30)     NOT NULL,
+    Tipo        VARCHAR(30)     NOT NULL
+);
+
+CREATE TABLE Productos (
+    Id_Prod         INTEGER         PRIMARY KEY,
+    Nom_Prod        VARCHAR(50)     NOT NULL,
+    Precio_Unitario DECIMAL(10,2),
+    Id_Marca        INTEGER         NOT NULL REFERENCES Marca(Id_Marca)
+);
+
+CREATE TABLE Ayudante (
+    Id_Ayu      INTEGER         PRIMARY KEY,
+    Nom_Ayu     VARCHAR(30)     NOT NULL,
+    Ape_Ayu     VARCHAR(50)     NOT NULL,
+    Categoria_Ayu VARCHAR(30)
+);
+
+CREATE TABLE Promocion (
+    Id_Prom         INTEGER         PRIMARY KEY,
+    Porcentaje_Desc DECIMAL(5,2),
+    Fecha_Inicio    DATE,
+    Fecha_Fin       DATE
+);
+
+-- ============================================================
+-- ENTIDADES CON DEPENDENCIAS
+-- ============================================================
+
+CREATE TABLE Salon (
+    Id_Salon    INTEGER         PRIMARY KEY,
+    Dir_Salon   VARCHAR(50)     NOT NULL,
+    Tel_Salon   NUMERIC(12)     NOT NULL,
+    Nom_Salon   VARCHAR(30)     NOT NULL
+    -- id-t eliminado: relación se maneja desde Turno
+);
+
+CREATE TABLE Turno (
+    Id_T    INTEGER         PRIMARY KEY,
+    Fecha   DATE            NOT NULL,
+    Hora    TIME            NOT NULL,
+    Estado  VARCHAR(30)     NOT NULL,
+    Id_Clie INTEGER         NOT NULL REFERENCES Clientes(Id_Clie),
+    Id_P    INTEGER         NOT NULL REFERENCES Profesional(Id_P),
+    Id_Ayu  INTEGER                  REFERENCES Ayudante(Id_Ayu)
+    -- Id_S eliminado: se maneja en Turno_Servicio
+);
+
+CREATE TABLE Stock (
+    Id_Stock    INTEGER     PRIMARY KEY,
+    Cantidad    INTEGER     NOT NULL,
+    Fecha_Venc  DATE        NOT NULL,
+    Id_Prod     INTEGER     NOT NULL REFERENCES Productos(Id_Prod),
+    Id_Salon    INTEGER     NOT NULL REFERENCES Salon(Id_Salon)
+);
+
+CREATE TABLE Pago (
+    Id_Pago     INTEGER         PRIMARY KEY,
+    Fecha_Pago  DATE            NOT NULL,
+    Monto       DECIMAL(10,2),
+    Metodo      VARCHAR(30),
+    Id_Clie     INTEGER         NOT NULL REFERENCES Clientes(Id_Clie),
+    Id_Prom     INTEGER                  REFERENCES Promocion(Id_Prom)
+    -- Id_Prom ahora es nullable: no todo pago tiene promoción
+);
+
+CREATE TABLE Valoracion (
+    Id_V        INTEGER     PRIMARY KEY,
+    Puntuacion  INTEGER     CHECK (Puntuacion BETWEEN 1 AND 5),
+    Comentario  VARCHAR(200),
+    Id_Clie     INTEGER     NOT NULL REFERENCES Clientes(Id_Clie)
+);
+
+-- ============================================================
+-- TABLAS DE RELACIÓN (N:M)
+-- ============================================================
+
+CREATE TABLE Turno_Servicio (
+    Id_T    INTEGER NOT NULL REFERENCES Turno(Id_T),
+    Id_S    INTEGER NOT NULL REFERENCES Servicios(Id_S),
+    PRIMARY KEY (Id_T, Id_S)
+);
+
+CREATE TABLE Salon_Ciudad (
+    Id_Salon    INTEGER NOT NULL REFERENCES Salon(Id_Salon),
+    Id_Ciudad   INTEGER NOT NULL REFERENCES Ciudad(Id_Ciudad),
+    PRIMARY KEY (Id_Salon, Id_Ciudad)
+);
+
+CREATE TABLE Salon_Profesional (
+    Id_Salon    INTEGER NOT NULL REFERENCES Salon(Id_Salon),
+    Id_P        INTEGER NOT NULL REFERENCES Profesional(Id_P),
+    PRIMARY KEY (Id_Salon, Id_P)
+);
+
+CREATE TABLE Producto_Cliente (
+    Id_Prod INTEGER NOT NULL REFERENCES Productos(Id_Prod),
+    Id_Clie INTEGER NOT NULL REFERENCES Clientes(Id_Clie),
+    PRIMARY KEY (Id_Prod, Id_Clie)
+);
+
+CREATE TABLE Productos_Servicios_Prof (
+    Id_Prod INTEGER NOT NULL REFERENCES Productos(Id_Prod),
+    Id_S    INTEGER NOT NULL REFERENCES Servicios(Id_S),
+    Id_P    INTEGER NOT NULL REFERENCES Profesional(Id_P),
+    PRIMARY KEY (Id_Prod, Id_S, Id_P)
+);
+
+CREATE TABLE Cliente_Profesional (
+    Id_Clie INTEGER NOT NULL REFERENCES Clientes(Id_Clie),
+    Id_P    INTEGER NOT NULL REFERENCES Profesional(Id_P),
+    PRIMARY KEY (Id_Clie, Id_P)
+);
+```
+
+---
+
+## Observaciones Adicionales
+
+> [!NOTE]
+> **`Id_Prom` en `Pago`** fue cambiado a nullable (`REFERENCES` sin `NOT NULL`) ya que es perfectamente válido que un pago no tenga promoción asociada. La restricción `NOT NULL` original obligaría a crear una promoción ficticia para cada pago sin descuento.
+
+> [!WARNING]
+> **`Marca` en `Productos`** era el campo con `UNIQUE NOT NULL`. Al extraerlo a su propia tabla, cada nombre de marca es único dentro de la tabla `Marca`, y `Productos` referencia `Id_Marca`. Esto permite que varios productos sean de la misma marca sin violar la unicidad.
+
+> [!TIP]
+> **`Clientes_Productos` y `Producto_Cliente`** eran equivalentes. Se conserva solo `Producto_Cliente` con PK compuesta `(Id_Prod, Id_Clie)` para garantizar que no se repita la misma combinación.
+
+> [!IMPORTANT]
+> **`Cliente_Pago`** fue eliminada porque `Pago` ya contiene `Id_Clie` como FK. Mantener ambas generaría **redundancia de datos**: la misma información estaría en dos lugares distintos, con riesgo de inconsistencias.
