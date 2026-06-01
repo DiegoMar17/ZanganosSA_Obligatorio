@@ -75,11 +75,20 @@ function toastError(msg) { toast(msg, true); }
     resize(); draw();
 })();
 
-// Theme toggle
+// Theme toggle — persiste en localStorage
+(function () {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
 document.getElementById('theme-btn')?.addEventListener('click', () => {
     const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-    document.getElementById('theme-btn').textContent = dark ? '🌙' : '☀️';
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
 });
 
 // Tasks logic

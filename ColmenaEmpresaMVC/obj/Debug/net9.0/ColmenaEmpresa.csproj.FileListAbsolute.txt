@@ -217,9 +217,9 @@ C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debu
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaEmpresa.sourcelink.json
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-7h86nwc6pt.gz
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaE.E50E4F71.Up2Date
-C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\dtswzvy56p-5t7jlb6geu.gz
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.Internal.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.Extensions.Identity.Core.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\dtswzvy56p-6nn2xp0e4o.gz

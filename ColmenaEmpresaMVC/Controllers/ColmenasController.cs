@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
@@ -39,13 +40,18 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        public IActionResult Crear() => View(new Colmena { FechaInstalacion = DateTime.Today });
+        private void CargarApiarios() =>
+            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
+
+        public IActionResult Crear() { CargarApiarios(); return View(new Colmena { FechaInstalacion = DateTime.Today }); }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Colmena colmena)
         {
-            if (!ModelState.IsValid) return View(colmena);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(colmena); }
+            var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
+            colmena.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Colmenas.Add(colmena);
             _ctx.SaveChanges();
             TempData["Exito"] = $"Colmena '{colmena.Codigo}' registrada.";
@@ -56,7 +62,7 @@ namespace ColmenaEmpresa.Controllers
         {
             var c = _ctx.Colmenas.Find(id);
             if (c is null) return NotFound();
-            return View(c);
+            CargarApiarios(); return View(c);
         }
 
         [HttpPost, ValidateAntiForgeryToken]

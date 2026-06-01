@@ -20,10 +20,8 @@
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Apiario <span class="req">*</span></label>
-                <select asp-for="ApiarioId" class="fc">
-                    <option value="1">La Rinconada</option>
-                    <option value="2">Monte Olivo</option>
-                    <option value="3">El Eucaliptal</option>
+                <select asp-for="ApiarioId" class="fc" asp-items="ViewBag.Apiarios">
+                    <option value="">Seleccionar…</option>
                 </select>
                 <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
             </div>

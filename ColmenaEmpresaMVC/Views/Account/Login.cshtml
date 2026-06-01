@@ -9,6 +9,7 @@
     <title>Ingresar — ColmenaEmpresa</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -19,6 +20,13 @@
             --red: #F26B6B; --red-bg: rgba(242,107,107,.12);
             --sans: 'DM Sans', system-ui, sans-serif;
             --serif: 'DM Serif Display', Georgia, serif;
+        }
+        [data-theme="light"] {
+            --gold: #B8820A; --gold-glow: rgba(184,130,10,.18); --gold-dim: rgba(184,130,10,.08);
+            --bg: #F7F2E8; --bg-1: #EDE6D5; --bg-2: #E3D9C4;
+            --txt-1: #1A1408; --txt-2: #4A3C1E; --txt-3: #7A6840; --txt-4: #A8956A;
+            --bdr: rgba(0,0,0,.10); --bdr-2: rgba(0,0,0,.22);
+            --red: #CC3535; --red-bg: rgba(204,53,53,.10);
         }
         html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--txt-1); overflow: hidden; }
 
@@ -95,10 +103,21 @@
         .back:hover { color: var(--txt-2); }
 
         @@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        .theme-btn-login {
+            position: fixed; top: 18px; right: 24px;
+            width: 36px; height: 36px; border-radius: 9px;
+            background: var(--bg-2); border: 1px solid var(--bdr);
+            color: var(--txt-3); font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .2s; z-index: 10;
+        }
+        .theme-btn-login:hover { border-color: var(--bdr-2); color: var(--gold); }
     </style>
 </head>
 <body>
     <canvas id="cv"></canvas>
+    <button class="theme-btn-login" id="theme-login" title="Cambiar tema">🌙</button>
     <div class="page">
         <div class="card">
             <div class="card-logo">
@@ -133,6 +152,20 @@
         </div>
     </div>
     <script>
+        // Theme toggle
+        (function(){
+            const btn = document.getElementById('theme-login');
+            const apply = (t) => {
+                document.documentElement.setAttribute('data-theme', t);
+                localStorage.setItem('theme', t);
+                btn.textContent = t === 'dark' ? '🌙' : '☀️';
+            };
+            apply(localStorage.getItem('theme') || 'dark');
+            btn.addEventListener('click', () =>
+                apply(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')
+            );
+        })();
+
         (function(){
             const cv=document.getElementById('cv'), cx=cv.getContext('2d');
             const R=26,GAP=3; let mx=-9999,my=-9999,h=[];

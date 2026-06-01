@@ -12,7 +12,10 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index() => View(_ctx.Transhumancias.ToList());
 
-        public IActionResult Crear() => View(new Transhumancia { FechaSalida = DateTime.Today });
+        private void CargarApiarios() =>
+            ViewBag.NombresApiarios = _ctx.Apiarios.OrderBy(a => a.Nombre).Select(a => a.Nombre).ToList();
+
+        public IActionResult Crear() { CargarApiarios(); return View(new Transhumancia { FechaSalida = DateTime.Today }); }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
@@ -34,7 +35,10 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        public IActionResult Crear() => View(new Inspeccion { Fecha = DateTime.Today });
+        private void CargarApiarios() =>
+            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
+
+        public IActionResult Crear() { CargarApiarios(); return View(new Inspeccion { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(Inspeccion inspeccion)

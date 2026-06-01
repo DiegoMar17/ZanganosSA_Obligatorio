@@ -1,28 +1,152 @@
+@model IEnumerable<ColmenaEmpresa.Models.Visita>
 @{
     ViewData["Title"] = "Planificación";
-    ViewData["Subtitle"] = "Tareas y visitas programadas";
+    var tareas  = (List<ColmenaEmpresa.Models.Tarea>)ViewBag.Tareas;
+    var pendT   = (int)ViewBag.Pendientes;
+    var pendV   = (int)ViewBag.VisitasPend;
+    ViewData["Subtitle"] = $"{pendT} tareas · {pendV} visitas pendientes";
 }
 
-@section Actions {
-    <button class="btn btn-primary btn-sm" onclick="toast('Nueva tarea creada ✓')">+ Nueva tarea</button>
-}
+<div class="g2 mb-6">
+    <!-- Formulario nueva tarea -->
+    <div class="card">
+        <div class="card-hd"><div class="card-title">+ Nueva tarea</div></div>
+        <form asp-action="CrearTarea" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fgrp mb-4">
+                <label class="flbl">Descripción <span class="req">*</span></label>
+                <input type="text" name="nombre" class="fc" placeholder="Ej: Aplicar tratamiento Varroa…" required>
+            </div>
+            <div class="fg mb-4">
+                <div class="fgrp">
+                    <label class="flbl">Categoría</label>
+                    <select name="categoria" class="fc">
+                        <option>Sanidad</option>
+                        <option>Inspección</option>
+                        <option>Alimentación</option>
+                        <option>Mantenimiento</option>
+                        <option>Cosecha</option>
+                        <option>General</option>
+                    </select>
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Prioridad</label>
+                    <select name="prioridad" class="fc">
+                        <option value="alta">Alta</option>
+                        <option value="media" selected>Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                </div>
+                <div class="fgrp fg-full">
+                    <label class="flbl">Fecha límite (opcional)</label>
+                    <input type="date" name="fechaVencimiento" class="fc">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Agregar tarea</button>
+        </form>
+    </div>
+
+    <!-- Formulario nueva visita -->
+    <div class="card">
+        <div class="card-hd"><div class="card-title">+ Nueva visita</div></div>
+        <form asp-action="CrearVisita" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fgrp mb-4">
+                <label class="flbl">Apiario <span class="req">*</span></label>
+                <select name="apiarioNombre" class="fc" asp-items="ViewBag.NombresApiarios" required>
+                    <option value="">Seleccionar apiario…</option>
+                </select>
+            </div>
+            <div class="fgrp mb-4">
+                <label class="flbl">Fecha planificada <span class="req">*</span></label>
+                <input type="date" name="fechaPlanificada" class="fc" required>
+            </div>
+            <div class="fgrp mb-4">
+                <label class="flbl">Materiales (opcional)</label>
+                <input type="text" name="materiales" class="fc" placeholder="Ej: Ácido oxálico, cuadernillo…">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Agendar visita</button>
+        </form>
+    </div>
+</div>
 
 <div class="dual-panel">
+    <!-- TAREAS -->
     <div class="panel">
-        <div class="panel-hd"><div class="panel-title">Tareas pendientes</div><span class="panel-cnt" id="task-cnt">4 pendientes</span></div>
-        <div class="panel-body" id="task-panel">
-            <div class="task-row"><div class="chk" onclick="toggleTask(this)"></div><div class="t-info"><div class="t-name">Aplicar tratamiento Varroa en La Rinconada</div><div class="t-tags"><span class="chip">Sanidad</span><span class="chip" style="color:var(--red);border-color:var(--red-bdr);background:var(--red-bg)">alta</span><span class="chip">25 abr</span></div></div></div>
-            <div class="task-row"><div class="chk" onclick="toggleTask(this)"></div><div class="t-info"><div class="t-name">Reponer jarabe azucarado Monte Olivo</div><div class="t-tags"><span class="chip">Alimentación</span><span class="chip" style="color:var(--amber);border-color:var(--amber-bdr);background:var(--amber-bg)">media</span><span class="chip">27 abr</span></div></div></div>
-            <div class="task-row"><div class="chk" onclick="toggleTask(this)"></div><div class="t-info"><div class="t-name">Revisar postura reinas antes de cosecha</div><div class="t-tags"><span class="chip">Inspección</span><span class="chip" style="color:var(--red);border-color:var(--red-bdr);background:var(--red-bg)">alta</span></div></div></div>
-            <div class="task-row done"><div class="chk on" onclick="toggleTask(this)"></div><div class="t-info"><div class="t-name t-done">Pintar alzas dañadas lote B</div><div class="t-tags"><span class="chip">Mantenimiento</span></div></div></div>
+        <div class="panel-hd">
+            <div class="panel-title">Tareas</div>
+            <span class="panel-cnt">@pendT pendientes</span>
         </div>
+        @if (!tareas.Any())
+        {
+            <div style="padding:28px;text-align:center;color:var(--txt-4);font-size:13px">Sin tareas creadas.</div>
+        }
+        @foreach (var t in tareas)
+        {
+            <div class="task-row @(t.Completada ? "done" : "")">
+                <form asp-action="CompletarTarea" asp-route-id="@t.Id" method="post" style="display:contents">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="chk @(t.Completada ? "on" : "")"
+                            style="background:none;border:2px solid var(--bdr-2);border-radius:6px;cursor:pointer;flex-shrink:0;width:20px;height:20px;padding:0">
+                    </button>
+                </form>
+                <div class="t-info">
+                    <div class="t-name @(t.Completada ? "t-done" : "")">@t.Nombre</div>
+                    <div class="t-tags">
+                        <span class="chip">@t.Categoria</span>
+                        <span class="chip" style="@(t.Prioridad == "alta" ? "color:var(--red);border-color:var(--red-bdr);background:var(--red-bg)" : t.Prioridad == "media" ? "color:var(--amber);border-color:var(--amber-bdr);background:var(--amber-bg)" : "")">@t.Prioridad</span>
+                        @if (t.FechaVencimiento.HasValue)
+                        {
+                            var v = t.FechaVencimiento.Value.Date < DateTime.Today && !t.Completada;
+                            <span class="chip" style="@(v ? "color:var(--red)" : "")">@t.FechaVencimiento.Value.ToString("dd MMM") @(v ? "⚠" : "")</span>
+                        }
+                    </div>
+                </div>
+                <form asp-action="EliminarTarea" asp-route-id="@t.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--txt-4)">🗑</button>
+                </form>
+            </div>
+        }
     </div>
+
+    <!-- VISITAS -->
     <div class="panel">
-        <div class="panel-hd"><div class="panel-title">Visitas planificadas</div><span class="panel-cnt">3 pendientes</span></div>
-        <div class="panel-body">
-            <div class="visit-row"><div class="vdot-wrap"><div class="vdot vd-late"></div></div><div class="v-info"><div class="v-place">La Rinconada</div><div class="v-date">Plan: 14 abr · Vencida hace 8 días</div><div class="v-mats">🧰 Ácido oxálico, cuadernillo</div></div><span class="pill p-red" style="font-size:11px;flex-shrink:0">Vencida</span></div>
-            <div class="visit-row"><div class="vdot-wrap"><div class="vdot vd-pend"></div></div><div class="v-info"><div class="v-place">El Eucaliptal</div><div class="v-date">Plan: 25 abr · En 3 días</div><div class="v-mats">🧰 Alzas de repuesto, extractor</div><button class="v-btn" onclick="toast('Visita marcada como realizada ✓')">Marcar realizada</button></div><span class="pill p-blue" style="font-size:11px;flex-shrink:0">Planificada</span></div>
-            <div class="visit-row"><div class="vdot-wrap"><div class="vdot vd-ok"></div></div><div class="v-info"><div class="v-place">Monte Olivo</div><div class="v-date">Realizada: 18 abr 2026</div></div><span class="pill p-green" style="font-size:11px;flex-shrink:0">Completada</span></div>
+        <div class="panel-hd">
+            <div class="panel-title">Visitas planificadas</div>
+            <span class="panel-cnt">@pendV pendientes</span>
         </div>
+        @if (!Model.Any())
+        {
+            <div style="padding:28px;text-align:center;color:var(--txt-4);font-size:13px">Sin visitas agendadas.</div>
+        }
+        @foreach (var v in Model)
+        {
+            var dotCls = v.Estado == "completada" ? "vd-ok" : v.EstaVencida ? "vd-late" : "vd-pend";
+            var pillCls = v.Estado == "completada" ? "p-green" : v.EstaVencida ? "p-red" : "p-blue";
+            var pillTxt = v.Estado == "completada" ? "Completada" : v.EstaVencida ? "Vencida" : "Planificada";
+            <div class="visit-row">
+                <div class="vdot-wrap"><div class="vdot @dotCls"></div></div>
+                <div class="v-info">
+                    <div class="v-place">@v.ApiarioNombre</div>
+                    <div class="v-date">@v.FechaPlanificada.ToString("dd MMM yyyy")</div>
+                    @if (!string.IsNullOrWhiteSpace(v.Materiales))
+                    {
+                        <div class="v-mats">🧰 @v.Materiales</div>
+                    }
+                    <div style="display:flex;gap:6px;margin-top:6px">
+                        <form asp-action="CompletarVisita" asp-route-id="@v.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="v-btn">@(v.Estado == "completada" ? "↩ Reabrir" : "✓ Completada")</button>
+                        </form>
+                        <form asp-action="EliminarVisita" asp-route-id="@v.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar visita?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="v-btn" style="color:var(--red)">🗑</button>
+                        </form>
+                    </div>
+                </div>
+                <span class="pill @pillCls" style="font-size:11px;flex-shrink:0">@pillTxt</span>
+            </div>
+        }
     </div>
 </div>

@@ -16,5 +16,7 @@ namespace ColmenaEmpresa.Data
         public DbSet<RegistroFinanciero> RegistrosFinancieros { get; set; }
         public DbSet<Transhumancia> Transhumancias { get; set; }
         public DbSet<ItemInventario> ItemsInventario { get; set; }
+        public DbSet<Tarea> Tareas { get; set; }
+        public DbSet<Visita> Visitas { get; set; }
     }
 }

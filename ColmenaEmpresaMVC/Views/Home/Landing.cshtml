@@ -6,16 +6,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColmenaEmpresa — Gestión Apícola</title>
+    <title>ZanganosSA — Gestión Apícola</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
             --gold:      #F2BE30;
-            --gold-2:    #FACCAA;
             --gold-glow: rgba(242,190,48,.25);
             --gold-dim:  rgba(242,190,48,.10);
             --bg:        #0C0A07;
@@ -34,6 +34,26 @@
             --blue:      #6BAEE8;
             --sans:      'DM Sans', system-ui, sans-serif;
             --serif:     'DM Serif Display', Georgia, serif;
+        }
+
+        [data-theme="light"] {
+            --gold:      #B8820A;
+            --gold-glow: rgba(184,130,10,.18);
+            --gold-dim:  rgba(184,130,10,.08);
+            --bg:        #F7F2E8;
+            --bg-1:      #EDE6D5;
+            --bg-2:      #E3D9C4;
+            --bg-3:      #D6CAB0;
+            --txt-1:     #1A1408;
+            --txt-2:     #4A3C1E;
+            --txt-3:     #7A6840;
+            --txt-4:     #A8956A;
+            --bdr:       rgba(0,0,0,.10);
+            --bdr-2:     rgba(0,0,0,.22);
+            --green:     #1A9055;
+            --red:       #CC3535;
+            --amber:     #C07010;
+            --blue:      #2065B0;
         }
 
         html, body {
@@ -88,6 +108,18 @@
             border-radius: 99px;
             padding: 5px 14px;
         }
+        .theme-btn-land {
+            width: 36px; height: 36px;
+            border-radius: 9px;
+            background: var(--bg-2);
+            border: 1px solid var(--bdr);
+            color: var(--txt-3);
+            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all .22s;
+        }
+        .theme-btn-land:hover { border-color: var(--bdr-2); color: var(--gold); }
 
         /* ── HERO ── */
         .hero {
@@ -418,7 +450,10 @@
             <div class="nav-logo-mark">🐝</div>
             <div class="nav-logo-name">ColmenaEmpresa</div>
         </div>
-        <span class="nav-pill">v2.0 · Uruguay</span>
+        <div style="display:flex;align-items:center;gap:10px">
+            <span class="nav-pill">Uruguay</span>
+            <button class="theme-btn-land" id="theme-land" title="Cambiar tema">🌙</button>
+        </div>
     </nav>
 
     <!-- HERO -->
@@ -610,6 +645,18 @@
         document.querySelector('a[href="#features"]')?.addEventListener('click', e => {
             e.preventDefault();
             document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Theme toggle
+        const themeBtn = document.getElementById('theme-land');
+        const applyTheme = (t) => {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
+            themeBtn.textContent = t === 'dark' ? '🌙' : '☀️';
+        };
+        applyTheme(localStorage.getItem('theme') || 'dark');
+        themeBtn.addEventListener('click', () => {
+            applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
         });
     </script>
 </body>
