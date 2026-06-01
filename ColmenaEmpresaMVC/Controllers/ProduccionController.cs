@@ -67,6 +67,16 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        public IActionResult Exportar()
+        {
+            var cosechas = _ctx.Cosechas.OrderBy(c => c.Fecha).ToList();
+            ViewBag.TotalKg    = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
+            ViewBag.Promedio   = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
+            var mejor = cosechas.OrderByDescending(c => c.PesoNeto).FirstOrDefault();
+            ViewBag.MejorCosecha = mejor is not null ? $"{mejor.ApiarioNombre} · {mejor.PesoNeto} kg" : "—";
+            return View(cosechas);
+        }
+
         public IActionResult ExportarCsv()
         {
             var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();

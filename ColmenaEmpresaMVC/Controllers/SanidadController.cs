@@ -38,6 +38,16 @@ namespace ColmenaEmpresa.Controllers
         private void CargarApiarios() =>
             ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
 
+        public IActionResult Exportar()
+        {
+            var controles = _ctx.ControlesSanitarios.OrderBy(c => c.Fecha).ToList();
+            ViewBag.Aplicados  = controles.Count(c => c.Estado == "limpio");
+            ViewBag.Pendientes = controles.Count(c => c.Estado == "en_tratamiento");
+            ViewBag.MasUsado   = controles.GroupBy(c => c.Tratamiento).OrderByDescending(g => g.Count()).FirstOrDefault()?.Key ?? "—";
+            ViewBag.Afectadas  = controles.SelectMany(c => c.ColmenasAfectadas.Split(',', StringSplitOptions.RemoveEmptyEntries)).Distinct().Count();
+            return View(controles);
+        }
+
         public IActionResult Crear() { CargarApiarios(); return View(new ControlSanitario { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]

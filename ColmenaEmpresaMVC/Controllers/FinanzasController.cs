@@ -73,6 +73,18 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        public IActionResult Exportar()
+        {
+            var registros = _ctx.RegistrosFinancieros.OrderBy(r => r.Fecha).ToList();
+            var ingresos  = registros.Where(r => r.TipoMovimiento == "ingreso").Sum(r => r.Monto);
+            var gastos    = registros.Where(r => r.TipoMovimiento != "ingreso").Sum(r => r.Monto);
+            ViewBag.TotalIngresos = ingresos;
+            ViewBag.TotalGastos   = gastos;
+            ViewBag.Balance       = ingresos - gastos;
+            ViewBag.Margen        = ingresos > 0 ? Math.Round((ingresos - gastos) / ingresos * 100, 1) : 0m;
+            return View(registros);
+        }
+
         public IActionResult ExportarCsv()
         {
             var registros = _ctx.RegistrosFinancieros.OrderByDescending(r => r.Fecha).ToList();

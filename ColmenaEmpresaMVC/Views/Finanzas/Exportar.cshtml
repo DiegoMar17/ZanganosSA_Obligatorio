@@ -1,0 +1,121 @@
+@model IEnumerable<ColmenaEmpresa.Models.RegistroFinanciero>
+@{
+    Layout = null;
+    var fecha = DateTime.Now.ToString("dd/MM/yyyy");
+    var temporada = "2025–2026";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Gastos y Finanzas — ZanganosSA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;background:#F0E5D0;color:#2C1A0A;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:1100px;max-width:100%;margin:0 auto;background:#F0E5D0;min-height:100vh}
+.header{padding:32px 48px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.sys-lbl{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8B6040;margin-bottom:10px}
+.title{font-size:52px;font-weight:700;color:#1C0E04;line-height:1;margin-bottom:6px}
+.exp-lbl{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8B6040}
+.divider{height:2px;background:linear-gradient(to right,#8B6040,#C4A070);margin:18px 48px 0}
+.info-bar{display:grid;grid-template-columns:repeat(4,1fr);padding:18px 48px;border-bottom:1px solid #C4A882;gap:0}
+.info-cell{padding:0 20px;border-right:1px solid #C4A882}
+.info-cell:first-child{padding-left:0}
+.info-cell:last-child{border-right:none}
+.info-lbl{font-family:'Courier New',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:#8B6040;margin-bottom:5px}
+.info-val{font-size:16px;font-weight:700;color:#1C0E04}
+.tbl-wrap{padding:20px 48px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead tr{background:#7B4F1E}
+th{padding:9px 12px;text-align:left;font-family:'Courier New',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#F5EDE0;font-weight:700}
+td{padding:9px 12px;border-bottom:1px solid #DDD0BC;vertical-align:middle}
+tr:nth-child(even) td{background:#F7EDD8}
+tr:nth-child(odd) td{background:#F0E5D0}
+.td-id{color:#A07850;font-family:'Courier New',monospace;font-size:11px}
+.td-b{font-weight:700;color:#1C0E04}
+.td-green{font-weight:700;font-size:15px;color:#2A6E3A}
+.td-red{font-weight:700;font-size:15px;color:#A02A1A}
+.td-amber{font-weight:700;font-size:15px;color:#7B4F1E}
+.pill{display:inline-block;padding:3px 10px;border-radius:3px;font-size:10.5px;font-weight:600;font-family:'Courier New',monospace}
+.pill-g{background:#E8F5EE;color:#1A6035;border:1px solid #A0D4B8}
+.pill-r{background:#FDECEA;color:#A02010;border:1px solid #E0A0A0}
+.pill-a{background:#FFF3E0;color:#7B4F1E;border:1px solid #DFBE80}
+.summary{margin:0 48px 28px;background:#7B4F1E;color:#F5EDE0;padding:20px 28px;display:flex;align-items:center;gap:28px;border-radius:3px}
+.sum-badge{width:42px;height:42px;background:#F0E5D0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:#7B4F1E;flex-shrink:0}
+.sum-items{display:grid;grid-template-columns:repeat(4,1fr);flex:1}
+.sum-lbl{font-family:'Courier New',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#C4956A;margin-bottom:4px}
+.sum-val{font-size:20px;font-weight:700}
+.foot{padding:12px 48px 28px;display:flex;justify-content:space-between;align-items:flex-end}
+.foot-txt{text-align:center;font-family:'Courier New',monospace;font-size:9px;color:#8B6040;line-height:1.9;letter-spacing:.05em}
+.print-btn{position:fixed;top:20px;right:20px;background:#7B4F1E;color:#F5EDE0;border:none;padding:10px 22px;font-size:14px;cursor:pointer;border-radius:4px;font-family:sans-serif;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.print-btn:hover{background:#5A3A10}
+@@media print{.print-btn{display:none}body{background:#F0E5D0}}
+</style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">⬇ Guardar PDF</button>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="sys-lbl">Sistema de Gestión Apícola</div>
+      <div class="title">Gastos y Finanzas</div>
+      <div class="exp-lbl">Exportación &nbsp;·&nbsp; Módulo Finanzas</div>
+    </div>
+    <svg width="120" height="100" viewBox="0 0 120 100">
+      <polygon points="14,2 42,2 56,26 42,50 14,50 0,26" fill="#7B4F1E"/>
+      <polygon points="50,2 78,2 92,26 78,50 50,50 36,26" fill="#7B4F1E" opacity=".7"/>
+      <polygon points="86,2 114,2 128,26 114,50 86,50 72,26" fill="#7B4F1E" opacity=".45"/>
+      <polygon points="32,52 60,52 74,76 60,100 32,100 18,76" fill="#7B4F1E" opacity=".55"/>
+      <polygon points="68,52 96,52 110,76 96,100 68,100 54,76" fill="#7B4F1E" opacity=".35"/>
+    </svg>
+  </div>
+  <div class="divider"></div>
+  <div class="info-bar">
+    <div class="info-cell"><div class="info-lbl">Apiario</div><div class="info-val">ZanganosSA — UY</div></div>
+    <div class="info-cell"><div class="info-lbl">Temporada</div><div class="info-val">@temporada</div></div>
+    <div class="info-cell"><div class="info-lbl">Exportado</div><div class="info-val">@fecha</div></div>
+    <div class="info-cell"><div class="info-lbl">Registros</div><div class="info-val">@Model.Count() entradas</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Tipo</th><th>Apiario</th>
+        </tr>
+      </thead>
+      <tbody>
+        @{ int i = 1; }
+        @foreach (var r in Model)
+        {
+          <tr>
+            <td class="td-id">@i.ToString("D3")</td>
+            <td>@r.Fecha.ToString("dd/MM/yyyy")</td>
+            <td class="td-b">@r.Descripcion</td>
+            <td>@r.Categoria</td>
+            <td class="@(r.TipoMovimiento == "ingreso" ? "td-green" : r.TipoMovimiento == "gasto" ? "td-red" : "td-amber")">$@r.Monto</td>
+            <td><span class="pill @(r.TipoMovimiento == "ingreso" ? "pill-g" : r.TipoMovimiento == "gasto" ? "pill-r" : "pill-a")">@(r.TipoMovimiento == "ingreso" ? "Ingreso" : r.TipoMovimiento == "gasto" ? "Gasto" : "Inversión")</span></td>
+            <td>@r.ApiarioNombre</td>
+          </tr>
+          i++;
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="summary">
+    <div class="sum-badge">FI</div>
+    <div class="sum-items">
+      <div><div class="sum-lbl">Ingresos Totales</div><div class="sum-val">$@ViewBag.TotalIngresos</div></div>
+      <div><div class="sum-lbl">Gastos Totales</div><div class="sum-val">$@ViewBag.TotalGastos</div></div>
+      <div><div class="sum-lbl">Balance Neto</div><div class="sum-val">$@ViewBag.Balance</div></div>
+      <div><div class="sum-lbl">Margen</div><div class="sum-val">@ViewBag.Margen%</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <svg width="50" height="44"><polygon points="7,1 21,1 28,13 21,25 7,25 0,13" fill="#7B4F1E" opacity=".4"/><polygon points="22,13 36,13 43,25 36,37 22,37 15,25" fill="#7B4F1E" opacity=".25"/></svg>
+    <div class="foot-txt">Sistema de Gestión Apícola &nbsp;·&nbsp; Gastos y Finanzas &nbsp;·&nbsp; v2.4<br>Exportado en formato visual &nbsp;·&nbsp; ZanganosSA &nbsp;·&nbsp; Uruguay</div>
+    <svg width="50" height="44"><polygon points="7,1 21,1 28,13 21,25 7,25 0,13" fill="#7B4F1E" opacity=".4"/><polygon points="22,13 36,13 43,25 36,37 22,37 15,25" fill="#7B4F1E" opacity=".25"/></svg>
+  </div>
+</div>
+<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>
+</body>
+</html>

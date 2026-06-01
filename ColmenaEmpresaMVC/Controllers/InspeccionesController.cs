@@ -38,6 +38,16 @@ namespace ColmenaEmpresa.Controllers
         private void CargarApiarios() =>
             ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
 
+        public IActionResult Exportar()
+        {
+            var inspecciones = _ctx.Inspecciones.OrderBy(i => i.Fecha).ToList();
+            ViewBag.Completas  = inspecciones.Count(i => i.Estado == "completa");
+            ViewBag.Alertas    = inspecciones.Count(i => i.Estado == "incompleta");
+            ViewBag.Criticas   = inspecciones.Count(i => i.Estado == "pendiente");
+            ViewBag.PromMarcos = inspecciones.Any() ? Math.Round(inspecciones.Average(i => (double)i.ColmenasInspeccionadas), 1) : 0;
+            return View(inspecciones);
+        }
+
         public IActionResult Crear() { CargarApiarios(); return View(new Inspeccion { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]

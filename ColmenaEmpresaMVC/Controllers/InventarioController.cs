@@ -18,6 +18,16 @@ namespace ColmenaEmpresa.Controllers
             return View(items);
         }
 
+        public IActionResult Exportar()
+        {
+            var items = _ctx.ItemsInventario.OrderBy(i => i.Nombre).ToList();
+            ViewBag.Disponibles = items.Count(i => i.EstadoStock == "verde");
+            ViewBag.BajoStock   = items.Count(i => i.EstadoStock == "amarillo");
+            ViewBag.Agotados    = items.Count(i => i.EstadoStock == "rojo");
+            ViewBag.Categorias  = items.Count;
+            return View(items);
+        }
+
         public IActionResult Crear() => View(new ItemInventario());
 
         [HttpPost]

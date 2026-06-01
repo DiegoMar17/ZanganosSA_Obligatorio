@@ -68,6 +68,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW56YXNcRWRpdGFyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Finanzas/Exportar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW56YXNcRXhwb3J0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Finanzas/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmluYW56YXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -92,6 +96,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5zcGVjY2lvbmVzXEVkaXRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inspecciones/Exportar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5zcGVjY2lvbmVzXEV4cG9ydGFyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inspecciones/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5zcGVjY2lvbmVzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -102,6 +110,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inventario/Editar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW52ZW50YXJpb1xFZGl0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inventario/Exportar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW52ZW50YXJpb1xFeHBvcnRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inventario/Index.cshtml]
@@ -124,6 +136,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjY2lvblxFZGl0YXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Produccion/Exportar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjY2lvblxFeHBvcnRhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Produccion/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjY2lvblxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -134,6 +150,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Sanidad/Editar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FuaWRhZFxFZGl0YXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Sanidad/Exportar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FuaWRhZFxFeHBvcnRhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Sanidad/Index.cshtml]
