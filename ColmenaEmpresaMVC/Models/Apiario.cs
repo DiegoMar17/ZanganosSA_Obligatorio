@@ -32,7 +32,7 @@ namespace ColmenaEmpresa.Models
 
         public bool FuenteAgua { get; set; }
 
-        [Range(1, 500, ErrorMessage = "Capacidad entre 1 y 500 colmenas.")]
+        [Range(0, 500, ErrorMessage = "Capacidad entre 0 y 500 colmenas.")]
         public int CapacidadColmenas { get; set; }
 
         public string EstadoSemaforo { get; set; } = "verde"; // verde | amarillo | rojo

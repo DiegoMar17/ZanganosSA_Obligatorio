@@ -51,7 +51,8 @@
                 <span asp-validation-for="Longitud" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp fg-full" style="align-items:flex-start;padding-top:22px">
-                <button type="button" class="btn" onclick="toast('📍 Ubicación detectada: -34.4521, -56.2180')">📡 Detectar ubicación</button>
+                <button type="button" class="btn" id="btn-gps">📡 Detectar ubicación</button>
+                <span class="fhint" id="gps-status" style="margin-top:6px"></span>
             </div>
         </div>
 
@@ -75,9 +76,14 @@
                 </select>
             </div>
             <div class="fgrp">
-                <label class="flbl">Capacidad (colmenas)</label>
-                <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30">
+                <label class="flbl">Capacidad (colmenas) <span class="req">*</span></label>
+                <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30" min="0" max="500">
                 <span asp-validation-for="CapacidadColmenas" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="fcheck">
+                    <input type="checkbox" asp-for="FuenteAgua"> Tiene fuente de agua cercana
+                </label>
             </div>
         </div>
 
@@ -90,4 +96,26 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        document.getElementById('btn-gps').addEventListener('click', function () {
+            const status = document.getElementById('gps-status');
+            if (!navigator.geolocation) {
+                status.textContent = 'Tu navegador no soporta geolocalización.';
+                return;
+            }
+            status.textContent = 'Detectando ubicación…';
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    document.getElementById('Latitud').value  = pos.coords.latitude.toFixed(6);
+                    document.getElementById('Longitud').value = pos.coords.longitude.toFixed(6);
+                    status.textContent = '✓ Ubicación detectada correctamente.';
+                    status.style.color = 'var(--green)';
+                },
+                function () {
+                    status.textContent = '⚠ No se pudo detectar la ubicación. Ingresala manualmente.';
+                    status.style.color = 'var(--red)';
+                }
+            );
+        });
+    </script>
 }
