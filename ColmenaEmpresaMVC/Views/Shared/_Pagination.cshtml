@@ -1,0 +1,30 @@
+@model dynamic
+@{
+    int cur        = Model.Page;
+    int totalPages = Model.TotalPages;
+    string? q      = Model.Q;
+    string action  = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+}
+@if (totalPages > 1)
+{
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--bdr)">
+        <span style="font-size:12px;color:var(--txt-4)">
+            Página @cur de @totalPages · @Model.TotalItems registros
+        </span>
+        <div style="display:flex;gap:6px">
+            @if (Model.HasPrev)
+            {
+                <a class="btn btn-xs" asp-action="@action" asp-route-page="@(cur - 1)" asp-route-q="@q">← Anterior</a>
+            }
+            @for (int i = Math.Max(1, cur - 2); i <= Math.Min(totalPages, cur + 2); i++)
+            {
+                <a class="btn btn-xs @(i == cur ? "btn-primary" : "")"
+                   asp-action="@action" asp-route-page="@i" asp-route-q="@q">@i</a>
+            }
+            @if (Model.HasNext)
+            {
+                <a class="btn btn-xs" asp-action="@action" asp-route-page="@(cur + 1)" asp-route-q="@q">Siguiente →</a>
+            }
+        </div>
+    </div>
+}

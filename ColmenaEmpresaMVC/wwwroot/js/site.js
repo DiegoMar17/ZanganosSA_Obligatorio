@@ -4,15 +4,19 @@ function toggleNotifPanel() {
     document.getElementById('notif-panel').classList.toggle('open');
 }
 
-function toast(msg) {
+function toast(msg, isError = false) {
     const el = document.getElementById('toast-el');
     const msgEl = document.getElementById('toast-msg');
     if (el && msgEl) {
         msgEl.textContent = msg;
+        el.style.borderLeftColor = isError ? 'var(--red)' : 'var(--green)';
+        el.style.borderColor     = isError ? 'var(--red-bdr)' : 'var(--green-bdr)';
         el.classList.add('show');
-        setTimeout(() => el.classList.remove('show'), 3000);
+        setTimeout(() => el.classList.remove('show'), 3500);
     }
 }
+
+function toastError(msg) { toast(msg, true); }
 
 // Hex background effect
 (function () {

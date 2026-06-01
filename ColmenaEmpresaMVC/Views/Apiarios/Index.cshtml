@@ -5,7 +5,7 @@
 }
 
 @section Actions {
-    <button class="btn btn-primary btn-sm">+ Nuevo apiario</button>
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo apiario</a>
 }
 
 <div class="map-ph mb-6">
@@ -36,6 +36,11 @@
             <div class="ap-footer">
                 <span class="pill p-@item.EstadoSemaforo">@(item.EstadoSemaforo == "red" ? "Insp. vencida" : item.EstadoSemaforo == "amber" ? "Visitar pronto" : "Al día")</span>
                 <div class="ap-stat" style="margin-left:auto"><span>🏠</span>@item.TotalColmenas colmenas</div>
+                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                </form>
             </div>
         </div>
     }

@@ -5,6 +5,7 @@
 }
 
 @section Actions {
+    <a class="btn btn-sm" asp-action="ExportarCsv">⬇ CSV</a>
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Registrar cosecha</a>
 }
 
@@ -17,12 +18,25 @@
 
 <div class="card">
     <div class="card-hd"><div class="card-title">Producción por apiario</div></div>
-    @foreach (var item in Model)
+    @if (!Model.Any())
     {
-        <div class="prod-row">
-            <div class="prod-name">@item.ApiarioNombre</div>
-            <div class="prod-bar"><div class="prod-fill" style="width:@(item.PesoBruto * 100 / Model.Max(m => m.PesoBruto))%;background:var(--gold)"></div></div>
-            <div class="prod-val c-gold">@item.PesoNeto kg</div>
-        </div>
+        <div style="padding:24px;color:var(--txt-4);text-align:center">Sin cosechas registradas aún.</div>
+    }
+    else
+    {
+        var maxPeso = Model.Max(m => m.PesoBruto);
+        @foreach (var item in Model)
+        {
+            <div class="prod-row">
+                <div class="prod-name">@item.ApiarioNombre</div>
+                <div class="prod-bar"><div class="prod-fill" style="width:@(maxPeso > 0 ? item.PesoBruto * 100 / maxPeso : 0)%;background:var(--gold)"></div></div>
+                <div class="prod-val c-gold">@item.PesoNeto kg</div>
+                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta cosecha?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                </form>
+            </div>
+        }
     }
 </div>

@@ -1,42 +1,86 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
     public class FinanzasController : Controller
     {
-        private static readonly List<RegistroFinanciero> _registros = new()
+        private readonly AppDbContext _ctx;
+        private const int PageSize = 10;
+
+        public FinanzasController(AppDbContext ctx) => _ctx = ctx;
+
+        public IActionResult Index(int page = 1, string? q = null)
         {
-            new() { Id=1, TipoMovimiento="ingreso",   Categoria="Cosecha miel",  Descripcion="Venta primavera 2024",     Fecha=new DateTime(2024,11,15), Monto=1850, ApiarioNombre="Monte Olivo" },
-            new() { Id=2, TipoMovimiento="gasto",     Categoria="Insumos",       Descripcion="Ácido oxálico + frames",   Fecha=new DateTime(2024,11,20), Monto=320,  ApiarioNombre="General" },
-            new() { Id=3, TipoMovimiento="inversion",  Categoria="Equipamiento",  Descripcion="Extractor nuevo",          Fecha=new DateTime(2024,12,1),  Monto=2100, ApiarioNombre="General" },
-            new() { Id=4, TipoMovimiento="ingreso",   Categoria="Polen",         Descripcion="Venta mercado local",      Fecha=new DateTime(2024,12,10), Monto=480,  ApiarioNombre="General" },
-        };
+            var todos = _ctx.RegistrosFinancieros.ToList();
+            ViewBag.TotalIngresos = todos.Where(r => r.TipoMovimiento == "ingreso").Sum(r => r.Monto);
+            ViewBag.TotalGastos   = todos.Where(r => r.TipoMovimiento != "ingreso").Sum(r => r.Monto);
+            ViewBag.Balance       = (decimal)ViewBag.TotalIngresos - (decimal)ViewBag.TotalGastos;
 
-        public IActionResult Index()
-        {
-            var ingresos = _registros.Where(r => r.TipoMovimiento == "ingreso").Sum(r => r.Monto);
-            var gastos   = _registros.Where(r => r.TipoMovimiento != "ingreso").Sum(r => r.Monto);
+            var query = todos.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(q))
+                query = query.Where(r =>
+                    r.Descripcion.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    r.Categoria.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    r.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase));
 
-            ViewBag.TotalIngresos = ingresos;
-            ViewBag.TotalGastos   = gastos;
-            ViewBag.Balance       = ingresos - gastos;
+            var total = query.Count();
+            var items = query.OrderByDescending(r => r.Fecha).Skip((page - 1) * PageSize).Take(PageSize).ToList();
 
-            return View(_registros);
+            return View(new PagedResult<RegistroFinanciero>
+            {
+                Items = items, Page = page, PageSize = PageSize, TotalItems = total, Q = q
+            });
         }
 
         public IActionResult Crear() => View(new RegistroFinanciero { Fecha = DateTime.Today });
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(RegistroFinanciero registro)
         {
             if (!ModelState.IsValid) return View(registro);
-
-            registro.Id = _registros.Count + 1;
-            _registros.Add(registro);
+            _ctx.RegistrosFinancieros.Add(registro);
+            _ctx.SaveChanges();
             TempData["Exito"] = "Registro financiero guardado.";
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Editar(int id)
+        {
+            var r = _ctx.RegistrosFinancieros.Find(id);
+            if (r is null) return NotFound();
+            return View(r);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Editar(int id, RegistroFinanciero registro)
+        {
+            if (id != registro.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(registro);
+            _ctx.RegistrosFinancieros.Update(registro);
+            _ctx.SaveChanges();
+            TempData["Exito"] = "Registro actualizado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Eliminar(int id)
+        {
+            var r = _ctx.RegistrosFinancieros.Find(id);
+            if (r is not null) { _ctx.RegistrosFinancieros.Remove(r); _ctx.SaveChanges(); TempData["Exito"] = "Registro eliminado."; }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult ExportarCsv()
+        {
+            var registros = _ctx.RegistrosFinancieros.OrderByDescending(r => r.Fecha).ToList();
+            var sb = new StringBuilder();
+            sb.AppendLine("Tipo,Categoría,Descripción,Fecha,Monto,Apiario");
+            foreach (var r in registros)
+                sb.AppendLine($"{r.TipoMovimiento},{r.Categoria},\"{r.Descripcion}\",{r.Fecha:dd/MM/yyyy},{r.Monto},{r.ApiarioNombre}");
+            return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"finanzas_{DateTime.Now:yyyyMMdd}.csv");
         }
     }
 }

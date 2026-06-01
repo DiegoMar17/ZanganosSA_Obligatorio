@@ -1,17 +1,29 @@
-@model IEnumerable<ColmenaEmpresa.Models.RegistroFinanciero>
+@model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.RegistroFinanciero>
 @{
     ViewData["Title"] = "Finanzas";
-    ViewData["Subtitle"] = "Balance de operación 2024–25";
+    ViewData["Subtitle"] = "Balance de operación";
 }
 
 @section Actions {
+    <a class="btn btn-sm" asp-action="ExportarCsv">⬇ CSV</a>
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Registro</a>
 }
 
-<div class="fin-stats">
+<div class="fin-stats mb-6">
     <div class="stat-card"><div class="stat-lbl">Total ingresos</div><div class="stat-val c-green">$@ViewBag.TotalIngresos</div></div>
     <div class="stat-card"><div class="stat-lbl">Gastos e inversiones</div><div class="stat-val c-amber">$@ViewBag.TotalGastos</div></div>
-    <div class="stat-card"><div class="stat-lbl">Balance general</div><div class="stat-val c-green">$@ViewBag.Balance</div><div class="stat-meta" style="color:var(--green)">✓ Rentable</div></div>
+    <div class="stat-card"><div class="stat-lbl">Balance general</div><div class="stat-val @(ViewBag.Balance >= 0 ? "c-green" : "c-red")">$@ViewBag.Balance</div></div>
+</div>
+
+<div class="flex-between mb-4">
+    <form method="get" asp-action="Index" style="display:flex;gap:8px;align-items:center">
+        <input type="text" name="q" value="@Model.Q" class="fc" placeholder="Buscar descripción, categoría…" style="max-width:280px">
+        <button type="submit" class="btn btn-sm">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <a class="btn btn-sm" asp-action="Index">✕ Limpiar</a>
+        }
+    </form>
 </div>
 
 <div class="tbl-wrap">
@@ -23,16 +35,21 @@
                 <th>Descripción</th>
                 <th>Fecha</th>
                 <th class="td-r">Monto</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="6" style="text-align:center;color:var(--txt-4);padding:28px">Sin resultados.</td></tr>
+            }
+            @foreach (var item in Model.Items)
             {
                 <tr>
                     <td>
-                        @if (item.TipoMovimiento == "ingreso") { <span class="pill p-green">↑ Ingreso</span> }
-                        else if (item.TipoMovimiento == "gasto") { <span class="pill p-red">↓ Gasto</span> }
-                        else { <span class="pill p-amber">◆ Inversión</span> }
+                        @if (item.TipoMovimiento == "ingreso")      { <span class="pill p-green">↑ Ingreso</span> }
+                        else if (item.TipoMovimiento == "gasto")    { <span class="pill p-red">↓ Gasto</span> }
+                        else                                        { <span class="pill p-amber">◆ Inversión</span> }
                     </td>
                     <td class="td-1">@item.Categoria</td>
                     <td>@item.Descripcion</td>
@@ -40,8 +57,16 @@
                     <td class="td-r" style="color:var(--@(item.TipoMovimiento == "ingreso" ? "green" : item.TipoMovimiento == "gasto" ? "red" : "amber"));font-weight:700;font-size:15px">
                         $@item.Monto
                     </td>
+                    <td style="display:flex;gap:6px">
+                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+    @await Html.PartialAsync("_Pagination", Model)
 </div>

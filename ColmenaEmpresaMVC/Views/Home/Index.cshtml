@@ -74,8 +74,15 @@
         <div class="sem-leg"><div class="sem-dot" style="background:var(--red)"></div>Rojo — vencida (@Model.ColmenasRojo)</div>
     </div>
     <div class="sem-track">
-        <div style="width:@(Model.ColmenasVerde * 100 / Model.TotalColmenas)%;background:var(--green)"></div>
-        <div style="width:@(Model.ColmenasAmarillo * 100 / Model.TotalColmenas)%;background:var(--amber)"></div>
-        <div style="width:@(Model.ColmenasRojo * 100 / Model.TotalColmenas)%;background:var(--red)"></div>
+        @if (Model.TotalColmenas > 0)
+        {
+            <div style="width:@(Model.ColmenasVerde * 100 / Model.TotalColmenas)%;background:var(--green)"></div>
+            <div style="width:@(Model.ColmenasAmarillo * 100 / Model.TotalColmenas)%;background:var(--amber)"></div>
+            <div style="width:@(Model.ColmenasRojo * 100 / Model.TotalColmenas)%;background:var(--red)"></div>
+        }
+        else
+        {
+            <div style="width:100%;background:var(--surface-2)"></div>
+        }
     </div>
 </div>

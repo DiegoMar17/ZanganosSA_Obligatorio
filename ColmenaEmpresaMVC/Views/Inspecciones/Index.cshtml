@@ -1,17 +1,28 @@
-@model IEnumerable<ColmenaEmpresa.Models.Inspeccion>
+@model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.Inspeccion>
 @{
     ViewData["Title"] = "Inspecciones";
     ViewData["Subtitle"] = ViewBag.Pendientes + " pendientes esta semana";
 }
 
 @section Actions {
-    <button class="btn btn-primary btn-sm">+ Nueva inspección</button>
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nueva inspección</a>
 }
 
 <div class="g3 mb-6">
-    <div class="stat-card"><div class="stat-lbl">Pendientes</div><div class="stat-val c-red">@ViewBag.Pendientes</div><div class="stat-meta">Vencidas esta semana</div></div>
+    <div class="stat-card"><div class="stat-lbl">Pendientes</div><div class="stat-val c-red">@ViewBag.Pendientes</div></div>
     <div class="stat-card"><div class="stat-lbl">Este mes</div><div class="stat-val c-gold">@ViewBag.EsteMes</div></div>
-    <div class="stat-card"><div class="stat-lbl">Completadas</div><div class="stat-val c-green">@ViewBag.Completadas</div><div class="stat-meta">Temporada actual</div></div>
+    <div class="stat-card"><div class="stat-lbl">Completadas</div><div class="stat-val c-green">@ViewBag.Completadas</div></div>
+</div>
+
+<div class="flex-between mb-4">
+    <form method="get" asp-action="Index" style="display:flex;gap:8px;align-items:center">
+        <input type="text" name="q" value="@Model.Q" class="fc" placeholder="Buscar por apiario, estado…" style="max-width:280px">
+        <button type="submit" class="btn btn-sm">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <a class="btn btn-sm" asp-action="Index">✕ Limpiar</a>
+        }
+    </form>
 </div>
 
 <div class="tbl-wrap">
@@ -24,10 +35,15 @@
                 <th>Clima</th>
                 <th>Temp.</th>
                 <th>Estado</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="7" style="text-align:center;color:var(--txt-4);padding:28px">Sin resultados.</td></tr>
+            }
+            @foreach (var item in Model.Items)
             {
                 <tr>
                     <td class="td-1">@item.ApiarioNombre</td>
@@ -36,8 +52,16 @@
                     <td>@item.Clima</td>
                     <td>@item.Temperatura°C</td>
                     <td><span class="pill p-@(item.Estado == "completa" ? "green" : "amber")">@item.Estado</span></td>
+                    <td style="display:flex;gap:6px">
+                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta inspección?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+    @await Html.PartialAsync("_Pagination", Model)
 </div>

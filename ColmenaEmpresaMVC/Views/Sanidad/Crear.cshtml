@@ -9,28 +9,30 @@
     <div class="form-desc">Documentá el control y tratamiento aplicado en una o varias colmenas.</div>
 
     <form asp-action="Crear" method="post">
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
         <div class="fg">
             <div class="fgrp">
-                <label class="flbl">Apiario</label>
+                <label class="flbl">Apiario <span class="req">*</span></label>
                 <select asp-for="ApiarioId" class="fc">
                     <option value="1">La Rinconada</option>
                     <option value="2">Monte Olivo</option>
                 </select>
+                <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
-                <label class="flbl">Colmenas <span class="req">*</span></label>
-                <div class="tag-wrap">
-                    <span class="tag">C-47 <span class="tag-x">✕</span></span>
-                    <input asp-for="ColmenasAfectadas" class="tag-inp" placeholder="+ Agregar…">
-                </div>
+                <label class="flbl">Colmenas afectadas</label>
+                <input asp-for="ColmenasAfectadas" class="fc" placeholder="Ej: C-01, C-02, C-03">
+                <span asp-validation-for="ColmenasAfectadas" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
-                <label class="flbl">Tipo de control</label>
+                <label class="flbl">Tipo de control <span class="req">*</span></label>
                 <select asp-for="TipoControl" class="fc">
                     <option>Varroa — recuento</option>
                     <option>Nosema</option>
                     <option>Loque americana</option>
                 </select>
+                <span asp-validation-for="TipoControl" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Resultado</label>
@@ -60,3 +62,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

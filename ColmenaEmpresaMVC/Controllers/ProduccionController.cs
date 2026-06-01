@@ -1,26 +1,29 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
     public class ProduccionController : Controller
     {
-        private static readonly List<Cosecha> _cosechas = new()
-        {
-            new() { Id=1, ApiarioNombre="Monte Olivo",   Fecha=new DateTime(2024,11,10), TipoMiel="Multifloral", AlzasCosechadas=12, PesoBruto=855, Merma=15, Destino="Exportación" },
-            new() { Id=2, ApiarioNombre="Paso Carrasco", Fecha=new DateTime(2024,11,20), TipoMiel="Eucalipto",   AlzasCosechadas=9,  PesoBruto=640, Merma=10, Destino="Fraccionado local" },
-            new() { Id=3, ApiarioNombre="El Eucaliptal", Fecha=new DateTime(2024,12,5),  TipoMiel="Eucalipto",   AlzasCosechadas=8,  PesoBruto=515, Merma=10, Destino="Stock" },
-            new() { Id=4, ApiarioNombre="La Rinconada",  Fecha=new DateTime(2024,12,18), TipoMiel="Monte nativo",AlzasCosechadas=7,  PesoBruto=415, Merma=10, Destino="Exportación" },
-        };
+        private readonly AppDbContext _ctx;
+
+        public ProduccionController(AppDbContext ctx) => _ctx = ctx;
 
         public IActionResult Index()
         {
-            ViewBag.TotalKg        = 2380;
-            ViewBag.MejorApiario   = "Monte Olivo";
-            ViewBag.MejorKg        = 840;
-            ViewBag.PromColmena    = 16;
-            ViewBag.VariacionPct   = "+12%";
-            return View(_cosechas);
+            var cosechas = _ctx.Cosechas.ToList();
+            var totalKg  = cosechas.Sum(c => c.PesoNeto);
+            var mejor    = cosechas.GroupBy(c => c.ApiarioNombre)
+                                   .OrderByDescending(g => g.Sum(c => c.PesoNeto))
+                                   .FirstOrDefault();
+
+            ViewBag.TotalKg      = Math.Round(totalKg, 1);
+            ViewBag.MejorApiario = mejor?.Key ?? "—";
+            ViewBag.MejorKg      = mejor is not null ? Math.Round(mejor.Sum(c => c.PesoNeto), 1) : 0;
+            ViewBag.VariacionPct = "—";
+            return View(cosechas);
         }
 
         public IActionResult Crear() => View(new Cosecha { Fecha = DateTime.Today });
@@ -30,11 +33,48 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Crear(Cosecha cosecha)
         {
             if (!ModelState.IsValid) return View(cosecha);
-
-            cosecha.Id = _cosechas.Count + 1;
-            _cosechas.Add(cosecha);
+            _ctx.Cosechas.Add(cosecha);
+            _ctx.SaveChanges();
             TempData["Exito"] = "Cosecha registrada exitosamente.";
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Editar(int id)
+        {
+            var cosecha = _ctx.Cosechas.Find(id);
+            if (cosecha is null) return NotFound();
+            return View(cosecha);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Editar(int id, Cosecha cosecha)
+        {
+            if (id != cosecha.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(cosecha);
+            _ctx.Cosechas.Update(cosecha);
+            _ctx.SaveChanges();
+            TempData["Exito"] = "Cosecha actualizada.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Eliminar(int id)
+        {
+            var cosecha = _ctx.Cosechas.Find(id);
+            if (cosecha is not null) { _ctx.Cosechas.Remove(cosecha); _ctx.SaveChanges(); TempData["Exito"] = "Cosecha eliminada."; }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult ExportarCsv()
+        {
+            var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Apiario,Fecha,Tipo Miel,Alzas,Peso Bruto (kg),Merma (kg),Peso Neto (kg),Humedad (%),HMF,Destino");
+            foreach (var c in cosechas)
+                sb.AppendLine($"{c.ApiarioNombre},{c.Fecha:dd/MM/yyyy},{c.TipoMiel},{c.AlzasCosechadas},{c.PesoBruto},{c.Merma},{c.PesoNeto},{c.Humedad},{c.HMF},{c.Destino}");
+            return File(System.Text.Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"produccion_{DateTime.Now:yyyyMMdd}.csv");
         }
     }
 }

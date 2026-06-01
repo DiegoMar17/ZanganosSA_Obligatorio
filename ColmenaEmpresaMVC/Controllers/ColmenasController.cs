@@ -1,48 +1,80 @@
 using Microsoft.AspNetCore.Mvc;
+using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
-    /// <summary>
-    /// CRUD para colmenas.
-    /// </summary>
     public class ColmenasController : Controller
     {
-        private static readonly List<Colmena> _colmenas = new()
-        {
-            new() { Id=1, Codigo="C-01",  ApiarioNombre="Monte Olivo",   EstadoReina="vista",    EstadoSemaforo="verde",    CantidadAlzas=2, UltimaVisita=DateTime.Now.AddDays(-4) },
-            new() { Id=2, Codigo="C-47",  ApiarioNombre="La Rinconada",  EstadoReina="no_vista", EstadoSemaforo="amarillo", CantidadAlzas=1, UltimaVisita=DateTime.Now.AddDays(-18) },
-            new() { Id=3, Codigo="C-82",  ApiarioNombre="La Rinconada",  EstadoReina="ausente",  EstadoSemaforo="rojo",     CantidadAlzas=0, UltimaVisita=DateTime.Now.AddDays(-25) },
-            new() { Id=4, Codigo="C-110", ApiarioNombre="Paso Carrasco", EstadoReina="vista",    EstadoSemaforo="viaje",    CantidadAlzas=1, UltimaVisita=null },
-        };
+        private readonly AppDbContext _ctx;
+        private const int PageSize = 10;
 
-        // GET: /Colmenas
-        public IActionResult Index()
+        public ColmenasController(AppDbContext ctx) => _ctx = ctx;
+
+        public IActionResult Index(int page = 1, string? q = null)
         {
-            var resumen = new
+            var todas = _ctx.Colmenas.ToList();
+
+            ViewBag.Resumen = new
             {
-                Total         = _colmenas.Count,
-                EnProduccion  = 131,
-                EnTratamiento = 12,
-                SinReina      = _colmenas.Count(c => c.EstadoReina == "ausente")
+                Total         = todas.Count,
+                EnProduccion  = todas.Count(c => c.CantidadAlzas > 0),
+                EnTratamiento = _ctx.ControlesSanitarios.Count(cs => cs.Estado == "en_tratamiento"),
+                SinReina      = todas.Count(c => c.EstadoReina == "ausente")
             };
-            ViewBag.Resumen = resumen;
-            return View(_colmenas);
+
+            var query = todas.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(q))
+                query = query.Where(c =>
+                    c.Codigo.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    c.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    c.EstadoReina.Contains(q, StringComparison.OrdinalIgnoreCase));
+
+            var total = query.Count();
+            var items = query.Skip((page - 1) * PageSize).Take(PageSize).ToList();
+
+            return View(new PagedResult<Colmena>
+            {
+                Items = items, Page = page, PageSize = PageSize, TotalItems = total, Q = q
+            });
         }
 
-        // GET: /Colmenas/Crear
-        public IActionResult Crear() => View(new Colmena());
+        public IActionResult Crear() => View(new Colmena { FechaInstalacion = DateTime.Today });
 
-        // POST: /Colmenas/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Colmena colmena)
         {
             if (!ModelState.IsValid) return View(colmena);
+            _ctx.Colmenas.Add(colmena);
+            _ctx.SaveChanges();
+            TempData["Exito"] = $"Colmena '{colmena.Codigo}' registrada.";
+            return RedirectToAction(nameof(Index));
+        }
 
-            colmena.Id = _colmenas.Count + 1;
-            _colmenas.Add(colmena);
-            TempData["Exito"] = $"Colmena '{colmena.Codigo}' registrada exitosamente.";
+        public IActionResult Editar(int id)
+        {
+            var c = _ctx.Colmenas.Find(id);
+            if (c is null) return NotFound();
+            return View(c);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Editar(int id, Colmena colmena)
+        {
+            if (id != colmena.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(colmena);
+            _ctx.Colmenas.Update(colmena);
+            _ctx.SaveChanges();
+            TempData["Exito"] = $"Colmena '{colmena.Codigo}' actualizada.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Eliminar(int id)
+        {
+            var c = _ctx.Colmenas.Find(id);
+            if (c is not null) { _ctx.Colmenas.Remove(c); _ctx.SaveChanges(); TempData["Exito"] = "Colmena eliminada."; }
             return RedirectToAction(nameof(Index));
         }
     }

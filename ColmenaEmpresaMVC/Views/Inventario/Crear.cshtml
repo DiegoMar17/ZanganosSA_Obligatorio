@@ -1,0 +1,56 @@
+@model ColmenaEmpresa.Models.ItemInventario
+@{
+    ViewData["Title"] = "Nuevo Ítem";
+    ViewData["Subtitle"] = "Agregar al inventario";
+}
+
+<div class="form-wrap">
+    <div class="form-title">📦 Nuevo ítem de inventario</div>
+    <div class="form-desc">Registrá un insumo o equipamiento con sus cantidades mínimas y máximas.</div>
+
+    <form asp-action="Crear" method="post">
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
+        <div class="fg">
+            <div class="fgrp fg-full">
+                <label class="flbl">Nombre del ítem <span class="req">*</span></label>
+                <input asp-for="Nombre" class="fc" placeholder="Ej: Alzas de madera, Ácido oxálico…">
+                <span asp-validation-for="Nombre" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Unidad <span class="req">*</span></label>
+                <select asp-for="Unidad" class="fc">
+                    <option value="u">Unidades (u)</option>
+                    <option value="kg">Kilogramos (kg)</option>
+                    <option value="L">Litros (L)</option>
+                    <option value="g">Gramos (g)</option>
+                </select>
+                <span asp-validation-for="Unidad" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Cantidad actual</label>
+                <input asp-for="CantidadActual" class="fc" type="number" step="0.1" min="0">
+                <span asp-validation-for="CantidadActual" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Cantidad mínima</label>
+                <input asp-for="CantidadMinima" class="fc" type="number" step="0.1" min="0">
+                <span asp-validation-for="CantidadMinima" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Cantidad máxima</label>
+                <input asp-for="CantidadMaxima" class="fc" type="number" step="0.1" min="0">
+                <span asp-validation-for="CantidadMaxima" class="fhint" style="color:var(--red)"></span>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar ítem</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

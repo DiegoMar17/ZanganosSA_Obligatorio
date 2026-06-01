@@ -1,18 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
+using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
     public class TranshumanciaController : Controller
     {
-        private static readonly List<Transhumancia> _traslados = new()
-        {
-            new() { Id=1, Nombre="Verano 2024",    ApiarioOrigen="Paso Carrasco", ApiarioDestino="El Trébol (temp.)", CantidadColmenas=21, DistanciaKm=184, FechaSalida=new DateTime(2024,1,1),  FechaRetorno=new DateTime(2024,6,30), Estado="en_curso",  PorcentajeAvance=45 },
-            new() { Id=2, Nombre="Primavera 2023", ApiarioOrigen="Paso Carrasco", ApiarioDestino="La Rinconada",      CantidadColmenas=18, DistanciaKm=140, FechaSalida=new DateTime(2023,9,1),  FechaRetorno=new DateTime(2023,12,1), Estado="completado", PorcentajeAvance=100 },
-            new() { Id=3, Nombre="Verano 2023",    ApiarioOrigen="Monte Olivo",   ApiarioDestino="El Eucaliptal",     CantidadColmenas=12, DistanciaKm=95,  FechaSalida=new DateTime(2023,12,15), FechaRetorno=new DateTime(2024,3,15), Estado="completado", PorcentajeAvance=100 },
-        };
+        private readonly AppDbContext _ctx;
 
-        public IActionResult Index() => View(_traslados);
+        public TranshumanciaController(AppDbContext ctx) => _ctx = ctx;
+
+        public IActionResult Index() => View(_ctx.Transhumancias.ToList());
 
         public IActionResult Crear() => View(new Transhumancia { FechaSalida = DateTime.Today });
 
@@ -21,11 +19,43 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Crear(Transhumancia traslado)
         {
             if (!ModelState.IsValid) return View(traslado);
-
-            traslado.Id = _traslados.Count + 1;
             traslado.Estado = "planificado";
-            _traslados.Add(traslado);
+            _ctx.Transhumancias.Add(traslado);
+            _ctx.SaveChanges();
             TempData["Exito"] = "Traslado registrado exitosamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Editar(int id)
+        {
+            var traslado = _ctx.Transhumancias.Find(id);
+            if (traslado is null) return NotFound();
+            return View(traslado);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Editar(int id, Transhumancia traslado)
+        {
+            if (id != traslado.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(traslado);
+            _ctx.Transhumancias.Update(traslado);
+            _ctx.SaveChanges();
+            TempData["Exito"] = "Traslado actualizado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Eliminar(int id)
+        {
+            var traslado = _ctx.Transhumancias.Find(id);
+            if (traslado is not null)
+            {
+                _ctx.Transhumancias.Remove(traslado);
+                _ctx.SaveChanges();
+                TempData["Exito"] = "Traslado eliminado.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }

@@ -9,6 +9,8 @@
     <div class="form-desc">Registrá ingresos, gastos e inversiones de tu operación.</div>
 
     <form asp-action="Crear" method="post">
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
         <div class="fs">Tipo de movimiento</div>
         <div class="radio-row mb-6">
             <label class="radio-card @(Model.TipoMovimiento == "ingreso" ? "sel" : "")" style="border-color:var(--green-bdr);background:var(--green-bg);color:var(--green)">
@@ -21,24 +23,28 @@
                 <input type="radio" asp-for="TipoMovimiento" value="inversion"> ◆ Inversión
             </label>
         </div>
+        <span asp-validation-for="TipoMovimiento" class="fhint" style="color:var(--red)"></span>
 
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Categoría <span class="req">*</span></label>
-                <select asp-for="Categoria" class="fc" required>
+                <select asp-for="Categoria" class="fc">
                     <option>Venta de miel</option>
                     <option>Venta de polen</option>
                     <option>Insumos apícolas</option>
                     <option>Equipamiento</option>
                 </select>
+                <span asp-validation-for="Categoria" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Monto <span class="req">*</span></label>
-                <input asp-for="Monto" class="fc" type="number" step="0.01" style="color:var(--green);font-weight:700;font-size:16px" required>
+                <input asp-for="Monto" class="fc" type="number" step="0.01" style="color:var(--green);font-weight:700;font-size:16px">
+                <span asp-validation-for="Monto" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Fecha <span class="req">*</span></label>
-                <input asp-for="Fecha" class="fc" type="date" required>
+                <input asp-for="Fecha" class="fc" type="date">
+                <span asp-validation-for="Fecha" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Apiario</label>
@@ -49,8 +55,9 @@
                 </select>
             </div>
             <div class="fgrp fg-full">
-                <label class="flbl">Descripción</label>
+                <label class="flbl">Descripción <span class="req">*</span></label>
                 <textarea asp-for="Descripcion" class="fc" placeholder="Detalles del movimiento…"></textarea>
+                <span asp-validation-for="Descripcion" class="fhint" style="color:var(--red)"></span>
             </div>
         </div>
 
@@ -60,3 +67,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

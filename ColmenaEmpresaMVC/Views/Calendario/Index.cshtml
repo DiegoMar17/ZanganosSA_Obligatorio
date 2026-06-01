@@ -1,53 +1,128 @@
+@model ColmenaEmpresa.Models.CalendarioViewModel
 @{
     ViewData["Title"] = "Calendario";
-    ViewData["Subtitle"] = "Agenda visual de actividades";
+    ViewData["Subtitle"] = Model.MesNombre;
+    var hoy = DateTime.Now;
 }
 
 @section Actions {
-    <button class="btn btn-primary btn-sm" onclick="toast('Nueva actividad agendada ✓')">+ Agendar</button>
+    <a class="btn btn-sm" asp-action="Index" asp-route-year="@Model.PrevYear" asp-route-month="@Model.PrevMonth">‹ Anterior</a>
+    <a class="btn btn-sm" asp-action="Index">Hoy</a>
+    <a class="btn btn-sm" asp-action="Index" asp-route-year="@Model.NextYear" asp-route-month="@Model.NextMonth">Siguiente ›</a>
 }
 
 <div class="cal-layout">
     <div class="cal-main">
         <div class="cal-header">
-            <div class="cal-month">Abril 2024</div>
-            <div class="cal-nav">
-                <button class="cal-nav-btn">‹</button>
-                <button class="cal-nav-btn">•</button>
-                <button class="cal-nav-btn">›</button>
+            <div class="cal-month" style="text-transform:capitalize">@Model.MesNombre</div>
+            <div style="display:flex;gap:6px;font-size:12px;color:var(--txt-4)">
+                <span class="pill p-blue" style="font-size:10px">🔍 Inspección</span>
+                <span class="pill p-gold" style="font-size:10px">🍯 Cosecha</span>
+                <span class="pill p-red" style="font-size:10px">🩺 Sanidad</span>
+                <span class="pill p-amber" style="font-size:10px">🚚 Traslado</span>
             </div>
         </div>
+
         <div class="cal-grid-head">
-            <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mié</div>
-            <div class="cal-day-name">Jue</div><div class="cal-day-name">Vie</div>
-            <div class="cal-day-name">Sáb</div><div class="cal-day-name">Dom</div>
+            <div class="cal-day-name">Lun</div>
+            <div class="cal-day-name">Mar</div>
+            <div class="cal-day-name">Mié</div>
+            <div class="cal-day-name">Jue</div>
+            <div class="cal-day-name">Vie</div>
+            <div class="cal-day-name">Sáb</div>
+            <div class="cal-day-name">Dom</div>
         </div>
-        <div class="cal-grid" id="cal-grid">
-            @* El grid se genera vía JS en site.js como en el original *@
+
+        <div class="cal-grid">
+            @* Celdas vacías del offset *@
+            @for (int i = 0; i < Model.OffsetPrimerDia; i++)
+            {
+                <div class="cal-cell other-month"></div>
+            }
+
+            @* Días del mes *@
+            @for (int d = 1; d <= Model.DiasEnMes; d++)
+            {
+                var esHoy = d == hoy.Day && Model.Month == hoy.Month && Model.Year == hoy.Year;
+                var evs = Model.EventosDel(d).ToList();
+                <div class="cal-cell @(esHoy ? "today" : "")" onclick="mostrarDia(@d, @Model.Month, @Model.Year)">
+                    <div class="cal-date">@d</div>
+                    @foreach (var ev in evs.Take(3))
+                    {
+                        var cls = ev.Tipo switch {
+                            "visit"   => "ce-visit",
+                            "cosecha" => "ce-cosecha",
+                            "salud"   => "ce-salud",
+                            _         => "ce-tarea"
+                        };
+                        <div class="cal-event @cls">@ev.Titulo</div>
+                    }
+                    @if (evs.Count > 3)
+                    {
+                        <div style="font-size:10px;color:var(--txt-4);padding:1px 4px">+@(evs.Count - 3) más</div>
+                    }
+                </div>
+            }
         </div>
     </div>
+
     <div class="cal-sidebar-panel">
         <div class="cal-sp-hd">
             <div class="cal-sp-title">Actividades del día</div>
-            <div class="cal-sp-date" id="cal-sel-date">Hoy — 22 de abril</div>
+            <div class="cal-sp-date" id="cal-sel-date">Seleccioná un día</div>
         </div>
         <div class="cal-ev-list" id="cal-ev-list">
-            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--blue)"></div><div class="cal-ev-info"><div class="cal-ev-title">Visita — El Eucaliptal</div><div class="cal-ev-meta">10:00 · Inspección completa</div></div></div>
-            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--amber)"></div><div class="cal-ev-info"><div class="cal-ev-title">Tratamiento Varroa</div><div class="cal-ev-meta">Colmenas C-47, C-82</div></div></div>
-            <div class="cal-ev-item"><div class="cal-ev-dot" style="background:var(--gold)"></div><div class="cal-ev-info"><div class="cal-ev-title">Preparar centrífuga</div><div class="cal-ev-meta">Tarea — Galpón principal</div></div></div>
+            @if (!Model.Eventos.Any())
+            {
+                <div style="padding:20px;text-align:center;color:var(--txt-4);font-size:13px">
+                    Sin eventos este mes.<br>Registrá inspecciones o cosechas.
+                </div>
+            }
+            else
+            {
+                <div style="padding:14px 18px;color:var(--txt-4);font-size:12.5px">
+                    @Model.Eventos.Count evento(s) este mes. Hacé click en un día para ver el detalle.
+                </div>
+            }
         </div>
         <div class="cal-legend">
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--blue)"></div>Visita</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--blue)"></div>Inspección</div>
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--gold)"></div>Cosecha</div>
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--amber)"></div>Tarea</div>
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--red)"></div>Sanidad</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--amber)"></div>Traslado</div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        // Inicializar el calendario al cargar la vista
-        if (typeof buildCal === 'function') buildCal();
-    </script>
+<script>
+    // Datos de eventos desde el servidor
+    const eventos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.Eventos.GroupBy(e => e.Dia).ToDictionary(
+            g => g.Key,
+            g => g.Select(e => new { tipo = e.Tipo, titulo = e.Titulo, meta = e.Meta }).ToList()
+        )
+    ));
+
+    const colores = { visit: 'var(--blue)', cosecha: 'var(--gold)', salud: 'var(--red)', tarea: 'var(--amber)' };
+
+    function mostrarDia(dia, mes, anio) {
+        const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        document.getElementById('cal-sel-date').textContent = `${dia} de ${meses[mes]} ${anio}`;
+        const lista = document.getElementById('cal-ev-list');
+        const evs = eventos[dia] || [];
+        if (!evs.length) {
+            lista.innerHTML = '<div style="padding:20px;text-align:center;color:var(--txt-4);font-size:13px">Sin actividades para este día.</div>';
+            return;
+        }
+        lista.innerHTML = evs.map(e => `
+            <div class="cal-ev-item">
+                <div class="cal-ev-dot" style="background:${colores[e.tipo] || 'var(--txt-4)'}"></div>
+                <div class="cal-ev-info">
+                    <div class="cal-ev-title">${e.titulo}</div>
+                    <div class="cal-ev-meta">${e.meta}</div>
+                </div>
+            </div>`).join('');
+    }
+</script>
 }

@@ -1,24 +1,67 @@
 using Microsoft.AspNetCore.Mvc;
+using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
     public class InventarioController : Controller
     {
-        private static readonly List<ItemInventario> _items = new()
-        {
-            new() { Id=1, Nombre="Alzas de madera",   Unidad="u",  CantidadActual=80,  CantidadMaxima=100, CantidadMinima=20 },
-            new() { Id=2, Nombre="Ácido oxálico",     Unidad="kg", CantidadActual=2,   CantidadMaxima=8,   CantidadMinima=2 },
-            new() { Id=3, Nombre="Marcos de cera",    Unidad="u",  CantidadActual=120, CantidadMaxima=200, CantidadMinima=40 },
-            new() { Id=4, Nombre="Jarabe azucarado",  Unidad="L",  CantidadActual=5,   CantidadMaxima=50,  CantidadMinima=20 },
-            new() { Id=5, Nombre="Trajes apícolas",   Unidad="u",  CantidadActual=4,   CantidadMaxima=4,   CantidadMinima=2 },
-        };
+        private readonly AppDbContext _ctx;
+
+        public InventarioController(AppDbContext ctx) => _ctx = ctx;
 
         public IActionResult Index()
         {
-            ViewBag.BajoMinimo    = _items.Count(i => i.CantidadActual <= i.CantidadMinima);
-            ViewBag.ItemsTotales  = _items.Count;
-            return View(_items);
+            var items = _ctx.ItemsInventario.ToList();
+            ViewBag.BajoMinimo   = items.Count(i => i.CantidadActual <= i.CantidadMinima);
+            ViewBag.ItemsTotales = items.Count;
+            return View(items);
+        }
+
+        public IActionResult Crear() => View(new ItemInventario());
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Crear(ItemInventario item)
+        {
+            if (!ModelState.IsValid) return View(item);
+            _ctx.ItemsInventario.Add(item);
+            _ctx.SaveChanges();
+            TempData["Exito"] = $"Ítem '{item.Nombre}' agregado al inventario.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Editar(int id)
+        {
+            var item = _ctx.ItemsInventario.Find(id);
+            if (item is null) return NotFound();
+            return View(item);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Editar(int id, ItemInventario item)
+        {
+            if (id != item.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(item);
+            _ctx.ItemsInventario.Update(item);
+            _ctx.SaveChanges();
+            TempData["Exito"] = $"Ítem '{item.Nombre}' actualizado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Eliminar(int id)
+        {
+            var item = _ctx.ItemsInventario.Find(id);
+            if (item is not null)
+            {
+                _ctx.ItemsInventario.Remove(item);
+                _ctx.SaveChanges();
+                TempData["Exito"] = "Ítem eliminado del inventario.";
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

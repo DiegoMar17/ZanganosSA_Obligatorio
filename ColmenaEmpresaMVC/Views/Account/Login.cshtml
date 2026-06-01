@@ -1,0 +1,148 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingresar — ColmenaEmpresa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #F2BE30; --gold-glow: rgba(242,190,48,.2); --gold-dim: rgba(242,190,48,.10);
+            --bg: #0C0A07; --bg-1: #131008; --bg-2: #1A1509;
+            --txt-1: #F5EDD5; --txt-2: #C8AD78; --txt-3: #8A7650; --txt-4: #5A4D35;
+            --bdr: rgba(242,190,48,.14); --bdr-2: rgba(242,190,48,.32);
+            --red: #F26B6B; --red-bg: rgba(242,107,107,.12);
+            --sans: 'DM Sans', system-ui, sans-serif;
+            --serif: 'DM Serif Display', Georgia, serif;
+        }
+        html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--txt-1); overflow: hidden; }
+
+        canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        .page {
+            position: relative; z-index: 1;
+            height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            background: rgba(19,16,8,.88);
+            border: 1px solid var(--bdr-2);
+            border-radius: 24px;
+            padding: 40px 44px;
+            width: 100%; max-width: 420px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 32px 80px rgba(0,0,0,.6);
+            animation: fadeUp .5s ease both;
+        }
+
+        .card-logo {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            margin-bottom: 32px; text-align: center;
+        }
+        .logo-mark {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: var(--gold-dim); border: 1px solid var(--bdr-2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 0 40px var(--gold-glow);
+        }
+        .logo-name  { font-family: var(--serif); font-size: 22px; color: var(--gold); }
+        .logo-sub   { font-size: 13px; color: var(--txt-4); }
+
+        .error-box {
+            background: var(--red-bg);
+            border: 1px solid rgba(242,107,107,.3);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px; color: var(--red);
+            margin-bottom: 20px;
+        }
+
+        .fgrp { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+        .flbl { font-size: 12.5px; font-weight: 600; color: var(--txt-2); }
+        .fc {
+            background: var(--bg); border: 1.5px solid var(--bdr);
+            border-radius: 10px; color: var(--txt-1);
+            font-family: var(--sans); font-size: 14px;
+            padding: 12px 14px; outline: none; width: 100%;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .fc::placeholder { color: var(--txt-4); }
+        .fc:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+
+        .hint { font-size: 11.5px; color: var(--txt-4); margin-top: 20px; text-align: center; }
+        .hint strong { color: var(--gold); font-family: monospace; }
+
+        .btn {
+            width: 100%; padding: 13px;
+            background: var(--gold); color: #0C0A07;
+            font-family: var(--sans); font-size: 15px; font-weight: 700;
+            border: none; border-radius: 10px; cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 4px 20px var(--gold-glow);
+            margin-top: 8px;
+        }
+        .btn:hover { filter: brightness(1.08); transform: translateY(-2px); }
+
+        .back { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: var(--txt-4); text-decoration: none; }
+        .back:hover { color: var(--txt-2); }
+
+        @@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+</head>
+<body>
+    <canvas id="cv"></canvas>
+    <div class="page">
+        <div class="card">
+            <div class="card-logo">
+                <div class="logo-mark">🍯</div>
+                <div class="logo-name">ColmenaEmpresa</div>
+                <div class="logo-sub">Ingresá con tu cuenta</div>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="error-box">⚠ @ViewBag.Error</div>
+            }
+
+            <form method="post" asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl">
+                @Html.AntiForgeryToken()
+                <div class="fgrp">
+                    <label class="flbl">Email</label>
+                    <input type="email" name="email" class="fc" placeholder="admin@colmena.com" required autofocus>
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Contraseña</label>
+                    <input type="password" name="password" class="fc" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn">Ingresar →</button>
+            </form>
+
+            <div class="hint">
+                Usuario por defecto: <strong>admin@colmena.com</strong> / <strong>colmena123</strong>
+            </div>
+
+            <a href="@Url.Action("Landing", "Home")" class="back">← Volver al inicio</a>
+        </div>
+    </div>
+    <script>
+        (function(){
+            const cv=document.getElementById('cv'), cx=cv.getContext('2d');
+            const R=26,GAP=3; let mx=-9999,my=-9999,h=[];
+            function build(){h=[];const W=(2*R+GAP)*.75,H=(Math.sqrt(3)*R+GAP);for(let c=-1;c<Math.ceil(cv.width/W)+2;c++)for(let r=-1;r<Math.ceil(cv.height/H)+2;r++)h.push({x:c*W,y:r*H+(c%2?H/2:0),g:0});}
+            function hex(x,y,r){cx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);i?cx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a)):cx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));}cx.closePath();}
+            function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;build();}
+            function draw(){cx.clearRect(0,0,cv.width,cv.height);h.forEach(e=>{const d=Math.hypot(mx-e.x,my-e.y);e.g+=((d<120?(1-d/120)*.7:0)-e.g)*.12;const a=.032+e.g*.6;hex(e.x,e.y,R-1.5);cx.fillStyle=`rgba(242,190,48,${(a*.4).toFixed(3)})`;cx.fill();cx.strokeStyle=`rgba(242,190,48,${a.toFixed(3)})`;cx.lineWidth=e.g>.06?1.3:.6;cx.stroke();});requestAnimationFrame(draw);}
+            window.addEventListener('resize',resize);window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+            resize();draw();
+        })();
+    </script>
+</body>
+</html>

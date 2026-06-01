@@ -1,0 +1,68 @@
+@model ColmenaEmpresa.Models.Inspeccion
+@{
+    ViewData["Title"] = "Editar Inspección";
+    ViewData["Subtitle"] = "Modificar registro de inspección";
+}
+
+<div class="form-wrap">
+    <div class="form-title">🔍 Editar inspección</div>
+    <div class="form-desc">Modificá los datos de la inspección de campo.</div>
+
+    <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Apiario <span class="req">*</span></label>
+                <select asp-for="ApiarioId" class="fc">
+                    <option value="1">La Rinconada</option>
+                    <option value="2">Monte Olivo</option>
+                    <option value="3">El Eucaliptal</option>
+                </select>
+                <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Fecha <span class="req">*</span></label>
+                <input asp-for="Fecha" class="fc" type="date">
+                <span asp-validation-for="Fecha" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Clima</label>
+                <select asp-for="Clima" class="fc">
+                    <option>☀ Soleado</option>
+                    <option>⛅ Parcialmente nublado</option>
+                    <option>☁ Nublado</option>
+                    <option>🌧 Lluvia</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Temperatura (°C)</label>
+                <input asp-for="Temperatura" class="fc" type="number" min="-10" max="50">
+                <span asp-validation-for="Temperatura" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Estado</label>
+                <select asp-for="Estado" class="fc">
+                    <option value="completa">Completa</option>
+                    <option value="incompleta">Incompleta</option>
+                    <option value="pendiente">Pendiente</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="fgrp fg-full" style="margin-top:16px">
+            <label class="flbl">Notas de campo</label>
+            <textarea asp-for="NotasCampo" class="fc" placeholder="Detalles de la visita…"></textarea>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -1,0 +1,91 @@
+@model ColmenaEmpresa.Models.Apiario
+@{
+    ViewData["Title"] = "Editar Apiario";
+    ViewData["Subtitle"] = "Modificar datos del apiario";
+}
+
+<div class="form-wrap">
+    <div class="form-title">📍 Editar apiario</div>
+    <div class="form-desc">Modificá los datos de ubicación, características y acceso del apiario.</div>
+
+    <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
+        <div class="fs">Identificación</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Nombre del apiario <span class="req">*</span></label>
+                <input asp-for="Nombre" class="fc" placeholder="Ej: El Pinar, La Cañada…">
+                <span asp-validation-for="Nombre" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Departamento <span class="req">*</span></label>
+                <select asp-for="Departamento" class="fc">
+                    <option value="">Seleccionar…</option>
+                    <option>San José</option>
+                    <option>Canelones</option>
+                    <option>Lavalleja</option>
+                    <option>Rocha</option>
+                    <option>Colonia</option>
+                    <option>Flores</option>
+                </select>
+                <span asp-validation-for="Departamento" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp fg-full">
+                <label class="flbl">Dirección / Paraje</label>
+                <input asp-for="Ubicacion" class="fc" placeholder="Ej: Ruta 9 km 120, paraje Los Pinos">
+                <span asp-validation-for="Ubicacion" class="fhint" style="color:var(--red)"></span>
+            </div>
+        </div>
+
+        <div class="fs">Coordenadas GPS</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Latitud</label>
+                <input asp-for="Latitud" class="fc" placeholder="-34.4567" step="any">
+                <span asp-validation-for="Latitud" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Longitud</label>
+                <input asp-for="Longitud" class="fc" placeholder="-56.2345" step="any">
+                <span asp-validation-for="Longitud" class="fhint" style="color:var(--red)"></span>
+            </div>
+        </div>
+
+        <div class="fs">Características</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Flora predominante</label>
+                <select asp-for="Flora" class="fc">
+                    <option>Eucaliptal</option>
+                    <option>Monte nativo</option>
+                    <option>Pradera</option>
+                    <option>Mixta</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Acceso</label>
+                <select asp-for="Acceso" class="fc">
+                    <option>Todo tiempo</option>
+                    <option>Solo con buen tiempo</option>
+                    <option>Requiere 4x4</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Capacidad (colmenas)</label>
+                <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30">
+                <span asp-validation-for="CapacidadColmenas" class="fhint" style="color:var(--red)"></span>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

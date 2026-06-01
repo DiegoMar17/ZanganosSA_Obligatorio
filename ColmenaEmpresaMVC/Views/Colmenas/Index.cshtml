@@ -1,4 +1,4 @@
-@model IEnumerable<ColmenaEmpresa.Models.Colmena>
+@model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.Colmena>
 @{
     ViewData["Title"] = "Colmenas";
     var resumen = ViewBag.Resumen;
@@ -6,7 +6,7 @@
 }
 
 @section Actions {
-    <button class="btn btn-primary btn-sm">+ Nueva colmena</button>
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nueva colmena</a>
 }
 
 <div class="g4 mb-6">
@@ -14,6 +14,17 @@
     <div class="stat-card"><div class="stat-lbl">En producción</div><div class="stat-val c-green">@resumen.EnProduccion</div></div>
     <div class="stat-card"><div class="stat-lbl">En tratamiento</div><div class="stat-val c-amber">@resumen.EnTratamiento</div></div>
     <div class="stat-card"><div class="stat-lbl">Sin reina</div><div class="stat-val c-red">@resumen.SinReina</div></div>
+</div>
+
+<div class="flex-between mb-4">
+    <form method="get" asp-action="Index" style="display:flex;gap:8px;align-items:center">
+        <input type="text" name="q" value="@Model.Q" class="fc" placeholder="Buscar por código, apiario…" style="max-width:280px">
+        <button type="submit" class="btn btn-sm">Buscar</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <a class="btn btn-sm" asp-action="Index">✕ Limpiar</a>
+        }
+    </form>
 </div>
 
 <div class="tbl-wrap">
@@ -30,22 +41,33 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="7" style="text-align:center;color:var(--txt-4);padding:28px">Sin resultados.</td></tr>
+            }
+            @foreach (var item in Model.Items)
             {
                 <tr>
                     <td class="td-1">@item.Codigo</td>
                     <td>@item.ApiarioNombre</td>
                     <td>@(item.UltimaVisita.HasValue ? "Hace " + (DateTime.Now - item.UltimaVisita.Value).Days + " días" : "—")</td>
                     <td>
-                        @if (item.EstadoReina == "vista") { <span style="color:var(--green)">✓ Vista</span> }
-                        else if (item.EstadoReina == "no_vista") { <span style="color:var(--amber)">? No vista</span> }
-                        else { <span style="color:var(--red)">✗ Ausente</span> }
+                        @if (item.EstadoReina == "vista")      { <span style="color:var(--green)">✓ Vista</span> }
+                        else if (item.EstadoReina == "no_vista"){ <span style="color:var(--amber)">? No vista</span> }
+                        else                                    { <span style="color:var(--red)">✗ Ausente</span> }
                     </td>
                     <td><span class="pill p-@item.EstadoSemaforo">@item.EstadoSemaforo</span></td>
                     <td class="td-1">@item.CantidadAlzas</td>
-                    <td><button class="btn btn-xs btn-icon">👁</button></td>
+                    <td style="display:flex;gap:6px">
+                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar la colmena @item.Codigo?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+    @await Html.PartialAsync("_Pagination", Model)
 </div>

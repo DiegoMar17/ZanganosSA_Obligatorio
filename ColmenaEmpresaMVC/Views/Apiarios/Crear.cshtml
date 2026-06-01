@@ -9,15 +9,18 @@
     <div class="form-desc">Completá los datos de ubicación, características y acceso del nuevo apiario.</div>
     
     <form asp-action="Crear" method="post">
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
         <div class="fs">Identificación</div>
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Nombre del apiario <span class="req">*</span></label>
-                <input asp-for="Nombre" class="fc" placeholder="Ej: El Pinar, La Cañada…" required>
+                <input asp-for="Nombre" class="fc" placeholder="Ej: El Pinar, La Cañada…">
+                <span asp-validation-for="Nombre" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Departamento <span class="req">*</span></label>
-                <select asp-for="Departamento" class="fc" required>
+                <select asp-for="Departamento" class="fc">
                     <option value="">Seleccionar…</option>
                     <option>San José</option>
                     <option>Canelones</option>
@@ -26,22 +29,26 @@
                     <option>Colonia</option>
                     <option>Flores</option>
                 </select>
+                <span asp-validation-for="Departamento" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp fg-full">
                 <label class="flbl">Dirección / Paraje</label>
-                <input class="fc" placeholder="Ej: Ruta 9 km 120, paraje Los Pinos">
+                <input asp-for="Ubicacion" class="fc" placeholder="Ej: Ruta 9 km 120, paraje Los Pinos">
+                <span asp-validation-for="Ubicacion" class="fhint" style="color:var(--red)"></span>
             </div>
         </div>
 
         <div class="fs">Coordenadas GPS</div>
         <div class="fg">
             <div class="fgrp">
-                <label class="flbl">Latitud <span class="req">*</span></label>
+                <label class="flbl">Latitud</label>
                 <input asp-for="Latitud" class="fc" placeholder="-34.4567" step="any">
+                <span asp-validation-for="Latitud" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
-                <label class="flbl">Longitud <span class="req">*</span></label>
+                <label class="flbl">Longitud</label>
                 <input asp-for="Longitud" class="fc" placeholder="-56.2345" step="any">
+                <span asp-validation-for="Longitud" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp fg-full" style="align-items:flex-start;padding-top:22px">
                 <button type="button" class="btn" onclick="toast('📍 Ubicación detectada: -34.4521, -56.2180')">📡 Detectar ubicación</button>
@@ -70,6 +77,7 @@
             <div class="fgrp">
                 <label class="flbl">Capacidad (colmenas)</label>
                 <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30">
+                <span asp-validation-for="CapacidadColmenas" class="fhint" style="color:var(--red)"></span>
             </div>
         </div>
 
@@ -79,3 +87,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

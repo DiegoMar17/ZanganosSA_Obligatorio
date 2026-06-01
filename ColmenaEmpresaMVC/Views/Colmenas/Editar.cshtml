@@ -1,0 +1,101 @@
+@model ColmenaEmpresa.Models.Colmena
+@{
+    ViewData["Title"] = "Editar Colmena";
+    ViewData["Subtitle"] = "Modificar datos de la colmena";
+}
+
+<div class="form-wrap">
+    <div class="form-title">🏠 Editar colmena</div>
+    <div class="form-desc">Modificá los datos de identificación y estado de la colmena.</div>
+
+    <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
+
+        <div class="fs">Identificación</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Código <span class="req">*</span></label>
+                <input asp-for="Codigo" class="fc" placeholder="Ej: C-149">
+                <span asp-validation-for="Codigo" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Apiario <span class="req">*</span></label>
+                <select asp-for="ApiarioId" class="fc">
+                    <option value="">Seleccionar…</option>
+                    <option value="1">La Rinconada</option>
+                    <option value="2">Monte Olivo</option>
+                    <option value="3">El Eucaliptal</option>
+                    <option value="4">Paso Carrasco</option>
+                </select>
+                <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Tipo <span class="req">*</span></label>
+                <select asp-for="Tipo" class="fc">
+                    <option>Langstroth</option>
+                    <option>Núcleo</option>
+                    <option>Otro</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Fecha instalación <span class="req">*</span></label>
+                <input asp-for="FechaInstalacion" class="fc" type="date">
+                <span asp-validation-for="FechaInstalacion" class="fhint" style="color:var(--red)"></span>
+            </div>
+        </div>
+
+        <div class="fs">Estado actual</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Origen</label>
+                <select asp-for="Origen" class="fc">
+                    <option>Enjambre capturado</option>
+                    <option>División</option>
+                    <option>Compra</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Estado de la reina <span class="req">*</span></label>
+                <select asp-for="EstadoReina" class="fc">
+                    <option value="vista">Sí (Vista)</option>
+                    <option value="no_vista">No vista (Huevos presentes)</option>
+                    <option value="ausente">No</option>
+                </select>
+                <span asp-validation-for="EstadoReina" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Alzas</label>
+                <input asp-for="CantidadAlzas" class="fc" type="number" min="0" max="20">
+                <span asp-validation-for="CantidadAlzas" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Marcos con cría</label>
+                <input asp-for="MarcosConCria" class="fc" type="number" min="0" max="30">
+                <span asp-validation-for="MarcosConCria" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Semáforo</label>
+                <select asp-for="EstadoSemaforo" class="fc">
+                    <option value="verde">Verde — Al día</option>
+                    <option value="amarillo">Amarillo — Visitar pronto</option>
+                    <option value="rojo">Rojo — Crítico</option>
+                    <option value="viaje">Viaje — En transhumancia</option>
+                </select>
+            </div>
+            <div class="fgrp fg-full">
+                <label class="flbl">Observaciones</label>
+                <textarea asp-for="Observaciones" class="fc" placeholder="Estado general, comportamiento…"></textarea>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
