@@ -1,0 +1,95 @@
+@model ColmenaEmpresa.Models.Apiario
+@using ColmenaEmpresa.Models
+@{
+    ViewData["Title"] = Model.Nombre;
+    ViewData["Subtitle"] = Model.Departamento + " · " + Model.Ubicacion;
+    var colmenas = (List<Colmena>)ViewBag.Colmenas;
+}
+
+@section Actions {
+    <a class="btn btn-sm" asp-action="Index">← Volver</a>
+    <a class="btn btn-primary btn-sm" asp-action="Editar" asp-route-id="@Model.Id">✏ Editar apiario</a>
+}
+
+<div class="g4 mb-6">
+    <div class="stat-card">
+        <div class="stat-lbl">Colmenas registradas</div>
+        <div class="stat-val c-gold">@colmenas.Count</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Capacidad total</div>
+        <div class="stat-val">@Model.CapacidadColmenas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Flora predominante</div>
+        <div class="stat-val" style="font-size:18px">@(string.IsNullOrEmpty(Model.Flora) ? "—" : Model.Flora)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Fuente de agua</div>
+        <div class="stat-val" style="font-size:18px;color:@(Model.FuenteAgua ? "var(--green)" : "var(--red)")">
+            @(Model.FuenteAgua ? "✓ Sí" : "✗ No")
+        </div>
+    </div>
+</div>
+
+<div class="flex-between mb-4">
+    <div class="sec-head" style="margin-bottom:0">
+        <div>
+            <div class="sec-title">Colmenas en este apiario</div>
+            <div class="sec-sub">@colmenas.Count de @Model.CapacidadColmenas lugares ocupados</div>
+        </div>
+    </div>
+    <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear">+ Nueva colmena</a>
+</div>
+
+<div class="tbl-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Última visita</th>
+                <th>Reina</th>
+                <th>Estado</th>
+                <th>Alzas</th>
+                <th>Marcos cría</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!colmenas.Any())
+            {
+                <tr>
+                    <td colspan="8" style="text-align:center;color:var(--txt-4);padding:40px">
+                        <div style="font-size:32px;margin-bottom:8px">🏠</div>
+                        <div>No hay colmenas registradas en este apiario.</div>
+                        <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear" style="margin-top:14px;display:inline-block">+ Agregar primera colmena</a>
+                    </td>
+                </tr>
+            }
+            @foreach (var c in colmenas)
+            {
+                <tr>
+                    <td class="td-1" style="font-weight:600">@c.Codigo</td>
+                    <td>@c.Tipo</td>
+                    <td>@(c.UltimaVisita.HasValue ? "Hace " + (DateTime.Now - c.UltimaVisita.Value).Days + " días" : "—")</td>
+                    <td>
+                        @if (c.EstadoReina == "vista")       { <span style="color:var(--green)">✓ Vista</span> }
+                        else if (c.EstadoReina == "no_vista") { <span style="color:var(--amber)">? No vista</span> }
+                        else                                  { <span style="color:var(--red)">✗ Ausente</span> }
+                    </td>
+                    <td><span class="pill p-@c.EstadoSemaforo">@c.EstadoSemaforo</span></td>
+                    <td class="td-1">@c.CantidadAlzas</td>
+                    <td class="td-1">@c.MarcosConCria</td>
+                    <td style="display:flex;gap:6px">
+                        <a class="btn btn-xs btn-icon" asp-controller="Colmenas" asp-action="Editar" asp-route-id="@c.Id" title="Editar">✏</a>
+                        <form asp-controller="Colmenas" asp-action="Eliminar" asp-route-id="@c.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar la colmena @c.Codigo?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

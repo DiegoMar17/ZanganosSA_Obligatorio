@@ -1,3 +1,4 @@
+@inject ColmenaEmpresa.Data.AppDbContext _db
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -27,7 +28,7 @@
                 <span class="sb-ico">◈</span>Dashboard
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Apiarios" ? "active" : "")" asp-controller="Apiarios" asp-action="Index">
-                <span class="sb-ico">📍</span>Apiarios<span class="sb-badge sb-badge-g">12</span>
+                <span class="sb-ico">📍</span>Apiarios<span class="sb-badge sb-badge-g">@_db.Apiarios.Count()</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Colmenas" ? "active" : "")" asp-controller="Colmenas" asp-action="Index">
                 <span class="sb-ico">🏠</span>Colmenas

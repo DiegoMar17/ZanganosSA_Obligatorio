@@ -21,7 +21,7 @@
 <div class="apiary-grid">
     @foreach (var item in Model)
     {
-        <div class="apiary-card">
+        <div class="apiary-card" style="cursor:pointer" onclick="window.location='@Url.Action("Detalle", "Apiarios", new { id = item.Id })'">
             <div class="ap-header">
                 <div>
                     <div class="ap-name">@item.Nombre</div>
@@ -36,8 +36,8 @@
             <div class="ap-footer">
                 <span class="pill p-@item.EstadoSemaforo">@(item.EstadoSemaforo == "red" ? "Insp. vencida" : item.EstadoSemaforo == "amber" ? "Visitar pronto" : "Al día")</span>
                 <div class="ap-stat" style="margin-left:auto"><span>🏠</span>@item.TotalColmenas colmenas</div>
-                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')">
+                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" onclick="event.stopPropagation()" title="Editar">✏</a>
+                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')" onclick="event.stopPropagation()">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
                 </form>

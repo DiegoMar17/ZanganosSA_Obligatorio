@@ -29,6 +29,10 @@ namespace ColmenaEmpresa.Controllers
         {
             var apiario = _ctx.Apiarios.Find(id);
             if (apiario is null) return NotFound();
+            ViewBag.Colmenas = _ctx.Colmenas
+                .Where(c => c.ApiarioId == id)
+                .OrderBy(c => c.Codigo)
+                .ToList();
             return View(apiario);
         }
 
