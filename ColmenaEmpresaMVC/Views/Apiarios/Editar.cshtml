@@ -73,9 +73,14 @@
                 </select>
             </div>
             <div class="fgrp">
-                <label class="flbl">Capacidad (colmenas)</label>
-                <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30">
+                <label class="flbl">Capacidad (colmenas) <span class="req">*</span></label>
+                <input asp-for="CapacidadColmenas" class="fc" type="number" placeholder="Ej: 30" min="0" max="500">
                 <span asp-validation-for="CapacidadColmenas" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="fcheck">
+                    <input type="checkbox" asp-for="FuenteAgua"> Tiene fuente de agua cercana
+                </label>
             </div>
         </div>
 

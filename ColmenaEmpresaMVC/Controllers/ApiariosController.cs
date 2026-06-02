@@ -10,7 +10,18 @@ namespace ColmenaEmpresa.Controllers
 
         public ApiariosController(AppDbContext ctx) => _ctx = ctx;
 
-        public IActionResult Index() => View(_ctx.Apiarios.ToList());
+        public IActionResult Index()
+        {
+            var apiarios = _ctx.Apiarios.ToList();
+            var conteos  = _ctx.Colmenas
+                .GroupBy(c => c.ApiarioId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            foreach (var a in apiarios)
+                a.TotalColmenas = conteos.TryGetValue(a.Id, out var n) ? n : 0;
+
+            return View(apiarios);
+        }
 
         public IActionResult Crear() => View(new Apiario());
 

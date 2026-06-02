@@ -19,6 +19,14 @@
 </div>
 
 <div class="apiary-grid">
+    @if (!Model.Any())
+    {
+        <div class="g-full" style="padding:48px;text-align:center;color:var(--txt-4);grid-column:1/-1">
+            <div style="font-size:32px;margin-bottom:12px">📍</div>
+            <div style="font-size:16px;font-weight:600;color:var(--txt-2);margin-bottom:6px">Sin apiarios registrados</div>
+            <div style="font-size:13px">Creá el primero con el botón <strong>+ Nuevo apiario</strong>.</div>
+        </div>
+    }
     @foreach (var item in Model)
     {
         <div class="apiary-card" style="cursor:pointer" onclick="window.location='@Url.Action("Detalle", "Apiarios", new { id = item.Id })'">
@@ -27,14 +35,19 @@
                     <div class="ap-name">@item.Nombre</div>
                     <div class="ap-loc">📍 @item.Departamento · @item.Ubicacion</div>
                 </div>
+                @{
+                    var dotColor = item.EstadoSemaforo == "rojo" ? "var(--red)" : item.EstadoSemaforo == "amarillo" ? "var(--amber)" : "var(--green)";
+                    var pillCls  = item.EstadoSemaforo == "rojo" ? "p-red" : item.EstadoSemaforo == "amarillo" ? "p-amber" : "p-green";
+                    var pillTxt  = item.EstadoSemaforo == "rojo" ? "Insp. vencida" : item.EstadoSemaforo == "amarillo" ? "Visitar pronto" : "Al día";
+                }
                 <div class="sem-dots">
-                    <div class="sm-dot" style="background:var(--@(item.EstadoSemaforo))"></div>
-                    <div class="sm-dot" style="background:var(--green)"></div>
-                    <div class="sm-dot" style="background:var(--green)"></div>
+                    <div class="sm-dot" style="background:@dotColor"></div>
+                    <div class="sm-dot" style="background:@dotColor;opacity:.6"></div>
+                    <div class="sm-dot" style="background:@dotColor;opacity:.3"></div>
                 </div>
             </div>
             <div class="ap-footer">
-                <span class="pill p-@item.EstadoSemaforo">@(item.EstadoSemaforo == "red" ? "Insp. vencida" : item.EstadoSemaforo == "amber" ? "Visitar pronto" : "Al día")</span>
+                <span class="pill @pillCls">@pillTxt</span>
                 <div class="ap-stat" style="margin-left:auto"><span>🏠</span>@item.TotalColmenas colmenas</div>
                 <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" onclick="event.stopPropagation()" title="Editar">✏</a>
                 <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')" onclick="event.stopPropagation()">
