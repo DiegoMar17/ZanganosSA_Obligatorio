@@ -14,8 +14,19 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index(int page = 1, string? q = null)
         {
+            // Auto-vencida: pendientes con fecha pasada
+            var vencibles = _ctx.Inspecciones
+                .Where(i => i.Estado == "pendiente" && i.Fecha < DateTime.Today)
+                .ToList();
+            if (vencibles.Any())
+            {
+                foreach (var v in vencibles) v.Estado = "vencida";
+                _ctx.SaveChanges();
+            }
+
             var todas = _ctx.Inspecciones.ToList();
             ViewBag.Pendientes  = todas.Count(i => i.Estado == "pendiente");
+            ViewBag.Vencidas    = todas.Count(i => i.Estado == "vencida");
             ViewBag.EsteMes     = todas.Count(i => i.Fecha.Month == DateTime.Now.Month && i.Fecha.Year == DateTime.Now.Year);
             ViewBag.Completadas = todas.Count(i => i.Estado == "completa");
 
@@ -35,8 +46,11 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        private void CargarApiarios() =>
+        private void CargarDatos()
+        {
             ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
+            ViewBag.Colmenas = _ctx.Colmenas.OrderBy(c => c.ApiarioNombre).ThenBy(c => c.Codigo).ToList();
+        }
 
         public IActionResult Exportar()
         {
@@ -48,12 +62,35 @@ namespace ColmenaEmpresa.Controllers
             return View(inspecciones);
         }
 
-        public IActionResult Crear() { CargarApiarios(); return View(new Inspeccion { Fecha = DateTime.Today }); }
+        public IActionResult Crear() { CargarDatos(); return View(new Inspeccion { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(Inspeccion inspeccion)
         {
-            if (!ModelState.IsValid) return View(inspeccion);
+            inspeccion.Estado = "pendiente";
+            inspeccion.ColmenasInspeccionadas = 0;
+
+            if (inspeccion.TipoInspeccion == "colmena" && inspeccion.ColmenaId.HasValue)
+            {
+                var colmena = _ctx.Colmenas.Find(inspeccion.ColmenaId.Value);
+                if (colmena != null)
+                {
+                    inspeccion.ApiarioId     = colmena.ApiarioId;
+                    inspeccion.ApiarioNombre = colmena.ApiarioNombre;
+                    inspeccion.ColmenaCodigo = colmena.Codigo;
+                    inspeccion.TotalColmenas = 1;
+                    ModelState.Remove(nameof(Inspeccion.ApiarioId));
+                }
+            }
+            else if (inspeccion.TipoInspeccion == "apiario" && inspeccion.ApiarioId > 0)
+            {
+                var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
+                inspeccion.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+                inspeccion.TotalColmenas = _ctx.Colmenas.Count(c => c.ApiarioId == inspeccion.ApiarioId);
+                ModelState.Remove(nameof(Inspeccion.ColmenaId));
+            }
+
+            if (!ModelState.IsValid) { CargarDatos(); return View(inspeccion); }
             _ctx.Inspecciones.Add(inspeccion);
             _ctx.SaveChanges();
             TempData["Exito"] = "Inspección registrada.";
@@ -75,6 +112,20 @@ namespace ColmenaEmpresa.Controllers
             _ctx.Inspecciones.Update(inspeccion);
             _ctx.SaveChanges();
             TempData["Exito"] = "Inspección actualizada.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public IActionResult Completar(int id)
+        {
+            var i = _ctx.Inspecciones.Find(id);
+            if (i is not null)
+            {
+                i.Estado = "completa";
+                i.ColmenasInspeccionadas = i.TotalColmenas;
+                _ctx.SaveChanges();
+                TempData["Exito"] = "Inspección marcada como completada.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
