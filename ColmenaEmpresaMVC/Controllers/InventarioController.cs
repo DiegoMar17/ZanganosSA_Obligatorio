@@ -13,7 +13,8 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Index()
         {
             var items = _ctx.ItemsInventario.ToList();
-            ViewBag.BajoMinimo   = items.Count(i => i.CantidadActual <= i.CantidadMinima);
+            ViewBag.BajoMinimo   = items.Count(i => i.EstadoStock == "amarillo");
+            ViewBag.Agotados     = items.Count(i => i.EstadoStock == "rojo");
             ViewBag.ItemsTotales = items.Count;
             return View(items);
         }

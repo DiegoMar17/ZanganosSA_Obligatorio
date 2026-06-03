@@ -46,11 +46,26 @@
             </div>
         </div>
 
-        <div class="fs" style="margin-top:22px">Colmenas inspeccionadas</div>
-        <div class="checklist mb-4">
-            <div class="cl-row on" onclick="this.classList.toggle('on')"><div class="cl-box"></div>Colmena C-01 — reina vista, buena postura</div>
-            <div class="cl-row on" onclick="this.classList.toggle('on')"><div class="cl-box"></div>Colmena C-02 — sin novedad</div>
-            <div class="cl-row" onclick="this.classList.toggle('on')"><div class="cl-box"></div>Colmena C-03 — pendiente</div>
+        <div class="fs" style="margin-top:22px">Cobertura de la inspección</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Colmenas inspeccionadas <span class="req">*</span></label>
+                <input asp-for="ColmenasInspeccionadas" class="fc" type="number" min="0" max="1000" placeholder="Ej: 18">
+                <span asp-validation-for="ColmenasInspeccionadas" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Total de colmenas <span class="req">*</span></label>
+                <input asp-for="TotalColmenas" class="fc" type="number" min="0" max="1000" placeholder="Ej: 24">
+                <span asp-validation-for="TotalColmenas" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Estado</label>
+                <select asp-for="Estado" class="fc">
+                    <option value="completa">Completa</option>
+                    <option value="incompleta">Incompleta</option>
+                    <option value="pendiente">Pendiente</option>
+                </select>
+            </div>
         </div>
 
         <div class="fgrp fg-full">

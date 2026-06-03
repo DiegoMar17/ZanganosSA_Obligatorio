@@ -35,12 +35,20 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        public IActionResult Crear() => View(new RegistroFinanciero { Fecha = DateTime.Today });
+        // Lista de apiarios reales + opción "General"
+        private void CargarApiarios()
+        {
+            var nombres = new List<string> { "General" };
+            nombres.AddRange(_ctx.Apiarios.OrderBy(a => a.Nombre).Select(a => a.Nombre));
+            ViewBag.NombresApiarios = nombres;
+        }
+
+        public IActionResult Crear() { CargarApiarios(); return View(new RegistroFinanciero { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(RegistroFinanciero registro)
         {
-            if (!ModelState.IsValid) return View(registro);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(registro); }
             _ctx.RegistrosFinancieros.Add(registro);
             _ctx.SaveChanges();
             TempData["Exito"] = "Registro financiero guardado.";
@@ -51,14 +59,14 @@ namespace ColmenaEmpresa.Controllers
         {
             var r = _ctx.RegistrosFinancieros.Find(id);
             if (r is null) return NotFound();
-            return View(r);
+            CargarApiarios(); return View(r);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Editar(int id, RegistroFinanciero registro)
         {
             if (id != registro.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(registro);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(registro); }
             _ctx.RegistrosFinancieros.Update(registro);
             _ctx.SaveChanges();
             TempData["Exito"] = "Registro actualizado.";

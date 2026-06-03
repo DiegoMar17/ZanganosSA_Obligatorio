@@ -36,7 +36,7 @@
     <div class="sec-head" style="margin-bottom:0">
         <div>
             <div class="sec-title">Colmenas en este apiario</div>
-            <div class="sec-sub">@colmenas.Count de @Model.CapacidadColmenas lugares ocupados</div>
+            <div class="sec-sub">@(Model.CapacidadColmenas > 0 ? $"{colmenas.Count} de {Model.CapacidadColmenas} lugares ocupados" : $"{colmenas.Count} colmenas · capacidad sin definir")</div>
         </div>
     </div>
     <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear">+ Nueva colmena</a>
@@ -78,7 +78,23 @@
                         else if (c.EstadoReina == "no_vista") { <span style="color:var(--amber)">? No vista</span> }
                         else                                  { <span style="color:var(--red)">✗ Ausente</span> }
                     </td>
-                    <td><span class="pill p-@c.EstadoSemaforo">@c.EstadoSemaforo</span></td>
+                    <td>
+                        @{
+                            var cPill = c.EstadoSemaforo switch {
+                                "rojo"     => "p-red",
+                                "amarillo" => "p-amber",
+                                "viaje"    => "p-blue",
+                                _          => "p-green"
+                            };
+                            var cTxt = c.EstadoSemaforo switch {
+                                "rojo"     => "Crítico",
+                                "amarillo" => "Alerta",
+                                "viaje"    => "En viaje",
+                                _          => "Saludable"
+                            };
+                        }
+                        <span class="pill @cPill">@cTxt</span>
+                    </td>
                     <td class="td-1">@c.CantidadAlzas</td>
                     <td class="td-1">@c.MarcosConCria</td>
                     <td style="display:flex;gap:6px">

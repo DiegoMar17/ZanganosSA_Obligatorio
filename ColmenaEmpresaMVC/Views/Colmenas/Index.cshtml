@@ -56,7 +56,23 @@
                         else if (item.EstadoReina == "no_vista"){ <span style="color:var(--amber)">? No vista</span> }
                         else                                    { <span style="color:var(--red)">✗ Ausente</span> }
                     </td>
-                    <td><span class="pill p-@item.EstadoSemaforo">@item.EstadoSemaforo</span></td>
+                    <td>
+                        @{
+                            var pill = item.EstadoSemaforo switch {
+                                "rojo"     => "p-red",
+                                "amarillo" => "p-amber",
+                                "viaje"    => "p-blue",
+                                _          => "p-green"
+                            };
+                            var txt = item.EstadoSemaforo switch {
+                                "rojo"     => "Crítico",
+                                "amarillo" => "Alerta",
+                                "viaje"    => "En viaje",
+                                _          => "Saludable"
+                            };
+                        }
+                        <span class="pill @pill">@txt</span>
+                    </td>
                     <td class="td-1">@item.CantidadAlzas</td>
                     <td style="display:flex;gap:6px">
                         <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>

@@ -7,9 +7,11 @@ namespace ColmenaEmpresa.Models
     {
         // ── Indicadores clave ──────────────────────────────────────────────
         public int TotalColmenas { get; set; }
+        public int ColmenasNuevasMes { get; set; }
         public int InspeccionesPendientes { get; set; }
-        public string CosechaEstimada { get; set; } = "0";
+        public string CosechaTotal { get; set; } = "0";
         public int TotalApiarios { get; set; }
+        public int EnTranshumancia { get; set; }
 
         // ── Semáforo sanitario ─────────────────────────────────────────────
         public int ColmenasVerde { get; set; }

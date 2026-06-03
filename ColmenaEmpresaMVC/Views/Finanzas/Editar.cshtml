@@ -29,16 +29,30 @@
             <div class="fgrp">
                 <label class="flbl">Categoría <span class="req">*</span></label>
                 <select asp-for="Categoria" class="fc">
-                    <option>Venta de miel</option>
-                    <option>Venta de polen</option>
-                    <option>Insumos apícolas</option>
-                    <option>Equipamiento</option>
+                    <optgroup label="Ingresos">
+                        <option>Venta de miel</option>
+                        <option>Venta de polen</option>
+                        <option>Venta de cera</option>
+                        <option>Otros ingresos</option>
+                    </optgroup>
+                    <optgroup label="Gastos">
+                        <option>Insumos apícolas</option>
+                        <option>Alimentación</option>
+                        <option>Sanidad</option>
+                        <option>Combustible / traslados</option>
+                        <option>Otros gastos</option>
+                    </optgroup>
+                    <optgroup label="Inversiones">
+                        <option>Equipamiento</option>
+                        <option>Colmenas nuevas</option>
+                        <option>Infraestructura</option>
+                    </optgroup>
                 </select>
                 <span asp-validation-for="Categoria" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Monto <span class="req">*</span></label>
-                <input asp-for="Monto" class="fc" type="number" step="0.01" style="color:var(--green);font-weight:700;font-size:16px">
+                <input asp-for="Monto" class="fc" type="number" step="0.01" style="font-weight:700;font-size:16px">
                 <span asp-validation-for="Monto" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
@@ -49,9 +63,10 @@
             <div class="fgrp">
                 <label class="flbl">Apiario</label>
                 <select asp-for="ApiarioNombre" class="fc">
-                    <option value="General">General</option>
-                    <option>Monte Olivo</option>
-                    <option>La Rinconada</option>
+                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
+                    {
+                        <option>@n</option>
+                    }
                 </select>
             </div>
             <div class="fgrp fg-full">

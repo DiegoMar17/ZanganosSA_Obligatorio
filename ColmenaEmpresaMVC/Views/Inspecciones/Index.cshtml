@@ -1,7 +1,7 @@
 @model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.Inspeccion>
 @{
     ViewData["Title"] = "Inspecciones";
-    ViewData["Subtitle"] = ViewBag.Pendientes + " pendientes esta semana";
+    ViewData["Subtitle"] = ViewBag.Pendientes + " inspecciones pendientes";
 }
 
 @section Actions {
@@ -52,7 +52,21 @@
                     <td>@item.Fecha.ToString("dd MMM yyyy")</td>
                     <td>@item.Clima</td>
                     <td>@item.Temperatura°C</td>
-                    <td><span class="pill p-@(item.Estado == "completa" ? "green" : "amber")">@item.Estado</span></td>
+                    <td>
+                        @{
+                            var pill = item.Estado switch {
+                                "completa"   => "p-green",
+                                "incompleta" => "p-amber",
+                                _            => "p-red"
+                            };
+                            var txt = item.Estado switch {
+                                "completa"   => "Completa",
+                                "incompleta" => "Incompleta",
+                                _            => "Pendiente"
+                            };
+                        }
+                        <span class="pill @pill">@txt</span>
+                    </td>
                     <td style="display:flex;gap:6px">
                         <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
                         <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta inspección?')">

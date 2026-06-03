@@ -1,7 +1,9 @@
 @model IEnumerable<ColmenaEmpresa.Models.Transhumancia>
 @{
     ViewData["Title"] = "Transhumancia";
-    ViewData["Subtitle"] = "1 evento activo";
+    var activos     = Model.Where(m => m.Estado == "en_curso" || m.Estado == "planificado").ToList();
+    var completados = Model.Where(m => m.Estado == "completado").ToList();
+    ViewData["Subtitle"] = activos.Count + (activos.Count == 1 ? " evento activo" : " eventos activos");
 }
 
 @section Actions {
@@ -9,25 +11,49 @@
 }
 
 <div class="g2">
-    @foreach (var item in Model.Where(m => m.Estado == "en_curso"))
-    {
-        <div class="card">
-            <div class="card-hd"><div class="card-title">Evento activo — @item.Nombre</div><span class="pill p-blue">@item.Estado</span></div>
-            <div class="g2 mb-4">
-                <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Origen</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioOrigen</div></div>
-                <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Destino</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioDestino</div></div>
-                <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Colmenas</div><div class="stat-val c-gold" style="font-size:26px">@item.CantidadColmenas</div></div>
-                <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Distancia</div><div class="stat-val c-gold" style="font-size:26px">@item.DistanciaKm km</div></div>
+    <div>
+        @if (!activos.Any())
+        {
+            <div class="card" style="text-align:center;color:var(--txt-4);padding:32px">
+                Sin traslados activos. Planificá uno con <strong>+ Nuevo traslado</strong>.
             </div>
-            <div style="font-size:12px;color:var(--txt-4);margin-bottom:6px">Progreso — @item.PorcentajeAvance% del tiempo</div>
-            <div class="prog mb-4"><div class="prog-fill" style="width:@(item.PorcentajeAvance)%"></div></div>
-            <div style="font-size:12.5px;color:var(--txt-3)">Retorno estimado: @(item.FechaRetorno?.ToString("dd MMM yyyy") ?? "—")</div>
-        </div>
-    }
+        }
+        @foreach (var item in activos)
+        {
+            var pillCls = item.Estado == "en_curso" ? "p-blue" : "p-amber";
+            var pillTxt = item.Estado == "en_curso" ? "En curso" : "Planificado";
+            <div class="card mb-4">
+                <div class="card-hd">
+                    <div class="card-title">@item.Nombre</div>
+                    <div style="display:flex;gap:6px;align-items:center">
+                        <span class="pill @pillCls">@pillTxt</span>
+                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este traslado?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="g2 mb-4">
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Origen</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioOrigen</div></div>
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Destino</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioDestino</div></div>
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Colmenas</div><div class="stat-val c-gold" style="font-size:26px">@item.CantidadColmenas</div></div>
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Distancia</div><div class="stat-val c-gold" style="font-size:26px">@item.DistanciaKm km</div></div>
+                </div>
+                <div style="font-size:12px;color:var(--txt-4);margin-bottom:6px">Progreso — @item.PorcentajeAvance%</div>
+                <div class="prog mb-4"><div class="prog-fill" style="width:@(item.PorcentajeAvance)%"></div></div>
+                <div style="font-size:12.5px;color:var(--txt-3)">Retorno estimado: @(item.FechaRetorno?.ToString("dd MMM yyyy") ?? "—")</div>
+            </div>
+        }
+    </div>
 
     <div class="card">
         <div class="card-hd"><div class="card-title">Historial</div></div>
-        @foreach (var item in Model.Where(m => m.Estado == "completado"))
+        @if (!completados.Any())
+        {
+            <div style="padding:24px;text-align:center;color:var(--txt-4);font-size:13px">Sin traslados completados todavía.</div>
+        }
+        @foreach (var item in completados)
         {
             <div class="tl-item">
                 <div class="tl-dot-col">

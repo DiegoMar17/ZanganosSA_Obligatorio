@@ -21,7 +21,7 @@ namespace ColmenaEmpresa.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Transhumancia traslado)
         {
-            if (!ModelState.IsValid) return View(traslado);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(traslado); }
             traslado.Estado = "planificado";
             _ctx.Transhumancias.Add(traslado);
             _ctx.SaveChanges();
@@ -33,7 +33,7 @@ namespace ColmenaEmpresa.Controllers
         {
             var traslado = _ctx.Transhumancias.Find(id);
             if (traslado is null) return NotFound();
-            return View(traslado);
+            CargarApiarios(); return View(traslado);
         }
 
         [HttpPost]
@@ -41,7 +41,7 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Editar(int id, Transhumancia traslado)
         {
             if (id != traslado.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(traslado);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(traslado); }
             _ctx.Transhumancias.Update(traslado);
             _ctx.SaveChanges();
             TempData["Exito"] = "Traslado actualizado.";

@@ -1,7 +1,7 @@
 @model IEnumerable<ColmenaEmpresa.Models.ItemInventario>
 @{
     ViewData["Title"] = "Inventario";
-    ViewData["Subtitle"] = ViewBag.BajoMinimo + " ítems bajo mínimo";
+    ViewData["Subtitle"] = ViewBag.ItemsTotales + " ítems en stock";
 }
 
 @section Actions {
@@ -10,8 +10,8 @@
 }
 
 <div class="g3 mb-6">
-    <div class="stat-card"><div class="stat-lbl">Bajo mínimo</div><div class="stat-val c-red">@ViewBag.BajoMinimo</div></div>
-    <div class="stat-card"><div class="stat-lbl">Movimientos hoy</div><div class="stat-val c-gold">7</div></div>
+    <div class="stat-card"><div class="stat-lbl">Bajo stock</div><div class="stat-val c-amber">@ViewBag.BajoMinimo</div></div>
+    <div class="stat-card"><div class="stat-lbl">Agotados / críticos</div><div class="stat-val c-red">@ViewBag.Agotados</div></div>
     <div class="stat-card"><div class="stat-lbl">Ítems totales</div><div class="stat-val c-gold">@ViewBag.ItemsTotales</div></div>
 </div>
 
@@ -19,13 +19,22 @@
     <div style="background:var(--bg-2);padding:14px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
         <span style="font-family:var(--serif);font-size:16px;color:var(--txt-1)">Stock actual</span>
     </div>
+    @if (!Model.Any())
+    {
+        <div style="padding:32px;text-align:center;color:var(--txt-4);font-size:13px">
+            Sin ítems en el inventario. Agregá el primero con <strong>+ Nuevo ítem</strong>.
+        </div>
+    }
     @foreach (var item in Model)
     {
+        var barColor = item.EstadoStock == "rojo" ? "var(--red)" : item.EstadoStock == "amarillo" ? "var(--amber)" : "var(--green)";
+        var pillCls  = item.EstadoStock == "rojo" ? "p-red" : item.EstadoStock == "amarillo" ? "p-amber" : "p-green";
+        var pillTxt  = item.EstadoStock == "rojo" ? "Crítico" : item.EstadoStock == "amarillo" ? "Bajo" : "OK";
         <div class="inv-row">
             <div class="inv-name">@item.Nombre</div>
-            <div class="inv-bar"><div class="inv-fill" style="width:@(item.PorcentajeStock)%;background:var(--@(item.EstadoStock))"></div></div>
+            <div class="inv-bar"><div class="inv-fill" style="width:@(item.PorcentajeStock)%;background:@barColor"></div></div>
             <div class="inv-qty">@item.CantidadActual @item.Unidad</div>
-            <span class="pill p-@item.EstadoStock">@(item.EstadoStock == "red" ? "Crítico" : item.EstadoStock == "amber" ? "Bajo" : "OK")</span>
+            <span class="pill @pillCls">@pillTxt</span>
             <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
             <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar @item.Nombre del inventario?')">
                 @Html.AntiForgeryToken()

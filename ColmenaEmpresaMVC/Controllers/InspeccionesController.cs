@@ -53,8 +53,17 @@ namespace ColmenaEmpresa.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(Inspeccion inspeccion)
         {
-            if (!ModelState.IsValid) return View(inspeccion);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(inspeccion); }
+
+            var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
+            inspeccion.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Inspecciones.Add(inspeccion);
+
+            // Actualiza la última visita de las colmenas del apiario inspeccionado
+            var colmenas = _ctx.Colmenas.Where(c => c.ApiarioId == inspeccion.ApiarioId).ToList();
+            foreach (var c in colmenas)
+                c.UltimaVisita = inspeccion.Fecha;
+
             _ctx.SaveChanges();
             TempData["Exito"] = "Inspección registrada.";
             return RedirectToAction(nameof(Index));
@@ -64,15 +73,24 @@ namespace ColmenaEmpresa.Controllers
         {
             var i = _ctx.Inspecciones.Find(id);
             if (i is null) return NotFound();
-            return View(i);
+            CargarApiarios(); return View(i);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Editar(int id, Inspeccion inspeccion)
         {
             if (id != inspeccion.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(inspeccion);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(inspeccion); }
+
+            var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
+            inspeccion.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Inspecciones.Update(inspeccion);
+
+            // Refresca la última visita de las colmenas del apiario
+            var colmenas = _ctx.Colmenas.Where(c => c.ApiarioId == inspeccion.ApiarioId).ToList();
+            foreach (var c in colmenas)
+                c.UltimaVisita = inspeccion.Fecha;
+
             _ctx.SaveChanges();
             TempData["Exito"] = "Inspección actualizada.";
             return RedirectToAction(nameof(Index));
