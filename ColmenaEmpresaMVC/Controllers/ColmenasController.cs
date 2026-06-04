@@ -16,11 +16,20 @@ namespace ColmenaEmpresa.Controllers
         {
             var todas = _ctx.Colmenas.ToList();
 
+            // Códigos únicos de colmenas bajo tratamiento sanitario activo
+            var enTratamiento = _ctx.ControlesSanitarios
+                .Where(cs => cs.Estado == "en_tratamiento")
+                .ToList()
+                .SelectMany(cs => cs.ColmenasAfectadas.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(s => s.Trim())
+                .Distinct()
+                .Count();
+
             ViewBag.Resumen = new
             {
                 Total         = todas.Count,
                 EnProduccion  = todas.Count(c => c.CantidadAlzas > 0),
-                EnTratamiento = _ctx.ControlesSanitarios.Count(cs => cs.Estado == "en_tratamiento"),
+                EnTratamiento = enTratamiento,
                 SinReina      = todas.Count(c => c.EstadoReina == "ausente")
             };
 
@@ -69,7 +78,9 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Editar(int id, Colmena colmena)
         {
             if (id != colmena.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(colmena);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(colmena); }
+            var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
+            colmena.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Colmenas.Update(colmena);
             _ctx.SaveChanges();
             TempData["Exito"] = $"Colmena '{colmena.Codigo}' actualizada.";

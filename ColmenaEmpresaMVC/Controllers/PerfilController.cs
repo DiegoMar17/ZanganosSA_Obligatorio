@@ -32,12 +32,31 @@ namespace ColmenaEmpresa.Controllers
         public async Task<IActionResult> ActualizarDatos(string nombreCompleto, string email)
         {
             var user = await _users.GetUserAsync(User);
+            if (user is null) return RedirectToAction(nameof(Index));
+
+            // ¿El email ya está en uso por otra cuenta?
+            var existente = await _users.FindByEmailAsync(email);
+            if (existente is not null && existente.Id != user.Id)
+            {
+                TempData["Error"] = "Ese correo ya está en uso por otra cuenta.";
+                return RedirectToAction(nameof(Index));
+            }
+
             user.NombreCompleto = nombreCompleto;
             user.Email    = email;
             user.UserName = email;
-            await _users.UpdateAsync(user);
-            await _signIn.RefreshSignInAsync(user);
-            TempData["Exito"] = "Datos actualizados correctamente.";
+
+            var result = await _users.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                await _signIn.RefreshSignInAsync(user);
+                TempData["Exito"] = "Datos actualizados correctamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudieron actualizar los datos: " +
+                    string.Join(" ", result.Errors.Select(e => e.Description));
+            }
             return RedirectToAction(nameof(Index));
         }
 

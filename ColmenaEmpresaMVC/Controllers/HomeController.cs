@@ -16,9 +16,10 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index()
         {
-            var colmenas    = _ctx.Colmenas.ToList();
-            var cosechas    = _ctx.Cosechas.ToList();
+            var colmenas     = _ctx.Colmenas.ToList();
+            var cosechas     = _ctx.Cosechas.ToList();
             var inspecciones = _ctx.Inspecciones.ToList();
+            var transhumancias = _ctx.Transhumancias.ToList();
 
             var maxKg = cosechas.Any() ? cosechas.Max(c => c.PesoNeto) : 1.0;
 
@@ -33,16 +34,31 @@ namespace ColmenaEmpresa.Controllers
                 })
                 .ToList();
 
+            // Alertas reales generadas desde la BD
+            var alertas = new List<AlertaDashboard>();
+            foreach (var c in colmenas.Where(c => c.EstadoSemaforo == "rojo"))
+                alertas.Add(new AlertaDashboard { Tipo = "red", Titulo = $"Colmena {c.Codigo} en estado crítico", Tiempo = c.ApiarioNombre });
+            foreach (var c in colmenas.Where(c => c.EstadoReina == "ausente"))
+                alertas.Add(new AlertaDashboard { Tipo = "amber", Titulo = $"Colmena {c.Codigo} sin reina", Tiempo = c.ApiarioNombre });
+            foreach (var i in inspecciones.Where(i => i.Estado == "pendiente"))
+                alertas.Add(new AlertaDashboard { Tipo = "amber", Titulo = $"Inspección pendiente — {i.ApiarioNombre}", Tiempo = i.Fecha.ToString("dd MMM yyyy") });
+            if (!alertas.Any())
+                alertas.Add(new AlertaDashboard { Tipo = "green", Titulo = "Todo en orden — sin alertas activas", Tiempo = "Operación saludable" });
+
+            var ahora = DateTime.Now;
+
             var vm = new DashboardViewModel
             {
                 TotalColmenas          = colmenas.Count,
+                ColmenasNuevasMes      = colmenas.Count(c => c.FechaInstalacion.Month == ahora.Month && c.FechaInstalacion.Year == ahora.Year),
                 TotalApiarios          = _ctx.Apiarios.Count(),
+                EnTranshumancia        = transhumancias.Count(t => t.Estado == "en_curso"),
                 InspeccionesPendientes = inspecciones.Count(i => i.Estado == "pendiente"),
-                CosechaEstimada        = $"{Math.Round(cosechas.Sum(c => c.PesoNeto) / 1000.0, 1):F1} t",
+                CosechaTotal           = $"{Math.Round(cosechas.Sum(c => c.PesoNeto) / 1000.0, 1):F1} t",
                 ColmenasVerde          = colmenas.Count(c => c.EstadoSemaforo == "verde"),
                 ColmenasAmarillo       = colmenas.Count(c => c.EstadoSemaforo == "amarillo"),
                 ColmenasRojo           = colmenas.Count(c => c.EstadoSemaforo == "rojo"),
-                Alertas                = new List<AlertaDashboard>(),
+                Alertas                = alertas,
                 ProduccionMensual      = produccionMensual
             };
 

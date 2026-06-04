@@ -15,11 +15,13 @@
     <div class="cal-main">
         <div class="cal-header">
             <div class="cal-month" style="text-transform:capitalize">@Model.MesNombre</div>
-            <div style="display:flex;gap:6px;font-size:12px;color:var(--txt-4)">
+            <div style="display:flex;gap:6px;font-size:12px;color:var(--txt-4);flex-wrap:wrap">
                 <span class="pill p-blue" style="font-size:10px">🔍 Inspección</span>
                 <span class="pill p-gold" style="font-size:10px">🍯 Cosecha</span>
                 <span class="pill p-red" style="font-size:10px">🩺 Sanidad</span>
                 <span class="pill p-amber" style="font-size:10px">🚚 Traslado</span>
+                <span class="pill p-green" style="font-size:10px">📋 Tarea</span>
+                <span class="pill p-purple" style="font-size:10px">📍 Visita</span>
             </div>
         </div>
 
@@ -50,10 +52,13 @@
                     @foreach (var ev in evs.Take(3))
                     {
                         var cls = ev.Tipo switch {
-                            "visit"   => "ce-visit",
-                            "cosecha" => "ce-cosecha",
-                            "salud"   => "ce-salud",
-                            _         => "ce-tarea"
+                            "inspeccion" => "ce-inspeccion",
+                            "cosecha"    => "ce-cosecha",
+                            "sanidad"    => "ce-sanidad",
+                            "traslado"   => "ce-traslado",
+                            "tarea"      => "ce-tareap",
+                            "visita"     => "ce-visita",
+                            _            => "ce-tarea"
                         };
                         <div class="cal-event @cls">@ev.Titulo</div>
                     }
@@ -90,6 +95,8 @@
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--gold)"></div>Cosecha</div>
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--red)"></div>Sanidad</div>
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--amber)"></div>Traslado</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--green)"></div>Tarea</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--purple)"></div>Visita</div>
         </div>
     </div>
 </div>
@@ -104,7 +111,10 @@
         )
     ));
 
-    const colores = { visit: 'var(--blue)', cosecha: 'var(--gold)', salud: 'var(--red)', tarea: 'var(--amber)' };
+    const colores = {
+        inspeccion: 'var(--blue)', cosecha: 'var(--gold)', sanidad: 'var(--red)',
+        traslado: 'var(--amber)', tarea: 'var(--green)', visita: 'var(--purple)'
+    };
 
     function mostrarDia(dia, mes, anio) {
         const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -124,5 +134,13 @@
                 </div>
             </div>`).join('');
     }
+
+    // Auto-seleccionar el día de hoy si estamos en el mes actual
+    (function () {
+        const hoy = new Date();
+        if (hoy.getFullYear() === @Model.Year && (hoy.getMonth() + 1) === @Model.Month) {
+            mostrarDia(hoy.getDate(), @Model.Month, @Model.Year);
+        }
+    })();
 </script>
 }

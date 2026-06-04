@@ -5,7 +5,7 @@
 }
 
 @section Actions {
-    <button class="btn btn-primary btn-sm" id="tb-act" onclick="location.href='@Url.Action("Crear", "Colmenas")'">+ Nuevo</button>
+    <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear">+ Nueva colmena</a>
 }
 
 <div class="g4 mb-6">
@@ -13,25 +13,25 @@
         <div class="stat-card-accent" style="background:var(--gold-dim)">🐝</div>
         <div class="stat-lbl">Colmenas activas</div>
         <div class="stat-val c-gold">@Model.TotalColmenas</div>
-        <div class="stat-meta">↑ 4 este mes</div>
+        <div class="stat-meta">@(Model.ColmenasNuevasMes > 0 ? $"↑ {Model.ColmenasNuevasMes} este mes" : "Sin altas este mes")</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-accent" style="background:var(--red-bg)">⚠</div>
         <div class="stat-lbl">Inspecciones pend.</div>
         <div class="stat-val c-red">@Model.InspeccionesPendientes</div>
-        <div class="stat-meta">Vencidas esta semana</div>
+        <div class="stat-meta">Sin completar</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-accent" style="background:var(--amber-bg)">🍯</div>
-        <div class="stat-lbl">Cosecha estimada</div>
-        <div class="stat-val c-amber">@Model.CosechaEstimada</div>
+        <div class="stat-lbl">Cosecha total</div>
+        <div class="stat-val c-amber">@Model.CosechaTotal</div>
         <div class="stat-meta">Temporada 2025–26</div>
     </div>
     <div class="stat-card">
         <div class="stat-card-accent" style="background:var(--green-bg)">📍</div>
         <div class="stat-lbl">Apiarios</div>
         <div class="stat-val c-green">@Model.TotalApiarios</div>
-        <div class="stat-meta">2 en transhumancia</div>
+        <div class="stat-meta">@(Model.EnTranshumancia > 0 ? $"{Model.EnTranshumancia} en transhumancia" : "Ninguno en traslado")</div>
     </div>
 </div>
 
@@ -51,18 +51,25 @@
     </div>
     <div class="card">
         <div class="card-hd"><div class="card-title">Producción mensual</div><span class="pill p-ghost">kg</span></div>
-        <div class="bars">
-            @foreach (var item in Model.ProduccionMensual)
-            {
-                <div class="bar" style="height:@(item.PorcentajeAlto)%;background:@(item.PorcentajeAlto >= 80 ? "var(--gold)" : "var(--bg-3)")" title="@item.Mes: @item.Kg"></div>
-            }
-        </div>
-        <div class="bar-lbls">
-            @foreach (var item in Model.ProduccionMensual)
-            {
-                <div class="bar-lbl">@item.Mes</div>
-            }
-        </div>
+        @if (!Model.ProduccionMensual.Any())
+        {
+            <div style="padding:32px;text-align:center;color:var(--txt-4);font-size:13px">Sin cosechas registradas todavía.</div>
+        }
+        else
+        {
+            <div class="bars">
+                @foreach (var item in Model.ProduccionMensual)
+                {
+                    <div class="bar" style="height:@(item.PorcentajeAlto)%;background:@(item.PorcentajeAlto >= 80 ? "var(--gold)" : "var(--bg-3)")" title="@item.Mes: @item.Kg kg"></div>
+                }
+            </div>
+            <div class="bar-lbls">
+                @foreach (var item in Model.ProduccionMensual)
+                {
+                    <div class="bar-lbl">@item.Mes</div>
+                }
+            </div>
+        }
     </div>
 </div>
 

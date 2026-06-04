@@ -53,7 +53,9 @@ namespace ColmenaEmpresa.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(ControlSanitario control)
         {
-            if (!ModelState.IsValid) return View(control);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(control); }
+            var apiario = _ctx.Apiarios.Find(control.ApiarioId);
+            control.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.ControlesSanitarios.Add(control);
             _ctx.SaveChanges();
             TempData["Exito"] = "Control sanitario registrado.";
@@ -64,14 +66,16 @@ namespace ColmenaEmpresa.Controllers
         {
             var c = _ctx.ControlesSanitarios.Find(id);
             if (c is null) return NotFound();
-            return View(c);
+            CargarApiarios(); return View(c);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Editar(int id, ControlSanitario control)
         {
             if (id != control.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(control);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(control); }
+            var apiario = _ctx.Apiarios.Find(control.ApiarioId);
+            control.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.ControlesSanitarios.Update(control);
             _ctx.SaveChanges();
             TempData["Exito"] = "Control sanitario actualizado.";

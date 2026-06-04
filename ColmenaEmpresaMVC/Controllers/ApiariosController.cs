@@ -10,15 +10,35 @@ namespace ColmenaEmpresa.Controllers
 
         public ApiariosController(AppDbContext ctx) => _ctx = ctx;
 
+        // Deriva el semáforo del apiario a partir del peor estado de sus colmenas.
+        private static string CalcularSemaforo(IEnumerable<Colmena> colmenas)
+        {
+            if (colmenas.Any(c => c.EstadoSemaforo == "rojo"))     return "rojo";
+            if (colmenas.Any(c => c.EstadoSemaforo == "amarillo")) return "amarillo";
+            return "verde";
+        }
+
         public IActionResult Index()
         {
             var apiarios = _ctx.Apiarios.ToList();
-            var conteos  = _ctx.Colmenas
+            var colmenasPorApiario = _ctx.Colmenas
+                .ToList()
                 .GroupBy(c => c.ApiarioId)
-                .ToDictionary(g => g.Key, g => g.Count());
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var a in apiarios)
-                a.TotalColmenas = conteos.TryGetValue(a.Id, out var n) ? n : 0;
+            {
+                if (colmenasPorApiario.TryGetValue(a.Id, out var cols))
+                {
+                    a.TotalColmenas  = cols.Count;
+                    a.EstadoSemaforo = CalcularSemaforo(cols);
+                }
+                else
+                {
+                    a.TotalColmenas  = 0;
+                    a.EstadoSemaforo = "verde";
+                }
+            }
 
             return View(apiarios);
         }
@@ -40,10 +60,16 @@ namespace ColmenaEmpresa.Controllers
         {
             var apiario = _ctx.Apiarios.Find(id);
             if (apiario is null) return NotFound();
-            ViewBag.Colmenas = _ctx.Colmenas
+
+            var colmenas = _ctx.Colmenas
                 .Where(c => c.ApiarioId == id)
                 .OrderBy(c => c.Codigo)
                 .ToList();
+
+            apiario.TotalColmenas  = colmenas.Count;
+            apiario.EstadoSemaforo = CalcularSemaforo(colmenas);
+
+            ViewBag.Colmenas = colmenas;
             return View(apiario);
         }
 

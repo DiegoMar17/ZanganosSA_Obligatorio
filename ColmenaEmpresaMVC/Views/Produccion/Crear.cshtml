@@ -14,10 +14,10 @@
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Apiario <span class="req">*</span></label>
-                <select asp-for="ApiarioNombre" class="fc">
-                    <option>Monte Olivo</option>
-                    <option>Paso Carrasco</option>
+                <select asp-for="ApiarioId" class="fc" asp-items="ViewBag.Apiarios">
+                    <option value="">Seleccionar…</option>
                 </select>
+                <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Fecha <span class="req">*</span></label>
@@ -75,10 +75,6 @@
             <label class="flbl">Notas</label>
             <textarea asp-for="Notas" class="fc" placeholder="Condiciones, personal…"></textarea>
         </div>
-
-        <label class="fcheck">
-            <input type="checkbox" asp-for="CrearRegistroIngreso"> Crear registro de ingreso automáticamente
-        </label>
 
         <div class="form-footer">
             <a asp-action="Index" class="btn">Cancelar</a>

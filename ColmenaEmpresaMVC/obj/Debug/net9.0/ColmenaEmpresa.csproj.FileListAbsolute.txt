@@ -215,7 +215,6 @@ C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debu
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\runtimes\win-x86\native\e_sqlite3.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaEmpresa.csproj.AssemblyReference.cache
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaEmpresa.sourcelink.json
-C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-7h86nwc6pt.gz
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaE.E50E4F71.Up2Date
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.Internal.dll
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
@@ -449,3 +448,8 @@ C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\Z
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaEmpresa.pdb
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\obj\Debug\net9.0\ColmenaEmpresa.genruntimeconfig.cache
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\obj\Debug\net9.0\ref\ColmenaEmpresa.dll
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\web.config
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.Development.json
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.json
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\ColmenaEmpresa.staticwebassets.endpoints.json
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-elzdnmnkgx.gz

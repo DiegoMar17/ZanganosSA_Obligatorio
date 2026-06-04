@@ -49,7 +49,13 @@
                 <tr>
                     <td class="td-1">@item.ColmenasAfectadas</td>
                     <td>@item.TipoControl</td>
-                    <td><span style="color:var(--@(item.Resultado == "positivo" ? "red" : "green"));font-weight:600">@item.Resultado</span></td>
+                    <td>
+                        @{
+                            var resColor = item.Resultado == "positivo" ? "var(--red)" : item.Resultado == "dudoso" ? "var(--amber)" : "var(--green)";
+                            var resTxt   = string.IsNullOrEmpty(item.Resultado) ? "—" : char.ToUpper(item.Resultado[0]) + item.Resultado[1..];
+                        }
+                        <span style="color:@resColor;font-weight:600">@resTxt</span>
+                    </td>
                     <td>@item.Tratamiento</td>
                     <td>@item.Fecha.ToString("dd MMM yyyy")</td>
                     <td><span class="pill p-@(item.Estado == "limpio" ? "green" : "amber")">@(item.Estado == "limpio" ? "Limpio" : "En tratamiento")</span></td>

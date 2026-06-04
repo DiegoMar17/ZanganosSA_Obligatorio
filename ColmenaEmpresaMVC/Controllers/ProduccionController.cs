@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
@@ -10,6 +11,9 @@ namespace ColmenaEmpresa.Controllers
         private readonly AppDbContext _ctx;
 
         public ProduccionController(AppDbContext ctx) => _ctx = ctx;
+
+        private void CargarApiarios() =>
+            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
 
         public IActionResult Index()
         {
@@ -22,17 +26,20 @@ namespace ColmenaEmpresa.Controllers
             ViewBag.TotalKg      = Math.Round(totalKg, 1);
             ViewBag.MejorApiario = mejor?.Key ?? "—";
             ViewBag.MejorKg      = mejor is not null ? Math.Round(mejor.Sum(c => c.PesoNeto), 1) : 0;
-            ViewBag.VariacionPct = "—";
+            ViewBag.Promedio     = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
+            ViewBag.Cantidad     = cosechas.Count;
             return View(cosechas);
         }
 
-        public IActionResult Crear() => View(new Cosecha { Fecha = DateTime.Today });
+        public IActionResult Crear() { CargarApiarios(); return View(new Cosecha { Fecha = DateTime.Today }); }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Cosecha cosecha)
         {
-            if (!ModelState.IsValid) return View(cosecha);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
+            var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
+            cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Cosechas.Add(cosecha);
             _ctx.SaveChanges();
             TempData["Exito"] = "Cosecha registrada exitosamente.";
@@ -43,7 +50,7 @@ namespace ColmenaEmpresa.Controllers
         {
             var cosecha = _ctx.Cosechas.Find(id);
             if (cosecha is null) return NotFound();
-            return View(cosecha);
+            CargarApiarios(); return View(cosecha);
         }
 
         [HttpPost]
@@ -51,7 +58,9 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Editar(int id, Cosecha cosecha)
         {
             if (id != cosecha.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(cosecha);
+            if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
+            var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
+            cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Cosechas.Update(cosecha);
             _ctx.SaveChanges();
             TempData["Exito"] = "Cosecha actualizada.";

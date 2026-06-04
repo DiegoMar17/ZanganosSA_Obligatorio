@@ -112,7 +112,6 @@
                 var id    = this.getAttribute('data-id');
                 var bubble = document.getElementById('notas-bubble');
 
-                // Toggle si mismo row
                 if (activeRow === id && bubble.style.display !== 'none') {
                     closeBubble();
                     return;
@@ -126,7 +125,6 @@
                 var top  = rect.bottom + 8;
                 var left = Math.min(rect.left, window.innerWidth - 360);
 
-                // Si no cabe abajo, mostrar arriba
                 if (top + 150 > window.innerHeight) top = rect.top - 8 - bubble.offsetHeight;
 
                 bubble.style.top  = top + 'px';

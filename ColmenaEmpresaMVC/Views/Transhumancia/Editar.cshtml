@@ -26,16 +26,22 @@
             <div class="fgrp">
                 <label class="flbl">Origen <span class="req">*</span></label>
                 <select asp-for="ApiarioOrigen" class="fc">
-                    <option>Paso Carrasco</option>
-                    <option>Monte Olivo</option>
+                    <option value="">Seleccionar…</option>
+                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
+                    {
+                        <option>@n</option>
+                    }
                 </select>
                 <span asp-validation-for="ApiarioOrigen" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Destino <span class="req">*</span></label>
                 <select asp-for="ApiarioDestino" class="fc">
-                    <option>El Trébol (temporal)</option>
-                    <option>La Rinconada</option>
+                    <option value="">Seleccionar…</option>
+                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
+                    {
+                        <option>@n</option>
+                    }
                 </select>
                 <span asp-validation-for="ApiarioDestino" class="fhint" style="color:var(--red)"></span>
             </div>
