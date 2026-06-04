@@ -17,16 +17,17 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index()
         {
-            var cosechas = _ctx.Cosechas.ToList();
-            var totalKg  = cosechas.Sum(c => c.PesoNeto);
+            var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
+            var vendidas = cosechas.Where(c => c.Vendida).ToList();
             var mejor    = cosechas.GroupBy(c => c.ApiarioNombre)
                                    .OrderByDescending(g => g.Sum(c => c.PesoNeto))
                                    .FirstOrDefault();
 
-            ViewBag.TotalKg      = Math.Round(totalKg, 1);
+            ViewBag.TotalKg      = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
+            ViewBag.Ingresos     = vendidas.Sum(c => c.MontoVenta);
+            ViewBag.KgVendidos   = Math.Round(vendidas.Sum(c => c.PesoNeto), 1);
             ViewBag.MejorApiario = mejor?.Key ?? "—";
             ViewBag.MejorKg      = mejor is not null ? Math.Round(mejor.Sum(c => c.PesoNeto), 1) : 0;
-            ViewBag.Promedio     = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
             ViewBag.Cantidad     = cosechas.Count;
             return View(cosechas);
         }

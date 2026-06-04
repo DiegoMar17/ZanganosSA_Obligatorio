@@ -1,42 +1,108 @@
 @model IEnumerable<ColmenaEmpresa.Models.Cosecha>
 @{
     ViewData["Title"] = "Producción";
-    ViewData["Subtitle"] = "Cosecha temporada 2025–26";
+    ViewData["Subtitle"] = ViewBag.Cantidad + " cosechas · " + ViewBag.TotalKg + " kg netos";
 }
 
 @section Actions {
-    <a class="btn btn-sm" asp-action="Exportar" target="_blank">⬇ Exportar</a>
+    <a class="btn btn-sm" asp-action="ExportarCsv">⬇ CSV</a>
+    <a class="btn btn-sm" asp-action="Exportar" target="_blank">⬇ PDF</a>
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Registrar cosecha</a>
 }
 
 <div class="g4 mb-6">
-    <div class="stat-card"><div class="stat-lbl">Cosecha total</div><div class="stat-val c-gold">@ViewBag.TotalKg kg</div><div class="stat-meta">Temporada 2025–26</div></div>
-    <div class="stat-card"><div class="stat-lbl">Mejor apiario</div><div class="stat-val" style="font-family:var(--serif);font-size:18px;color:var(--gold)">@ViewBag.MejorApiario</div><div class="stat-meta">@ViewBag.MejorKg kg</div></div>
-    <div class="stat-card"><div class="stat-lbl">Promedio por cosecha</div><div class="stat-val c-gold">@ViewBag.Promedio kg</div></div>
-    <div class="stat-card"><div class="stat-lbl">N° de cosechas</div><div class="stat-val c-green">@ViewBag.Cantidad</div></div>
+    <div class="stat-card">
+        <div class="stat-lbl">Producción total</div>
+        <div class="stat-val c-gold">@ViewBag.TotalKg <span style="font-size:18px">kg</span></div>
+        <div class="stat-meta">Peso neto acumulado</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Ingresos por ventas</div>
+        <div class="stat-val c-green">$@ViewBag.Ingresos</div>
+        <div class="stat-meta">@ViewBag.KgVendidos kg vendidos</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Mejor apiario</div>
+        <div class="stat-val" style="font-family:var(--serif);font-size:20px;color:var(--gold)">@ViewBag.MejorApiario</div>
+        <div class="stat-meta">@ViewBag.MejorKg kg</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Cosechas registradas</div>
+        <div class="stat-val c-gold">@ViewBag.Cantidad</div>
+        <div class="stat-meta">Total histórico</div>
+    </div>
 </div>
 
-<div class="card">
-    <div class="card-hd"><div class="card-title">Producción por apiario</div></div>
-    @if (!Model.Any())
-    {
-        <div style="padding:24px;color:var(--txt-4);text-align:center">Sin cosechas registradas aún.</div>
-    }
-    else
-    {
-        var maxPeso = Model.Max(m => m.PesoBruto);
-        @foreach (var item in Model)
-        {
-            <div class="prod-row">
-                <div class="prod-name">@item.ApiarioNombre</div>
-                <div class="prod-bar"><div class="prod-fill" style="width:@(maxPeso > 0 ? item.PesoBruto * 100 / maxPeso : 0)%;background:var(--gold)"></div></div>
-                <div class="prod-val c-gold">@item.PesoNeto kg</div>
-                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta cosecha?')">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-                </form>
-            </div>
-        }
-    }
+<div class="tbl-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Apiario</th>
+                <th>Fecha</th>
+                <th>Tipo miel</th>
+                <th>Alzas</th>
+                <th>Peso neto</th>
+                <th>Humedad</th>
+                <th>Destino</th>
+                <th>Venta</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="9" style="text-align:center;color:var(--txt-4);padding:40px">
+                    <div style="font-size:32px;margin-bottom:8px">🍯</div>
+                    <div>Sin cosechas registradas.</div>
+                    <a class="btn btn-primary btn-sm" asp-action="Crear" style="margin-top:14px;display:inline-block">+ Registrar primera cosecha</a>
+                </td></tr>
+            }
+            @foreach (var item in Model)
+            {
+                var destinoPill = item.Destino switch {
+                    "Exportación"       => "p-blue",
+                    "Fraccionado local" => "p-amber",
+                    _                   => "p-ghost"
+                };
+                var mielPill = item.TipoMiel switch {
+                    "Eucalipto"    => "p-green",
+                    "Monte nativo" => "p-amber",
+                    _              => "p-gold"
+                };
+                <tr>
+                    <td class="td-1">@item.ApiarioNombre</td>
+                    <td>@item.Fecha.ToString("dd MMM yyyy")</td>
+                    <td><span class="pill @mielPill">@item.TipoMiel</span></td>
+                    <td class="td-1">@item.AlzasCosechadas</td>
+                    <td class="td-1" style="color:var(--gold)">@Math.Round(item.PesoNeto, 1) kg</td>
+                    <td>
+                        @if (item.Humedad > 0)
+                        {
+                            var humColor = item.Humedad <= 18 ? "var(--green)" : item.Humedad <= 20 ? "var(--amber)" : "var(--red)";
+                            <span style="color:@humColor;font-weight:600">@item.Humedad%</span>
+                        }
+                        else { <span style="color:var(--txt-4)">—</span> }
+                    </td>
+                    <td><span class="pill @destinoPill">@item.Destino</span></td>
+                    <td>
+                        @if (item.Vendida)
+                        {
+                            <span class="pill p-green" title="$@item.PrecioPorKg/kg">✓ $@item.MontoVenta</span>
+                        }
+                        else
+                        {
+                            <span style="color:var(--txt-4);font-size:12px">En stock</span>
+                        }
+                    </td>
+                    <td style="display:flex;gap:6px">
+                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta cosecha?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
