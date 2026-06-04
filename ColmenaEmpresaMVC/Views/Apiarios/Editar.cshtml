@@ -39,7 +39,10 @@
             </div>
         </div>
 
-        <div class="fs">Coordenadas GPS</div>
+        <div class="fs">Ubicación en el mapa</div>
+        <div class="fhint mb-4">Hacé click en el mapa para mover la ubicación del apiario.</div>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <div id="mapa-pick" style="height:280px;border-radius:var(--r-md);border:1px solid var(--bdr);z-index:1" class="mb-4"></div>
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Latitud</label>
@@ -93,4 +96,29 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const inLat = document.getElementById('Latitud');
+        const inLng = document.getElementById('Longitud');
+
+        const lat0 = parseFloat(inLat.value) || -32.8;
+        const lng0 = parseFloat(inLng.value) || -55.8;
+        const tieneCoord = inLat.value && inLng.value;
+
+        const mapa = L.map('mapa-pick').setView([lat0, lng0], tieneCoord ? 12 : 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap', maxZoom: 18
+        }).addTo(mapa);
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+
+        let marcador = tieneCoord ? L.marker([lat0, lng0]).addTo(mapa) : null;
+
+        mapa.on('click', e => {
+            inLat.value = e.latlng.lat.toFixed(6);
+            inLng.value = e.latlng.lng.toFixed(6);
+            if (marcador) marcador.setLatLng(e.latlng);
+            else marcador = L.marker(e.latlng).addTo(mapa);
+        });
+    </script>
 }

@@ -8,11 +8,8 @@
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo apiario</a>
 }
 
-<div class="map-ph mb-6">
-    <div class="map-ph-pins">📍 📍 📍 📍</div>
-    <div class="map-ph-lbl">Mapa interactivo — Leaflet + OpenStreetMap</div>
-    <div class="map-ph-sub">Coordenadas GPS de cada apiario registrado</div>
-</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<div id="mapa" class="mb-6" style="height:340px;border-radius:var(--r-lg);border:1px solid var(--bdr);z-index:1;background:#aad3df"></div>
 
 <div class="sec-head mb-4">
     <div><div class="sec-title">Apiarios registrados</div></div>
@@ -58,3 +55,51 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const apiarios = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Where(a => a.Latitud.HasValue && a.Longitud.HasValue)
+                 .Select(a => new {
+                     nombre = a.Nombre,
+                     depto = a.Departamento,
+                     lat = a.Latitud,
+                     lng = a.Longitud,
+                     colmenas = a.TotalColmenas,
+                     estado = a.EstadoSemaforo
+                 })
+        ));
+
+        // Centro por defecto: Uruguay
+        const mapa = L.map('mapa').setView([-32.8, -55.8], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 18
+        }).addTo(mapa);
+
+        const colorEstado = { rojo: '#F26B6B', amarillo: '#F0A835', verde: '#52C98B' };
+
+        if (apiarios.length) {
+            const grupo = [];
+            apiarios.forEach(a => {
+                const color = colorEstado[a.estado] || '#52C98B';
+                const icono = L.divIcon({
+                    className: '',
+                    html: `<div style="background:${color};width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 18]
+                });
+                L.marker([a.lat, a.lng], { icon: icono })
+                    .addTo(mapa)
+                    .bindPopup(`<b>${a.nombre}</b><br>${a.depto}<br>🏠 ${a.colmenas} colmenas`);
+                grupo.push([a.lat, a.lng]);
+            });
+            mapa.fitBounds(grupo, { padding: [40, 40], maxZoom: 11 });
+        }
+
+        // Recalcular tamaño una vez que el contenedor tiene sus dimensiones finales
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+    </script>
+}

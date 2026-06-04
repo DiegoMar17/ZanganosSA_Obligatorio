@@ -33,6 +33,21 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Crear() { CargarApiarios(); return View(new Cosecha { Fecha = DateTime.Today }); }
 
+        // Genera un ingreso en Finanzas a partir de una cosecha vendida.
+        private void GenerarIngreso(Cosecha cosecha)
+        {
+            if (!cosecha.Vendida || cosecha.MontoVenta <= 0) return;
+            _ctx.RegistrosFinancieros.Add(new RegistroFinanciero
+            {
+                TipoMovimiento = "ingreso",
+                Categoria      = "Venta de miel",
+                Descripcion    = $"Venta cosecha {cosecha.PesoNeto} kg ({cosecha.TipoMiel}) — {cosecha.ApiarioNombre}",
+                Fecha          = cosecha.Fecha,
+                Monto          = cosecha.MontoVenta,
+                ApiarioNombre  = cosecha.ApiarioNombre
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Cosecha cosecha)
@@ -41,8 +56,11 @@ namespace ColmenaEmpresa.Controllers
             var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
             cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.Cosechas.Add(cosecha);
+            GenerarIngreso(cosecha);
             _ctx.SaveChanges();
-            TempData["Exito"] = "Cosecha registrada exitosamente.";
+            TempData["Exito"] = cosecha.Vendida && cosecha.MontoVenta > 0
+                ? $"Cosecha registrada e ingreso de ${cosecha.MontoVenta} cargado en Finanzas."
+                : "Cosecha registrada exitosamente.";
             return RedirectToAction(nameof(Index));
         }
 
