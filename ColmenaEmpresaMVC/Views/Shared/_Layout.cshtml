@@ -36,7 +36,7 @@
 
             <div class="sb-group-label">Gestión</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inspecciones" ? "active" : "")" asp-controller="Inspecciones" asp-action="Index">
-                <span class="sb-ico">🔍</span>Inspecciones<span class="sb-badge sb-badge-r">3</span>
+                <span class="sb-ico">🔍</span>Inspecciones<span class="sb-badge sb-badge-r">@_db.Inspecciones.Count(i => i.Estado == "pendiente" || i.Estado == "vencida")</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Transhumancia" ? "active" : "")" asp-controller="Transhumancia" asp-action="Index">
                 <span class="sb-ico">🚚</span>Transhumancia

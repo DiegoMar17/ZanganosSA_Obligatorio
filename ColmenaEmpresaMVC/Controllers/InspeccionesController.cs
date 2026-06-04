@@ -108,17 +108,18 @@ namespace ColmenaEmpresa.Controllers
         {
             var i = _ctx.Inspecciones.Find(id);
             if (i is null) return NotFound();
-            CargarDatos(); return View(i);
+            return View(i);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Editar(int id, Inspeccion inspeccion)
         {
             if (id != inspeccion.Id) return BadRequest();
-            if (!ModelState.IsValid) { CargarDatos(); return View(inspeccion); }
+            if (!ModelState.IsValid) return View(inspeccion);
 
-            var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
-            inspeccion.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+            if (inspeccion.Estado == "completa")
+                inspeccion.ColmenasInspeccionadas = inspeccion.TotalColmenas;
+
             _ctx.Inspecciones.Update(inspeccion);
 
             // Refresca la última visita de las colmenas del apiario
