@@ -25,5 +25,8 @@ namespace ColmenaEmpresa.Models
 
         [StringLength(100)]
         public string ApiarioNombre { get; set; } = "General";
+
+        // FK nullable hacia Cosecha — permite sincronizar ingresos al editar/eliminar
+        public int? CosechaId { get; set; }
     }
 }

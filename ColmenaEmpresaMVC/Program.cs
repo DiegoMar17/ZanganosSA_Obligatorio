@@ -44,10 +44,11 @@ using (var scope = app.Services.CreateScope())
 
     db.Database.EnsureCreated();
 
-    // Columnas agregadas en sesión 002 — no usar migraciones EF, ALTER TABLE idempotente
+    // ALTER TABLE idempotente — agrega columnas nuevas sin perder datos
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN TipoInspeccion TEXT NOT NULL DEFAULT 'apiario'"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaId INTEGER NULL"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaCodigo TEXT NOT NULL DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE RegistrosFinancieros ADD COLUMN CosechaId INTEGER NULL"); } catch { }
 
     // Seed usuario admin
     if (!userManager.Users.Any())
