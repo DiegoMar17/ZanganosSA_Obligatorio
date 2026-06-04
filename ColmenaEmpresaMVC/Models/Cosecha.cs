@@ -41,6 +41,13 @@ namespace ColmenaEmpresa.Models
         [StringLength(500)]
         public string Notas { get; set; } = string.Empty;
 
-        public bool CrearRegistroIngreso { get; set; } = true;
+        // ── Venta (integración con Finanzas) ──
+        public bool Vendida { get; set; }
+
+        [Range(0, 100000, ErrorMessage = "Precio por kg entre 0 y 100000.")]
+        public decimal PrecioPorKg { get; set; }
+
+        // Monto total de la venta (no se persiste, se calcula)
+        public decimal MontoVenta => Math.Round((decimal)PesoNeto * PrecioPorKg, 2);
     }
 }

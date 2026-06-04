@@ -38,7 +38,10 @@
             </div>
         </div>
 
-        <div class="fs">Coordenadas GPS</div>
+        <div class="fs">Ubicación en el mapa</div>
+        <div class="fhint mb-4">Hacé click en el mapa para marcar la ubicación del apiario, o usá «Detectar ubicación».</div>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <div id="mapa-pick" style="height:280px;border-radius:var(--r-md);border:1px solid var(--bdr);z-index:1" class="mb-4"></div>
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Latitud</label>
@@ -50,8 +53,8 @@
                 <input asp-for="Longitud" class="fc" placeholder="-56.2345" step="any">
                 <span asp-validation-for="Longitud" class="fhint" style="color:var(--red)"></span>
             </div>
-            <div class="fgrp fg-full" style="align-items:flex-start;padding-top:22px">
-                <button type="button" class="btn" id="btn-gps">📡 Detectar ubicación</button>
+            <div class="fgrp fg-full">
+                <button type="button" class="btn" id="btn-gps">📡 Detectar mi ubicación</button>
                 <span class="fhint" id="gps-status" style="margin-top:6px"></span>
             </div>
         </div>
@@ -96,23 +99,52 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        const inLat = document.getElementById('Latitud');
+        const inLng = document.getElementById('Longitud');
+        const status = document.getElementById('gps-status');
+
+        // Mapa centrado en Uruguay
+        const mapa = L.map('mapa-pick').setView([-32.8, -55.8], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap', maxZoom: 18
+        }).addTo(mapa);
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+
+        let marcador = null;
+        function ponerPin(lat, lng, zoom) {
+            inLat.value = lat.toFixed(6);
+            inLng.value = lng.toFixed(6);
+            if (marcador) marcador.setLatLng([lat, lng]);
+            else marcador = L.marker([lat, lng]).addTo(mapa);
+            if (zoom) mapa.setView([lat, lng], zoom);
+        }
+
+        // Click en el mapa coloca el pin
+        mapa.on('click', e => ponerPin(e.latlng.lat, e.latlng.lng));
+
+        // Si ya hay valores cargados (ej: al volver por validación), mostrar el pin
+        if (inLat.value && inLng.value) {
+            ponerPin(parseFloat(inLat.value), parseFloat(inLng.value), 12);
+        }
+
+        // Detectar ubicación del navegador
         document.getElementById('btn-gps').addEventListener('click', function () {
-            const status = document.getElementById('gps-status');
             if (!navigator.geolocation) {
                 status.textContent = 'Tu navegador no soporta geolocalización.';
                 return;
             }
             status.textContent = 'Detectando ubicación…';
             navigator.geolocation.getCurrentPosition(
-                function (pos) {
-                    document.getElementById('Latitud').value  = pos.coords.latitude.toFixed(6);
-                    document.getElementById('Longitud').value = pos.coords.longitude.toFixed(6);
-                    status.textContent = '✓ Ubicación detectada correctamente.';
+                pos => {
+                    ponerPin(pos.coords.latitude, pos.coords.longitude, 13);
+                    status.textContent = '✓ Ubicación detectada.';
                     status.style.color = 'var(--green)';
                 },
-                function () {
-                    status.textContent = '⚠ No se pudo detectar la ubicación. Ingresala manualmente.';
+                () => {
+                    status.textContent = '⚠ No se pudo detectar. Marcá el punto en el mapa.';
                     status.style.color = 'var(--red)';
                 }
             );

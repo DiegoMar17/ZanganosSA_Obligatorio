@@ -66,10 +66,10 @@ using (var scope = app.Services.CreateScope())
     if (!db.Apiarios.Any())
     {
         db.Apiarios.AddRange(
-            new Apiario { Nombre="La Rinconada",  Departamento="San José",  Ubicacion="Ruta 3 km 85",  Latitud=-34.38, Longitud=-56.68, Flora="Eucaliptal",   Acceso="Todo tiempo",          CapacidadColmenas=30, TotalColmenas=18, EstadoSemaforo="rojo" },
-            new Apiario { Nombre="Monte Olivo",   Departamento="Canelones", Ubicacion="Ruta 8 km 48",  Latitud=-34.47, Longitud=-56.25, Flora="Monte nativo", Acceso="Todo tiempo",          CapacidadColmenas=40, TotalColmenas=24, EstadoSemaforo="verde" },
-            new Apiario { Nombre="El Eucaliptal", Departamento="Lavalleja", Ubicacion="Ruta 81 km 12", Latitud=-34.32, Longitud=-55.63, Flora="Eucaliptal",   Acceso="Solo con buen tiempo", CapacidadColmenas=25, TotalColmenas=15, EstadoSemaforo="amarillo" },
-            new Apiario { Nombre="Paso Carrasco", Departamento="Rocha",     Ubicacion="Ruta 9 km 220", Latitud=-34.13, Longitud=-54.92, Flora="Pradera",      Acceso="Requiere 4x4",         CapacidadColmenas=35, TotalColmenas=21, EstadoSemaforo="amarillo" }
+            new Apiario { Nombre="La Rinconada",  Departamento="San José",  Ubicacion="Ruta 3 km 85",  Latitud=-34.337, Longitud=-56.713, Flora="Eucaliptal",   Acceso="Todo tiempo",          CapacidadColmenas=30, TotalColmenas=18, EstadoSemaforo="rojo" },
+            new Apiario { Nombre="Monte Olivo",   Departamento="Canelones", Ubicacion="Ruta 8 km 48",  Latitud=-34.523, Longitud=-56.284, Flora="Monte nativo", Acceso="Todo tiempo",          CapacidadColmenas=40, TotalColmenas=24, EstadoSemaforo="verde" },
+            new Apiario { Nombre="El Eucaliptal", Departamento="Lavalleja", Ubicacion="Ruta 81 km 12", Latitud=-34.375, Longitud=-55.237, Flora="Eucaliptal",   Acceso="Solo con buen tiempo", CapacidadColmenas=25, TotalColmenas=15, EstadoSemaforo="amarillo" },
+            new Apiario { Nombre="Paso Carrasco", Departamento="Rocha",     Ubicacion="Ruta 9 km 220", Latitud=-34.483, Longitud=-54.333, Flora="Pradera",      Acceso="Requiere 4x4",         CapacidadColmenas=35, TotalColmenas=21, EstadoSemaforo="amarillo" }
         );
         db.Colmenas.AddRange(
             new Colmena { Codigo="C-01",  ApiarioId=2, ApiarioNombre="Monte Olivo",   Tipo="Langstroth", FechaInstalacion=new DateTime(2022,9,1),  EstadoReina="vista",    CantidadAlzas=2, MarcosConCria=8, EstadoSemaforo="verde",    UltimaVisita=DateTime.Now.AddDays(-4) },
