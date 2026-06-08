@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net9.0": {
       "Humanizer.Core/2.14.1": {
@@ -3284,29 +3284,36 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\eric0\\.nuget\\packages\\": {}
+    "C:\\Users\\dm270\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\eric0\\OneDrive\\Desktop\\Obligatorio_Prog3\\obligatorio-integrado-prueba\\ZanganosSA_Obligatorio\\ColmenaEmpresaMVC\\ColmenaEmpresa.csproj",
+      "projectUniqueName": "C:\\CTC\\SEMESTRE - 3\\ObligatorioGeneral\\ColmenaEmpresa\\ColmenaEmpresaMVC\\ColmenaEmpresa.csproj",
       "projectName": "ColmenaEmpresa",
-      "projectPath": "C:\\Users\\eric0\\OneDrive\\Desktop\\Obligatorio_Prog3\\obligatorio-integrado-prueba\\ZanganosSA_Obligatorio\\ColmenaEmpresaMVC\\ColmenaEmpresa.csproj",
-      "packagesPath": "C:\\Users\\eric0\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\eric0\\OneDrive\\Desktop\\Obligatorio_Prog3\\obligatorio-integrado-prueba\\ZanganosSA_Obligatorio\\ColmenaEmpresaMVC\\obj\\",
+      "projectPath": "C:\\CTC\\SEMESTRE - 3\\ObligatorioGeneral\\ColmenaEmpresa\\ColmenaEmpresaMVC\\ColmenaEmpresa.csproj",
+      "packagesPath": "C:\\Users\\dm270\\.nuget\\packages\\",
+      "outputPath": "C:\\CTC\\SEMESTRE - 3\\ObligatorioGeneral\\ColmenaEmpresa\\ColmenaEmpresaMVC\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\eric0\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\dm270\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
-          "framework": "net9.0",
           "targetAlias": "net9.0",
           "projectReferences": {}
         }
@@ -3321,11 +3328,10 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
-        "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
@@ -3362,7 +3368,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -40,6 +40,8 @@ namespace ColmenaEmpresa.Controllers
                 alertas.Add(new AlertaDashboard { Tipo = "red", Titulo = $"Colmena {c.Codigo} en estado crítico", Tiempo = c.ApiarioNombre });
             foreach (var c in colmenas.Where(c => c.EstadoReina == "ausente"))
                 alertas.Add(new AlertaDashboard { Tipo = "amber", Titulo = $"Colmena {c.Codigo} sin reina", Tiempo = c.ApiarioNombre });
+            foreach (var i in inspecciones.Where(i => i.Estado == "vencida"))
+                alertas.Add(new AlertaDashboard { Tipo = "red", Titulo = $"Inspección vencida — {i.ApiarioNombre}", Tiempo = i.Fecha.ToString("dd MMM yyyy") });
             foreach (var i in inspecciones.Where(i => i.Estado == "pendiente"))
                 alertas.Add(new AlertaDashboard { Tipo = "amber", Titulo = $"Inspección pendiente — {i.ApiarioNombre}", Tiempo = i.Fecha.ToString("dd MMM yyyy") });
             if (!alertas.Any())
@@ -53,7 +55,7 @@ namespace ColmenaEmpresa.Controllers
                 ColmenasNuevasMes      = colmenas.Count(c => c.FechaInstalacion.Month == ahora.Month && c.FechaInstalacion.Year == ahora.Year),
                 TotalApiarios          = _ctx.Apiarios.Count(),
                 EnTranshumancia        = transhumancias.Count(t => t.Estado == "en_curso"),
-                InspeccionesPendientes = inspecciones.Count(i => i.Estado == "pendiente"),
+                InspeccionesPendientes = inspecciones.Count(i => i.Estado == "pendiente" || i.Estado == "vencida"),
                 CosechaTotal           = $"{Math.Round(cosechas.Sum(c => c.PesoNeto) / 1000.0, 1):F1} t",
                 ColmenasVerde          = colmenas.Count(c => c.EstadoSemaforo == "verde"),
                 ColmenasAmarillo       = colmenas.Count(c => c.EstadoSemaforo == "amarillo"),

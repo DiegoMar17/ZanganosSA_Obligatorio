@@ -451,9 +451,9 @@ C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debu
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.Development.json
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.json
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\ColmenaEmpresa.staticwebassets.endpoints.json
-C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-elzdnmnkgx.gz
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\web.config
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.Development.json
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\appsettings.json
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\ColmenaEmpresa.staticwebassets.endpoints.json
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\42ufp6ra4q-{0}-eg0l4nodnv-eg0l4nodnv.gz
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-m4tdokco65.gz

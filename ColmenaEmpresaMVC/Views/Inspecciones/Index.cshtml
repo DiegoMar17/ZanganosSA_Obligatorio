@@ -48,7 +48,13 @@
             }
             @foreach (var item in Model.Items)
             {
-                var pillCls = item.Estado == "completa" ? "p-green" : item.Estado == "vencida" ? "p-red" : "p-amber";
+                var pillCls = item.Estado == "completa" ? "p-green" : item.Estado == "vencida" ? "p-red" : item.Estado == "incompleta" ? "p-amber" : "p-amber";
+                var pillTxt = item.Estado switch {
+                    "completa"   => "Completa",
+                    "incompleta" => "Incompleta",
+                    "vencida"    => "Vencida",
+                    _            => "Pendiente"
+                };
                 var hasNotas = !string.IsNullOrWhiteSpace(item.NotasCampo);
                 <tr data-id="@item.Id"
                     data-notas="@(hasNotas ? item.NotasCampo : "")"
@@ -71,7 +77,7 @@
                     <td>@item.Fecha.ToString("dd MMM yyyy")</td>
                     <td>@item.Clima</td>
                     <td>@item.Temperatura°C</td>
-                    <td><span class="pill @pillCls">@item.Estado</span></td>
+                    <td><span class="pill @pillCls">@pillTxt</span></td>
                     <td style="display:flex;gap:6px" onclick="event.stopPropagation()">
                         @if (item.Estado != "completa")
                         {
