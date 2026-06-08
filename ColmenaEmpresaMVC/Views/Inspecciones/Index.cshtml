@@ -1,7 +1,7 @@
 @model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.Inspeccion>
 @{
     ViewData["Title"] = "Inspecciones";
-    ViewData["Subtitle"] = ViewBag.Pendientes + " inspecciones pendientes";
+    ViewData["Subtitle"] = ViewBag.Pendientes + " pendientes · " + ViewBag.Vencidas + " vencidas";
 }
 
 @section Actions {
@@ -9,8 +9,9 @@
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nueva inspección</a>
 }
 
-<div class="g3 mb-6">
-    <div class="stat-card"><div class="stat-lbl">Pendientes</div><div class="stat-val c-red">@ViewBag.Pendientes</div></div>
+<div class="g4 mb-6">
+    <div class="stat-card"><div class="stat-lbl">Pendientes</div><div class="stat-val c-amber">@ViewBag.Pendientes</div></div>
+    <div class="stat-card"><div class="stat-lbl">Vencidas</div><div class="stat-val c-red">@ViewBag.Vencidas</div></div>
     <div class="stat-card"><div class="stat-lbl">Este mes</div><div class="stat-val c-gold">@ViewBag.EsteMes</div></div>
     <div class="stat-card"><div class="stat-lbl">Completadas</div><div class="stat-val c-green">@ViewBag.Completadas</div></div>
 </div>
@@ -30,7 +31,8 @@
     <table>
         <thead>
             <tr>
-                <th>Apiario</th>
+                <th>Tipo</th>
+                <th>Apiario / Colmena</th>
                 <th>Colmenas</th>
                 <th>Fecha</th>
                 <th>Clima</th>
@@ -42,32 +44,42 @@
         <tbody>
             @if (!Model.Items.Any())
             {
-                <tr><td colspan="7" style="text-align:center;color:var(--txt-4);padding:28px">Sin resultados.</td></tr>
+                <tr><td colspan="8" style="text-align:center;color:var(--txt-4);padding:28px">Sin resultados.</td></tr>
             }
             @foreach (var item in Model.Items)
             {
-                <tr>
-                    <td class="td-1">@item.ApiarioNombre</td>
+                var pillCls = item.Estado == "completa" ? "p-green" : item.Estado == "vencida" ? "p-red" : "p-amber";
+                var hasNotas = !string.IsNullOrWhiteSpace(item.NotasCampo);
+                <tr data-id="@item.Id"
+                    data-notas="@(hasNotas ? item.NotasCampo : "")"
+                    style="cursor:pointer"
+                    title="@(hasNotas ? "Click para ver anotaciones" : "Sin anotaciones")">
+                    <td>
+                        @if (item.TipoInspeccion == "colmena")
+                        { <span style="font-size:12px;color:var(--txt-3)">🏠 Colmena</span> }
+                        else
+                        { <span style="font-size:12px;color:var(--txt-3)">📍 Apiario</span> }
+                    </td>
+                    <td class="td-1">
+                        @item.ApiarioNombre
+                        @if (item.TipoInspeccion == "colmena" && !string.IsNullOrEmpty(item.ColmenaCodigo))
+                        {
+                            <span style="color:var(--txt-4);font-size:11px"> · @item.ColmenaCodigo</span>
+                        }
+                    </td>
                     <td>@item.ColmenasInspeccionadas / @item.TotalColmenas</td>
                     <td>@item.Fecha.ToString("dd MMM yyyy")</td>
                     <td>@item.Clima</td>
                     <td>@item.Temperatura°C</td>
-                    <td>
-                        @{
-                            var pill = item.Estado switch {
-                                "completa"   => "p-green",
-                                "incompleta" => "p-amber",
-                                _            => "p-red"
-                            };
-                            var txt = item.Estado switch {
-                                "completa"   => "Completa",
-                                "incompleta" => "Incompleta",
-                                _            => "Pendiente"
-                            };
+                    <td><span class="pill @pillCls">@item.Estado</span></td>
+                    <td style="display:flex;gap:6px" onclick="event.stopPropagation()">
+                        @if (item.Estado != "completa")
+                        {
+                            <form asp-action="Completar" asp-route-id="@item.Id" method="post" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-xs btn-icon" style="color:var(--green)" title="Marcar completada">✓</button>
+                            </form>
                         }
-                        <span class="pill @pill">@txt</span>
-                    </td>
-                    <td style="display:flex;gap:6px">
                         <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
                         <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta inspección?')">
                             @Html.AntiForgeryToken()
@@ -80,3 +92,56 @@
     </table>
     @await Html.PartialAsync("_Pagination", Model)
 </div>
+
+<!-- Burbuja de anotaciones -->
+<div id="notas-bubble" style="display:none;position:fixed;z-index:200;background:var(--bg-2);border:1px solid var(--bdr-2);border-radius:var(--r-md);padding:16px 20px 14px;max-width:340px;min-width:200px;box-shadow:var(--shadow-md)">
+    <div style="font-size:10.5px;font-weight:700;color:var(--txt-4);letter-spacing:.06em;margin-bottom:8px">ANOTACIONES</div>
+    <div id="bubble-text" style="font-size:13px;color:var(--txt-1);line-height:1.55;white-space:pre-wrap"></div>
+    <button onclick="closeBubble()" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--txt-4);font-size:15px;cursor:pointer;line-height:1">✕</button>
+</div>
+
+@section Scripts {
+    <script>
+        var activeRow = null;
+
+        document.querySelectorAll('tr[data-id]').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.btn') || e.target.closest('form')) return;
+
+                var notas = this.getAttribute('data-notas');
+                var id    = this.getAttribute('data-id');
+                var bubble = document.getElementById('notas-bubble');
+
+                if (activeRow === id && bubble.style.display !== 'none') {
+                    closeBubble();
+                    return;
+                }
+
+                activeRow = id;
+                document.getElementById('bubble-text').textContent =
+                    notas && notas.trim() !== '' ? notas : 'Sin anotaciones registradas.';
+
+                var rect = this.getBoundingClientRect();
+                var top  = rect.bottom + 8;
+                var left = Math.min(rect.left, window.innerWidth - 360);
+
+                if (top + 150 > window.innerHeight) top = rect.top - 8 - bubble.offsetHeight;
+
+                bubble.style.top  = top + 'px';
+                bubble.style.left = Math.max(8, left) + 'px';
+                bubble.style.display = 'block';
+            });
+        });
+
+        function closeBubble() {
+            document.getElementById('notas-bubble').style.display = 'none';
+            activeRow = null;
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('tr[data-id]') && !e.target.closest('#notas-bubble')) {
+                closeBubble();
+            }
+        });
+    </script>
+}

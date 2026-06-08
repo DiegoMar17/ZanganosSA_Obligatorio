@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Editar Inspección";
     ViewData["Subtitle"] = "Modificar registro de inspección";
+    var esColmena = Model.TipoInspeccion == "colmena";
 }
 
 <div class="form-wrap">
@@ -9,17 +10,43 @@
     <div class="form-desc">Modificá los datos de la inspección de campo.</div>
 
     <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="TipoInspeccion" />
+        <input type="hidden" asp-for="ApiarioId" />
+        <input type="hidden" asp-for="ApiarioNombre" />
+        <input type="hidden" asp-for="ColmenaId" />
+        <input type="hidden" asp-for="ColmenaCodigo" />
+        <input type="hidden" asp-for="TotalColmenas" />
+        <input type="hidden" asp-for="ColmenasInspeccionadas" />
+
         <div asp-validation-summary="ModelOnly" class="fhint mb-4" style="color:var(--red);background:var(--red-bg);border-radius:var(--r-sm);padding:10px 14px"></div>
 
-        <div class="fg">
+        <div class="fg" style="margin-bottom:20px">
             <div class="fgrp">
-                <label class="flbl">Apiario <span class="req">*</span></label>
-                <select asp-for="ApiarioId" class="fc" asp-items="ViewBag.Apiarios">
-                    <option value="">Seleccionar…</option>
-                </select>
-                <span asp-validation-for="ApiarioId" class="fhint" style="color:var(--red)"></span>
+                <label class="flbl">Tipo</label>
+                <div class="fc" style="background:var(--surface);color:var(--txt-3);cursor:default">
+                    @(esColmena ? "🏠 Colmena específica" : "📍 Por apiario")
+                </div>
             </div>
+            <div class="fgrp">
+                <label class="flbl">@(esColmena ? "Colmena" : "Apiario")</label>
+                <div class="fc" style="background:var(--surface);color:var(--txt-3);cursor:default">
+                    @if (esColmena)
+                    {
+                        <span>@Model.ColmenaCodigo</span>
+                        <span style="color:var(--txt-4);font-size:11px;margin-left:6px">· @Model.ApiarioNombre</span>
+                    }
+                    else
+                    {
+                        <span>@Model.ApiarioNombre</span>
+                        <span style="color:var(--txt-4);font-size:11px;margin-left:6px">· @Model.TotalColmenas colmenas</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Fecha <span class="req">*</span></label>
                 <input asp-for="Fecha" class="fc" type="date">
@@ -42,16 +69,16 @@
             <div class="fgrp">
                 <label class="flbl">Estado</label>
                 <select asp-for="Estado" class="fc">
-                    <option value="completa">Completa</option>
-                    <option value="incompleta">Incompleta</option>
                     <option value="pendiente">Pendiente</option>
+                    <option value="completa">Completa</option>
+                    <option value="vencida">Vencida</option>
                 </select>
             </div>
         </div>
 
         <div class="fgrp fg-full" style="margin-top:16px">
             <label class="flbl">Notas de campo</label>
-            <textarea asp-for="NotasCampo" class="fc" placeholder="Detalles de la visita…"></textarea>
+            <textarea asp-for="NotasCampo" class="fc" rows="4" placeholder="Detalles de la visita…"></textarea>
         </div>
 
         <div class="form-footer">

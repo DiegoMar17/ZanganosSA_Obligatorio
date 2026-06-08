@@ -75,6 +75,23 @@
             <textarea asp-for="Notas" class="fc" placeholder="Condiciones, personal…"></textarea>
         </div>
 
+        <div class="fs">Venta (opcional)</div>
+        <label class="fcheck mb-4">
+            <input type="checkbox" asp-for="Vendida" id="chk-vendida"> Esta cosecha ya fue vendida
+        </label>
+        <div class="fg" id="venta-campos" style="display:none">
+            <div class="fgrp">
+                <label class="flbl">Precio por kg ($)</label>
+                <input asp-for="PrecioPorKg" class="fc" type="number" step="0.01" min="0" id="precio-kg">
+                <span asp-validation-for="PrecioPorKg" class="fhint" style="color:var(--red)"></span>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Ingreso estimado</label>
+                <input class="fc" id="ingreso-estimado" readonly style="color:var(--green);font-weight:700;font-size:16px" value="$0">
+                <span class="fhint">Calculado en base al peso neto.</span>
+            </div>
+        </div>
+
         <div class="form-footer">
             <a asp-action="Index" class="btn">Cancelar</a>
             <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -84,4 +101,26 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        const chk      = document.getElementById('chk-vendida');
+        const campos   = document.getElementById('venta-campos');
+        const precio   = document.getElementById('precio-kg');
+        const bruto    = document.getElementById('PesoBruto');
+        const merma    = document.getElementById('Merma');
+        const estimado = document.getElementById('ingreso-estimado');
+
+        function toggleVenta() {
+            campos.style.display = chk.checked ? 'grid' : 'none';
+            calcular();
+        }
+        function calcular() {
+            const neto  = (parseFloat(bruto?.value) || 0) - (parseFloat(merma?.value) || 0);
+            const total = neto * (parseFloat(precio?.value) || 0);
+            estimado.value = '$' + (total > 0 ? total.toFixed(2) : '0');
+        }
+
+        chk.addEventListener('change', toggleVenta);
+        [precio, bruto, merma].forEach(el => el?.addEventListener('input', calcular));
+        toggleVenta();
+    </script>
 }

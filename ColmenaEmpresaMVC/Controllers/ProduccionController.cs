@@ -17,49 +17,63 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index()
         {
-            var cosechas = _ctx.Cosechas.ToList();
-            var totalKg  = cosechas.Sum(c => c.PesoNeto);
+            var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
+            var vendidas = cosechas.Where(c => c.Vendida).ToList();
             var mejor    = cosechas.GroupBy(c => c.ApiarioNombre)
                                    .OrderByDescending(g => g.Sum(c => c.PesoNeto))
                                    .FirstOrDefault();
 
-            ViewBag.TotalKg      = Math.Round(totalKg, 1);
+            ViewBag.TotalKg      = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
+            ViewBag.Ingresos     = vendidas.Sum(c => c.MontoVenta);
+            ViewBag.KgVendidos   = Math.Round(vendidas.Sum(c => c.PesoNeto), 1);
             ViewBag.MejorApiario = mejor?.Key ?? "—";
             ViewBag.MejorKg      = mejor is not null ? Math.Round(mejor.Sum(c => c.PesoNeto), 1) : 0;
-            ViewBag.Promedio     = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
             ViewBag.Cantidad     = cosechas.Count;
             return View(cosechas);
         }
 
         public IActionResult Crear() { CargarApiarios(); return View(new Cosecha { Fecha = DateTime.Today }); }
 
-        // Genera un ingreso en Finanzas a partir de una cosecha vendida.
-        private void GenerarIngreso(Cosecha cosecha)
+        // Crea o actualiza el ingreso en Finanzas vinculado a esta cosecha.
+        // Debe llamarse DESPUÉS de SaveChanges para que cosecha.Id esté disponible.
+        private void SincronizarIngreso(Cosecha cosecha)
         {
-            if (!cosecha.Vendida || cosecha.MontoVenta <= 0) return;
-            _ctx.RegistrosFinancieros.Add(new RegistroFinanciero
-            {
-                TipoMovimiento = "ingreso",
-                Categoria      = "Venta de miel",
-                Descripcion    = $"Venta cosecha {cosecha.PesoNeto} kg ({cosecha.TipoMiel}) — {cosecha.ApiarioNombre}",
-                Fecha          = cosecha.Fecha,
-                Monto          = cosecha.MontoVenta,
-                ApiarioNombre  = cosecha.ApiarioNombre
-            });
+            // Eliminar ingreso anterior vinculado (si existe)
+            var anterior = _ctx.RegistrosFinancieros
+                .FirstOrDefault(r => r.CosechaId == cosecha.Id);
+            if (anterior is not null)
+                _ctx.RegistrosFinancieros.Remove(anterior);
+
+            // Crear nuevo ingreso solo si aplica
+            if (cosecha.Vendida && cosecha.MontoVenta > 0)
+                _ctx.RegistrosFinancieros.Add(new RegistroFinanciero
+                {
+                    CosechaId      = cosecha.Id,
+                    TipoMovimiento = "ingreso",
+                    Categoria      = "Venta de miel",
+                    Descripcion    = $"Venta cosecha {Math.Round(cosecha.PesoNeto, 1)} kg ({cosecha.TipoMiel}) — {cosecha.ApiarioNombre}",
+                    Fecha          = cosecha.Fecha,
+                    Monto          = cosecha.MontoVenta,
+                    ApiarioNombre  = cosecha.ApiarioNombre
+                });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Crear(Cosecha cosecha)
         {
             if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
+
             var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
             cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+
             _ctx.Cosechas.Add(cosecha);
-            GenerarIngreso(cosecha);
+            _ctx.SaveChanges(); // Necesario para obtener cosecha.Id antes de crear el ingreso
+
+            SincronizarIngreso(cosecha);
             _ctx.SaveChanges();
+
             TempData["Exito"] = cosecha.Vendida && cosecha.MontoVenta > 0
-                ? $"Cosecha registrada e ingreso de ${cosecha.MontoVenta} cargado en Finanzas."
+                ? $"Cosecha registrada e ingreso de ${cosecha.MontoVenta:N2} cargado en Finanzas."
                 : "Cosecha registrada exitosamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -71,34 +85,47 @@ namespace ColmenaEmpresa.Controllers
             CargarApiarios(); return View(cosecha);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Editar(int id, Cosecha cosecha)
         {
             if (id != cosecha.Id) return BadRequest();
             if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
+
             var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
             cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+
             _ctx.Cosechas.Update(cosecha);
+            SincronizarIngreso(cosecha); // Elimina el anterior y recrea si aplica
             _ctx.SaveChanges();
-            TempData["Exito"] = "Cosecha actualizada.";
+
+            TempData["Exito"] = cosecha.Vendida && cosecha.MontoVenta > 0
+                ? $"Cosecha actualizada e ingreso de ${cosecha.MontoVenta:N2} sincronizado en Finanzas."
+                : "Cosecha actualizada.";
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Eliminar(int id)
         {
             var cosecha = _ctx.Cosechas.Find(id);
-            if (cosecha is not null) { _ctx.Cosechas.Remove(cosecha); _ctx.SaveChanges(); TempData["Exito"] = "Cosecha eliminada."; }
+            if (cosecha is not null)
+            {
+                // Eliminar ingreso asociado en Finanzas antes de borrar la cosecha
+                var ingreso = _ctx.RegistrosFinancieros.FirstOrDefault(r => r.CosechaId == id);
+                if (ingreso is not null) _ctx.RegistrosFinancieros.Remove(ingreso);
+
+                _ctx.Cosechas.Remove(cosecha);
+                _ctx.SaveChanges();
+                TempData["Exito"] = "Cosecha eliminada.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Exportar()
         {
             var cosechas = _ctx.Cosechas.OrderBy(c => c.Fecha).ToList();
-            ViewBag.TotalKg    = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
-            ViewBag.Promedio   = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
+            ViewBag.TotalKg      = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
+            ViewBag.Promedio     = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
             var mejor = cosechas.OrderByDescending(c => c.PesoNeto).FirstOrDefault();
             ViewBag.MejorCosecha = mejor is not null ? $"{mejor.ApiarioNombre} · {mejor.PesoNeto} kg" : "—";
             return View(cosechas);
@@ -107,11 +134,11 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult ExportarCsv()
         {
             var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("Apiario,Fecha,Tipo Miel,Alzas,Peso Bruto (kg),Merma (kg),Peso Neto (kg),Humedad (%),HMF,Destino");
+            var sb = new StringBuilder();
+            sb.AppendLine("Apiario,Fecha,Tipo Miel,Alzas,Peso Bruto (kg),Merma (kg),Peso Neto (kg),Humedad (%),HMF,Destino,Vendida,Precio/kg,Ingreso");
             foreach (var c in cosechas)
-                sb.AppendLine($"{c.ApiarioNombre},{c.Fecha:dd/MM/yyyy},{c.TipoMiel},{c.AlzasCosechadas},{c.PesoBruto},{c.Merma},{c.PesoNeto},{c.Humedad},{c.HMF},{c.Destino}");
-            return File(System.Text.Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"produccion_{DateTime.Now:yyyyMMdd}.csv");
+                sb.AppendLine($"{c.ApiarioNombre},{c.Fecha:dd/MM/yyyy},{c.TipoMiel},{c.AlzasCosechadas},{c.PesoBruto},{c.Merma},{c.PesoNeto},{c.Humedad},{c.HMF},{c.Destino},{c.Vendida},{c.PrecioPorKg},{(c.Vendida ? c.MontoVenta : 0)}");
+            return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"produccion_{DateTime.Now:yyyyMMdd}.csv");
         }
     }
 }
