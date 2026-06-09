@@ -3,57 +3,85 @@
     ViewData["Subtitle"] = "Datos y preferencias";
 }
 
-<div class="profile-layout">
+<div class="g2">
     <div>
-        <div class="profile-card mb-6">
-            <div class="profile-cover">
-                <div class="profile-avatar-wrap">👨‍🌾</div>
-            </div>
-            <div class="profile-body">
-                <div class="profile-name">Carlos Bentancur</div>
-                <div class="profile-role">Apicultor · Montevideo, Uruguay</div>
-                <div class="profile-stats">
-                    <div class="ps-item"><div class="ps-val">12</div><div class="ps-lbl">Apiarios</div></div>
-                    <div class="ps-item"><div class="ps-val">148</div><div class="ps-lbl">Colmenas</div></div>
-                    <div class="ps-item"><div class="ps-val">8</div><div class="ps-lbl">Temporadas</div></div>
-                    <div class="ps-item"><div class="ps-val">2.4t</div><div class="ps-lbl">Última cosecha</div></div>
+        <div class="card mb-4" style="text-align:center;padding:32px 24px">
+            <div style="width:72px;height:72px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--bdr-2);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px">👨‍🌾</div>
+            <div style="font-family:var(--serif);font-size:20px;color:var(--txt-1);margin-bottom:4px">Carlos Bentancur</div>
+            <div style="font-size:13px;color:var(--txt-4);margin-bottom:20px">Apicultor · Montevideo, Uruguay</div>
+            <div class="g4" style="gap:8px">
+                <div style="text-align:center">
+                    <div style="font-family:var(--serif);font-size:22px;color:var(--gold)">12</div>
+                    <div style="font-size:11px;color:var(--txt-4)">Apiarios</div>
                 </div>
-                <button class="btn btn-sm" style="width:100%" onclick="toast('Foto de perfil actualizada ✓')">✏ Editar perfil</button>
+                <div style="text-align:center">
+                    <div style="font-family:var(--serif);font-size:22px;color:var(--gold)">148</div>
+                    <div style="font-size:11px;color:var(--txt-4)">Colmenas</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-family:var(--serif);font-size:22px;color:var(--gold)">8</div>
+                    <div style="font-size:11px;color:var(--txt-4)">Temporadas</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-family:var(--serif);font-size:22px;color:var(--gold)">2.4t</div>
+                    <div style="font-size:11px;color:var(--txt-4)">Última cosecha</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-hd"><div class="card-title">Preferencias</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--surface)">
+                <div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">Tema de la interfaz</div>
+                    <div style="font-size:12px;color:var(--txt-4)">Oscuro o claro</div>
+                </div>
+                <button class="btn btn-sm" onclick="document.getElementById('theme-btn').click()">Cambiar tema</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+                <div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">Idioma</div>
+                    <div style="font-size:12px;color:var(--txt-4)">Español (Uruguay)</div>
+                </div>
+                <span class="pill p-ghost">es-UY</span>
             </div>
         </div>
     </div>
 
-    <div class="profile-right">
-        <div class="profile-section">
-            <div class="ps-hd">Datos personales</div>
-            <div class="ps-body">
-                <div class="fg mb-4">
-                    <div class="fgrp"><div class="flbl">Nombre completo</div><input class="fc" value="Carlos Bentancur"></div>
-                    <div class="fgrp"><div class="flbl">Correo electrónico</div><input class="fc" value="carlos@apicola.uy" type="email"></div>
-                    <div class="fgrp"><div class="flbl">Teléfono</div><input class="fc" value="+598 99 123 456" type="tel"></div>
-                    <div class="fgrp"><div class="flbl">Departamento</div><select class="fc"><option>Montevideo</option><option>Canelones</option></select></div>
+    <div>
+        <div class="card mb-4">
+            <div class="card-hd"><div class="card-title">Datos personales</div></div>
+            <div class="fg mb-4">
+                <div class="fgrp">
+                    <label class="flbl">Nombre completo</label>
+                    <input type="text" class="fc" value="Carlos Bentancur">
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="toast('Datos guardados ✓')">Guardar cambios</button>
+                <div class="fgrp">
+                    <label class="flbl">Correo electrónico</label>
+                    <input type="email" class="fc" value="carlos@apicola.uy">
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Teléfono</label>
+                    <input type="tel" class="fc" value="+598 99 123 456">
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Departamento</label>
+                    <select class="fc">
+                        <option>Montevideo</option>
+                        <option>Canelones</option>
+                        <option>Maldonado</option>
+                    </select>
+                </div>
             </div>
+            <button class="btn btn-primary btn-sm">Guardar cambios</button>
         </div>
 
-        <div class="profile-section">
-            <div class="ps-hd">Preferencias de la app</div>
-            <div class="ps-body">
-                <div class="pref-row"><div class="pref-info"><div class="pref-title">Tema de la interfaz</div><div class="pref-desc">Oscuro o claro</div></div><button class="btn btn-sm" onclick="toggleTheme()">Cambiar tema</button></div>
-                <div class="pref-row">
-                    <div class="pref-info"><div class="pref-title">Idioma</div><div class="pref-desc">Español (Uruguay)</div></div>
-                    <select class="fc" style="width:140px"><option>Español (UY)</option><option>Español (AR)</option><option>English</option></select>
-                </div>
-            </div>
-        </div>
-
-        <div class="danger-zone">
-            <div class="dz-title">⚠ Zona peligrosa</div>
-            <div class="dz-desc">Estas acciones son irreversibles. Procedé con cuidado.</div>
+        <div class="card">
+            <div class="card-hd"><div class="card-title">Zona peligrosa</div></div>
+            <p style="font-size:13px;color:var(--txt-3);margin-bottom:16px">Estas acciones son irreversibles. Procedé con cuidado.</p>
             <div style="display:flex;gap:10px">
-                <button class="btn btn-sm btn-danger" onclick="toast('Exportando datos...')">⬇ Exportar datos</button>
-                <button class="btn btn-sm btn-danger" onclick="toast('Acción irreversible')">🗑 Eliminar cuenta</button>
+                <button class="btn btn-sm" style="color:var(--red);border-color:var(--red)">⬇ Exportar datos</button>
+                <button class="btn btn-sm" style="color:var(--red);border-color:var(--red)">🗑 Eliminar cuenta</button>
             </div>
         </div>
     </div>
