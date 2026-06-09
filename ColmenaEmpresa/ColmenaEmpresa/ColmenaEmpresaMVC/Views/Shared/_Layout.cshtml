@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ApiApp v2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <canvas id="hex-bg"></canvas>
+
+    <aside class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-logo-mark">🐝</div>
+            <div class="sb-logo-text">
+                <div class="sb-logo-name">ApiApp</div>
+                <div class="sb-logo-tagline">v2.0 · Gestión apícola</div>
+            </div>
+        </div>
+
+        <nav class="sb-nav">
+            <div class="sb-group-label">Principal</div>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                <span class="sb-ico">◈</span>Dashboard
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Apiarios" ? "active" : "")" asp-controller="Apiarios" asp-action="Index">
+                <span class="sb-ico">📍</span>Apiarios<span class="sb-badge sb-badge-g">12</span>
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Colmenas" ? "active" : "")" asp-controller="Colmenas" asp-action="Index">
+                <span class="sb-ico">🏠</span>Colmenas
+            </a>
+
+            <div class="sb-group-label">Gestión</div>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inspecciones" ? "active" : "")" asp-controller="Inspecciones" asp-action="Index">
+                <span class="sb-ico">🔍</span>Inspecciones<span class="sb-badge sb-badge-r">3</span>
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Transhumancia" ? "active" : "")" asp-controller="Transhumancia" asp-action="Index">
+                <span class="sb-ico">🚚</span>Transhumancia
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sanidad" ? "active" : "")" asp-controller="Sanidad" asp-action="Index">
+                <span class="sb-ico">🩺</span>Sanidad
+            </a>
+
+            <div class="sb-group-label">Planificación</div>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Calendario" ? "active" : "")" asp-controller="Calendario" asp-action="Index">
+                <span class="sb-ico">📅</span>Calendario
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Planificacion" ? "active" : "")" asp-controller="Planificacion" asp-action="Index">
+                <span class="sb-ico">📋</span>Tareas y visitas
+            </a>
+
+            <div class="sb-group-label">Recursos</div>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Finanzas" ? "active" : "")" asp-controller="Finanzas" asp-action="Index">
+                <span class="sb-ico">💰</span>Finanzas
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventario" ? "active" : "")" asp-controller="Inventario" asp-action="Index">
+                <span class="sb-ico">📦</span>Inventario
+            </a>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produccion" ? "active" : "")" asp-controller="Produccion" asp-action="Index">
+                <span class="sb-ico">🍯</span>Producción
+            </a>
+
+            <div class="sb-group-label">Sistema</div>
+            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Perfil" ? "active" : "")" asp-controller="Perfil" asp-action="Index">
+                <span class="sb-ico">👤</span>Perfil
+            </a>
+        </nav>
+
+        <div class="sb-footer">
+            <div class="sb-avatar">👨‍🌾</div>
+            <div>
+                <div class="sb-user-name">Carlos Bentancur</div>
+                <div class="sb-user-role">Apicultor principal</div>
+            </div>
+            <a class="sb-settings-btn" asp-controller="Perfil" asp-action="Index">⚙</a>
+        </div>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="tb-breadcrumb">
+                <div class="tb-title">@ViewData["Title"]</div>
+                <div class="tb-sub">@ViewData["Subtitle"]</div>
+            </div>
+            <div class="tb-actions">
+                <button class="theme-toggle" id="theme-btn">🌙</button>
+                <button class="notif-bell" onclick="toggleNotifPanel()">
+                    🔔<span class="notif-dot"></span>
+                </button>
+                <button class="btn btn-sm">⬇ Exportar</button>
+                @RenderSection("Actions", required: false)
+            </div>
+        </div>
+
+        <div class="content">
+            @RenderBody()
+        </div>
+    </div>
+
+    <!-- NOTIF PANEL (slide-in) -->
+    <div class="notif-panel" id="notif-panel">
+        <div class="np-hd">
+            <div class="np-title">Notificaciones</div>
+            <span class="pill p-red" style="font-size:10.5px">5 nuevas</span>
+            <button class="np-close" onclick="toggleNotifPanel()">✕</button>
+        </div>
+        <div class="np-list">
+            <div class="np-item unread"><div class="np-ico a-red">⚠</div><div class="np-content"><div class="np-title2">Inspección vencida — La Rinconada</div><div class="np-body">12 días sin visita.</div><div class="np-time">Hace 2 horas</div></div></div>
+            <div class="np-item unread"><div class="np-ico a-amber">🩺</div><div class="np-content"><div class="np-title2">Control Varroa pendiente — C-82</div><div class="np-body">Tratamiento no registrado.</div><div class="np-time">Hace 5 horas</div></div></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast-el"><span>✓</span><span id="toast-msg"></span></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,72 @@
+@model ColmenaEmpresa.Models.ControlSanitario
+@{
+    ViewData["Title"] = "Control Sanitario";
+    ViewData["Subtitle"] = "Registrar control";
+}
+
+<div class="form-wrap">
+    <div class="form-title">🩺 Control sanitario</div>
+    <div class="form-desc">Documentá el control y tratamiento aplicado en una o varias colmenas.</div>
+
+    <form asp-action="Crear" method="post">
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Apiario</label>
+                <select asp-for="ApiarioId" class="fc">
+                    @foreach (var a in (IEnumerable<ColmenaEmpresa.Models.Apiario>)ViewBag.Apiarios)
+                    {
+                        <option value="@a.Id">@a.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Colmenas <span class="req">*</span></label>
+                <input asp-for="ColmenasAfectadas" class="fc" placeholder="Ej: C-47, C-82">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Tipo de control</label>
+                <select asp-for="TipoControl" class="fc">
+                    <option>Varroa — recuento</option>
+                    <option>Nosema</option>
+                    <option>Loque americana</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Resultado</label>
+                <select asp-for="Resultado" class="fc">
+                    <option value="negativo">Negativo</option>
+                    <option value="positivo">Positivo</option>
+                    <option value="dudoso">Dudoso</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Tratamiento</label>
+                <input asp-for="Tratamiento" class="fc" placeholder="Ej: Ácido oxálico">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Dosis</label>
+                <input asp-for="Dosis" class="fc" placeholder="Ej: 5 ml por colmena">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Fecha</label>
+                <input asp-for="Fecha" class="fc" type="date">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Estado</label>
+                <select asp-for="Estado" class="fc">
+                    <option value="en_tratamiento">En tratamiento</option>
+                    <option value="limpio">Limpio</option>
+                </select>
+            </div>
+            <div class="fgrp fg-full">
+                <label class="flbl">Observaciones</label>
+                <textarea asp-for="Observaciones" class="fc" placeholder="Notas del control…"></textarea>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Registrar control</button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,28 @@
+@model IEnumerable<ColmenaEmpresa.Models.Cosecha>
+@{
+    ViewData["Title"] = "Producción";
+    ViewData["Subtitle"] = "Cosecha temporada 2024–25";
+}
+
+@section Actions {
+    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Registrar cosecha</a>
+}
+
+<div class="g4 mb-6">
+    <div class="stat-card"><div class="stat-lbl">Cosecha total</div><div class="stat-val c-gold">@ViewBag.TotalKg kg</div><div class="stat-meta">Temporada 24–25</div></div>
+    <div class="stat-card"><div class="stat-lbl">Mejor apiario</div><div class="stat-val" style="font-family:var(--serif);font-size:18px;color:var(--gold)">@ViewBag.MejorApiario</div><div class="stat-meta">@ViewBag.MejorKg kg</div></div>
+    <div class="stat-card"><div class="stat-lbl">Prom. colmena</div><div class="stat-val c-gold">@ViewBag.PromColmena kg</div></div>
+    <div class="stat-card"><div class="stat-lbl">vs temporada ant.</div><div class="stat-val c-green">@ViewBag.VariacionPct</div></div>
+</div>
+
+<div class="card">
+    <div class="card-hd"><div class="card-title">Producción por apiario</div></div>
+    @foreach (var item in Model)
+    {
+        <div class="prod-row">
+            <div class="prod-name">@item.ApiarioNombre</div>
+            <div class="prod-bar"><div class="prod-fill" style="width:@(item.PesoBruto * 100 / Model.Max(m => m.PesoBruto))%;background:var(--gold)"></div></div>
+            <div class="prod-val c-gold">@item.PesoNeto kg</div>
+        </div>
+    }
+</div>

@@ -1,0 +1,79 @@
+@model ColmenaEmpresa.Models.Colmena
+@{
+    ViewData["Title"] = "Nueva Colmena";
+    ViewData["Subtitle"] = "Formulario de registro";
+}
+
+<div class="form-wrap">
+    <div class="form-title">🏠 Registrar nueva colmena</div>
+    <div class="form-desc">Datos de identificación, estado inicial y ubicación dentro del apiario.</div>
+
+    <form asp-action="Crear" method="post">
+        <div class="fs">Identificación</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Código <span class="req">*</span></label>
+                <input asp-for="Codigo" class="fc" placeholder="Ej: C-149" required>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Apiario <span class="req">*</span></label>
+                <select asp-for="ApiarioId" class="fc" required>
+                    <option value="">Seleccionar…</option>
+                    @foreach (var a in (IEnumerable<ColmenaEmpresa.Models.Apiario>)ViewBag.Apiarios)
+                    {
+                        <option value="@a.Id">@a.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Tipo</label>
+                <select asp-for="Tipo" class="fc">
+                    <option>Langstroth</option>
+                    <option>Núcleo</option>
+                    <option>Otro</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Fecha instalación</label>
+                <input asp-for="FechaInstalacion" class="fc" type="date">
+            </div>
+        </div>
+
+        <div class="fs">Estado inicial</div>
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Origen</label>
+                <select asp-for="Origen" class="fc">
+                    <option>Enjambre capturado</option>
+                    <option>División</option>
+                    <option>Compra</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Reina al instalar</label>
+                <select asp-for="EstadoReina" class="fc">
+                    <option value="vista">Sí (Vista)</option>
+                    <option value="no_vista">No vista (Huevos presentes)</option>
+                    <option value="ausente">No</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Alzas</label>
+                <input asp-for="CantidadAlzas" class="fc" type="number" placeholder="0" min="0">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Marcos con cría</label>
+                <input asp-for="MarcosConCria" class="fc" type="number" placeholder="0" min="0">
+            </div>
+            <div class="fgrp fg-full">
+                <label class="flbl">Observaciones</label>
+                <textarea asp-for="Observaciones" class="fc" placeholder="Estado general, comportamiento…"></textarea>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar colmena</button>
+        </div>
+    </form>
+</div>

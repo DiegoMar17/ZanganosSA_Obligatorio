@@ -1,0 +1,32 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.db
+*.db-shm
+*.db-wal
+colmena.db
+
+## Logs
+*.log
+logs/
+
+## NuGet
+*.nupkg
+.nuget/
+packages/
+
+## Publish
+publish/
+out/
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Env
+*.env
+appsettings.Production.json

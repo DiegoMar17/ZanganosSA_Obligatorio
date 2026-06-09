@@ -1,0 +1,83 @@
+@model ColmenaEmpresa.Models.Cosecha
+@{
+    ViewData["Title"] = "Registro de Cosecha";
+    ViewData["Subtitle"] = "Documentá tu extracción";
+}
+
+<div class="form-wrap">
+    <div class="form-title">🍯 Registro de cosecha</div>
+    <div class="form-desc">Documentá cada extracción con peso, calidad y procesamiento.</div>
+
+    <form asp-action="Crear" method="post">
+        <div class="fg">
+            <div class="fgrp">
+                <label class="flbl">Apiario <span class="req">*</span></label>
+                <select asp-for="ApiarioId" class="fc" required>
+                    <option value="">Seleccionar…</option>
+                    @foreach (var a in (IEnumerable<ColmenaEmpresa.Models.Apiario>)ViewBag.Apiarios)
+                    {
+                        <option value="@a.Id">@a.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Fecha <span class="req">*</span></label>
+                <input asp-for="Fecha" class="fc" type="date" required>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Tipo de miel</label>
+                <select asp-for="TipoMiel" class="fc">
+                    <option>Multifloral</option>
+                    <option>Eucalipto</option>
+                    <option>Monte nativo</option>
+                </select>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Alzas cosechadas</label>
+                <input asp-for="AlzasCosechadas" class="fc" type="number" min="1">
+            </div>
+        </div>
+
+        <div class="fs">Peso y calidad</div>
+        <div class="fg3">
+            <div class="fgrp">
+                <label class="flbl">Peso bruto (kg) <span class="req">*</span></label>
+                <input asp-for="PesoBruto" class="fc" type="number" step="0.1" style="color:var(--gold);font-weight:700;font-size:16px" required>
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Merma (kg)</label>
+                <input asp-for="Merma" class="fc" type="number" step="0.1">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Humedad (%)</label>
+                <input asp-for="Humedad" class="fc" type="number" step="0.1">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">HMF (mg/kg)</label>
+                <input asp-for="HMF" class="fc" type="number">
+            </div>
+            <div class="fgrp">
+                <label class="flbl">Destino</label>
+                <select asp-for="Destino" class="fc">
+                    <option>Exportación</option>
+                    <option>Fraccionado local</option>
+                    <option>Stock</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="fgrp mb-4 fg-full" style="margin-top:16px">
+            <label class="flbl">Notas</label>
+            <textarea asp-for="Notas" class="fc" placeholder="Condiciones, personal…"></textarea>
+        </div>
+
+        <label class="fcheck">
+            <input type="checkbox" asp-for="CrearRegistroIngreso"> Crear registro de ingreso automáticamente
+        </label>
+
+        <div class="form-footer">
+            <a asp-action="Index" class="btn">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Registrar cosecha</button>
+        </div>
+    </form>
+</div>
