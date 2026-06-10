@@ -18,5 +18,7 @@ namespace ColmenaEmpresa.Data
         public DbSet<ItemInventario> ItemsInventario { get; set; }
         public DbSet<Tarea> Tareas { get; set; }
         public DbSet<Visita> Visitas { get; set; }
+        public DbSet<AlertaComunitaria> AlertasComunitarias { get; set; }
+        public DbSet<NotificacionAlerta> NotificacionesAlerta { get; set; }
     }
 }

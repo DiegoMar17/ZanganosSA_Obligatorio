@@ -50,6 +50,30 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaCodigo TEXT NOT NULL DEFAULT ''"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE RegistrosFinancieros ADD COLUMN CosechaId INTEGER NULL"); } catch { }
 
+    // Tablas nuevas — idempotente para bases existentes
+    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS AlertasComunitarias (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Titulo TEXT NOT NULL DEFAULT '',
+        Descripcion TEXT NOT NULL DEFAULT '',
+        TipoAmenaza TEXT NOT NULL DEFAULT 'sanitaria',
+        Latitud REAL NOT NULL DEFAULT 0,
+        Longitud REAL NOT NULL DEFAULT 0,
+        RadioKm REAL NOT NULL DEFAULT 10,
+        Ubicacion TEXT NOT NULL DEFAULT '',
+        Estado TEXT NOT NULL DEFAULT 'activa',
+        FechaCreacion TEXT NOT NULL DEFAULT '',
+        FechaResolucion TEXT,
+        ReportadoPor TEXT NOT NULL DEFAULT '',
+        Notas TEXT NOT NULL DEFAULT '')"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS NotificacionesAlerta (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        AlertaId INTEGER NOT NULL,
+        ApiarioId INTEGER NOT NULL,
+        ApiarioNombre TEXT NOT NULL DEFAULT '',
+        DistanciaKm REAL NOT NULL DEFAULT 0,
+        FechaEnvio TEXT NOT NULL DEFAULT '',
+        Leida INTEGER NOT NULL DEFAULT 0)"); } catch { }
+
     // Seed usuario admin
     if (!userManager.Users.Any())
     {
@@ -111,6 +135,46 @@ using (var scope = app.Services.CreateScope())
             new ItemInventario { Nombre="Jarabe azucarado", Unidad="L",  CantidadActual=5,   CantidadMaxima=50,  CantidadMinima=20 },
             new ItemInventario { Nombre="Trajes apícolas",  Unidad="u",  CantidadActual=4,   CantidadMaxima=4,   CantidadMinima=2 }
         );
+        db.SaveChanges();
+    }
+
+    if (!db.AlertasComunitarias.Any())
+    {
+        static double SeedHav(double la1, double lo1, double la2, double lo2) {
+            const double R = 6371;
+            var dL = (la2-la1)*Math.PI/180; var dO = (lo2-lo1)*Math.PI/180;
+            var a = Math.Sin(dL/2)*Math.Sin(dL/2)+Math.Cos(la1*Math.PI/180)*Math.Cos(la2*Math.PI/180)*Math.Sin(dO/2)*Math.Sin(dO/2);
+            return R*2*Math.Atan2(Math.Sqrt(a),Math.Sqrt(1-a));
+        }
+        var apiosGeo = db.Apiarios.Where(a => a.Latitud.HasValue && a.Longitud.HasValue).ToList();
+
+        var al1 = new AlertaComunitaria {
+            Titulo="Brote de Varroa detectado — Zona San José",
+            Descripcion="Se confirmó infestación elevada de Varroa destructor en apiarios de la zona. Se recomienda realizar recuentos inmediatos y aplicar tratamiento preventivo con ácido oxálico o ácido fórmico según temperatura.",
+            TipoAmenaza="sanitaria", Latitud=-34.337, Longitud=-56.713, RadioKm=50,
+            Ubicacion="Ruta 3, San José", Estado="activa",
+            FechaCreacion=DateTime.Now.AddDays(-3), ReportadoPor="admin@colmena.com",
+            Notas="Contactar al MGAP para registro oficial del brote. Compartir resultados del recuento."
+        };
+        foreach (var ap in apiosGeo) {
+            var d = SeedHav(al1.Latitud, al1.Longitud, ap.Latitud!.Value, ap.Longitud!.Value);
+            if (d <= al1.RadioKm) al1.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, ApiarioNombre=ap.Nombre, DistanciaKm=Math.Round(d,2), FechaEnvio=al1.FechaCreacion });
+        }
+
+        var al2 = new AlertaComunitaria {
+            Titulo="Fumigación aérea de agroquímicos — Canelones",
+            Descripcion="Se reportó aplicación aérea de herbicidas en cultivos de soja adyacentes. Riesgo de intoxicación de colonias por deriva del producto. Se recomienda evitar floración cercana durante 72 horas.",
+            TipoAmenaza="ambiental", Latitud=-34.523, Longitud=-56.284, RadioKm=60,
+            Ubicacion="Ruta 8, Canelones", Estado="resuelta",
+            FechaCreacion=DateTime.Now.AddDays(-10), FechaResolucion=DateTime.Now.AddDays(-7),
+            ReportadoPor="admin@colmena.com"
+        };
+        foreach (var ap in apiosGeo) {
+            var d = SeedHav(al2.Latitud, al2.Longitud, ap.Latitud!.Value, ap.Longitud!.Value);
+            if (d <= al2.RadioKm) al2.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, ApiarioNombre=ap.Nombre, DistanciaKm=Math.Round(d,2), FechaEnvio=al2.FechaCreacion, Leida=true });
+        }
+
+        db.AlertasComunitarias.AddRange(al1, al2);
         db.SaveChanges();
     }
 }

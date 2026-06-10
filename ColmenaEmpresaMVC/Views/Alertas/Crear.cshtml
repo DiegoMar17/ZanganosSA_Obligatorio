@@ -1,0 +1,143 @@
+@model ColmenaEmpresa.Models.AlertaComunitaria
+@{
+    ViewData["Title"] = "Reportar Amenaza";
+    ViewData["Subtitle"] = "Sistema de Alerta Comunitaria";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div class="g2" style="align-items:start">
+    <!-- Columna izquierda: mapa + coordenadas -->
+    <div>
+        <div class="card mb-4">
+            <div class="card-hd"><div class="card-title">1. Ubicá la amenaza en el mapa</div></div>
+            <div id="mapa-crear" style="height:280px;border-radius:var(--r-md);border:1px solid var(--bdr);background:#aad3df;cursor:crosshair"></div>
+            <div style="font-size:12px;color:var(--txt-4);margin-top:8px">Hacé clic en el mapa para ubicar la amenaza. El círculo refleja el radio de alerta.</div>
+        </div>
+
+        <div class="card">
+            <div class="card-hd"><div class="card-title">2. Coordenadas y radio</div></div>
+            <div class="fg">
+                <div class="fgrp">
+                    <label class="flbl">Latitud <span class="req">*</span></label>
+                    <input asp-for="Latitud" class="fc" type="number" step="0.000001" id="inp-lat" placeholder="-34.000">
+                    <span asp-validation-for="Latitud" style="color:var(--red);font-size:12px"></span>
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Longitud <span class="req">*</span></label>
+                    <input asp-for="Longitud" class="fc" type="number" step="0.000001" id="inp-lng" placeholder="-56.000">
+                    <span asp-validation-for="Longitud" style="color:var(--red);font-size:12px"></span>
+                </div>
+                <div class="fgrp fg-full">
+                    <label class="flbl">Radio de alerta (km)</label>
+                    <input asp-for="RadioKm" class="fc" type="number" min="1" max="200" id="inp-radio">
+                    <div style="font-size:11px;color:var(--txt-4);margin-top:4px">Los apiarios dentro de este radio serán notificados automáticamente.</div>
+                </div>
+            </div>
+
+            @if (ViewBag.Apiarios is List<ColmenaEmpresa.Models.Apiario> apiarios && apiarios.Any())
+            {
+                <div class="fgrp" style="margin-top:12px">
+                    <label class="flbl">O usar la ubicación de un apiario</label>
+                    <select class="fc" id="sel-apiario" onchange="usarApiario(this)">
+                        <option value="">— Seleccioná un apiario —</option>
+                        @foreach (var api in apiarios)
+                        {
+                            <option value="@api.Latitud,@api.Longitud">@api.Nombre (@api.Departamento)</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Columna derecha: campos del formulario -->
+    <div class="card">
+        <div class="card-hd"><div class="card-title">3. Datos de la amenaza</div></div>
+        <div style="font-size:13px;color:var(--txt-4);margin-bottom:18px">Se notificará automáticamente a todos los apiarios dentro del radio indicado.</div>
+
+        <form asp-action="Crear" method="post">
+            @Html.AntiForgeryToken()
+            <div class="fg">
+                <div class="fgrp fg-full">
+                    <label class="flbl">Título <span class="req">*</span></label>
+                    <input asp-for="Titulo" class="fc" placeholder="Ej: Brote de Varroa en zona norte">
+                    <span asp-validation-for="Titulo" style="color:var(--red);font-size:12px"></span>
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Tipo de amenaza</label>
+                    <select asp-for="TipoAmenaza" class="fc">
+                        <option value="sanitaria">🦠 Sanitaria — enfermedades, parásitos</option>
+                        <option value="plaga">🐛 Plaga — avispas, polillas, hormigas</option>
+                        <option value="ambiental">☣ Ambiental — agroquímicos, contaminación</option>
+                        <option value="climatica">🌩 Climática — heladas, incendios, sequía</option>
+                        <option value="otra">⚠ Otra amenaza</option>
+                    </select>
+                </div>
+                <div class="fgrp">
+                    <label class="flbl">Descripción de ubicación</label>
+                    <input asp-for="Ubicacion" class="fc" placeholder="Ej: Ruta 3 km 85, San José">
+                </div>
+                <div class="fgrp fg-full">
+                    <label class="flbl">Descripción detallada <span class="req">*</span></label>
+                    <textarea asp-for="Descripcion" class="fc" rows="5" placeholder="Describí la amenaza, síntomas observados, evidencias encontradas…"></textarea>
+                    <span asp-validation-for="Descripcion" style="color:var(--red);font-size:12px"></span>
+                </div>
+                <div class="fgrp fg-full">
+                    <label class="flbl">Notas y recomendaciones</label>
+                    <textarea asp-for="Notas" class="fc" rows="2" placeholder="Tratamiento sugerido, contactos de referencia, fuentes externas…"></textarea>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <a asp-action="Index" class="btn">Cancelar</a>
+                <button type="submit" class="btn btn-primary">🚨 Crear alerta y notificar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const mapa = L.map('mapa-crear').setView([-32.8, -55.8], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapa);
+
+        let marcador = null, circulo = null;
+
+        function actualizarMapa(lat, lng) {
+            const radioM = (parseFloat(document.getElementById('inp-radio').value) || 10) * 1000;
+            if (marcador) mapa.removeLayer(marcador);
+            if (circulo)  mapa.removeLayer(circulo);
+            marcador = L.circleMarker([lat, lng], { radius:9, color:'#fff', fillColor:'#F26B6B', fillOpacity:1, weight:2 }).addTo(mapa);
+            circulo  = L.circle([lat, lng], { color:'#F26B6B', fillColor:'#F26B6B', fillOpacity:0.12, radius:radioM, weight:2 }).addTo(mapa);
+        }
+
+        mapa.on('click', e => {
+            const lat = parseFloat(e.latlng.lat.toFixed(6));
+            const lng = parseFloat(e.latlng.lng.toFixed(6));
+            document.getElementById('inp-lat').value = lat;
+            document.getElementById('inp-lng').value = lng;
+            actualizarMapa(lat, lng);
+        });
+
+        document.getElementById('inp-radio').addEventListener('input', () => {
+            const lat = parseFloat(document.getElementById('inp-lat').value);
+            const lng = parseFloat(document.getElementById('inp-lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) actualizarMapa(lat, lng);
+        });
+
+        function usarApiario(sel) {
+            if (!sel.value) return;
+            const [lat, lng] = sel.value.split(',').map(parseFloat);
+            document.getElementById('inp-lat').value = lat.toFixed(6);
+            document.getElementById('inp-lng').value = lng.toFixed(6);
+            mapa.setView([lat, lng], 10);
+            actualizarMapa(lat, lng);
+            sel.value = '';
+        }
+
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+    </script>
+}

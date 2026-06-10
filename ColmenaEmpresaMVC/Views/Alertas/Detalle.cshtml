@@ -1,0 +1,193 @@
+@model ColmenaEmpresa.Models.AlertaComunitaria
+@{
+    ViewData["Title"] = "Detalle de Alerta";
+    ViewData["Subtitle"] = Model.Titulo;
+    var tipoPill = Model.TipoAmenaza switch {
+        "sanitaria" => "p-red",
+        "plaga"     => "p-amber",
+        "ambiental" => "p-green",
+        "climatica" => "p-blue",
+        _           => "p-ghost"
+    };
+    var tipoLabel = Model.TipoAmenaza switch {
+        "sanitaria" => "Sanitaria",
+        "plaga"     => "Plaga",
+        "ambiental" => "Ambiental",
+        "climatica" => "Climática",
+        _           => "Otra"
+    };
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+@section Actions {
+    <a class="btn btn-sm" asp-action="Index">← Volver</a>
+    @if (Model.Estado == "activa")
+    {
+        <form asp-action="Resolver" asp-route-id="@Model.Id" method="post" style="display:inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm" style="color:var(--green);border-color:var(--green)">✓ Marcar resuelta</button>
+        </form>
+    }
+    <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta alerta permanentemente?')">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-sm" style="color:var(--red);border-color:var(--red)">🗑 Eliminar</button>
+    </form>
+}
+
+@if (TempData["Exito"] is string exito)
+{
+    <div style="background:rgba(82,201,139,.12);border:1px solid var(--green);border-radius:var(--r-md);padding:12px 16px;color:var(--green);font-size:13.5px;margin-bottom:20px">✓ @exito</div>
+}
+
+<div class="g2 mb-6" style="align-items:start">
+    <!-- Izquierda: info + apiarios notificados -->
+    <div>
+        <div class="card mb-4">
+            <div class="card-hd">
+                <div class="card-title">Información de la alerta</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <span class="pill @tipoPill">@tipoLabel</span>
+                    @if (Model.Estado == "activa")
+                    { <span class="pill p-red">Activa</span> }
+                    else
+                    { <span class="pill p-ghost">Resuelta</span> }
+                </div>
+            </div>
+            <p style="font-size:14px;color:var(--txt-2);line-height:1.65;margin-bottom:18px">@Model.Descripcion</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                    <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Ubicación</div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">@(string.IsNullOrEmpty(Model.Ubicacion) ? "—" : Model.Ubicacion)</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Radio de alerta</div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">@Model.RadioKm km</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Reportado por</div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">@Model.ReportadoPor</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Fecha de reporte</div>
+                    <div style="font-size:13.5px;font-weight:600;color:var(--txt-1)">@Model.FechaCreacion.ToString("dd MMM yyyy HH:mm")</div>
+                </div>
+                @if (Model.FechaResolucion.HasValue)
+                {
+                    <div>
+                        <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Fecha de resolución</div>
+                        <div style="font-size:13.5px;font-weight:600;color:var(--green)">@Model.FechaResolucion.Value.ToString("dd MMM yyyy HH:mm")</div>
+                    </div>
+                }
+                <div>
+                    <div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Coordenadas GPS</div>
+                    <div style="font-size:12px;color:var(--txt-3)">@Model.Latitud.ToString("F5"), @Model.Longitud.ToString("F5")</div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.Notas))
+            {
+                <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:var(--r-sm);font-size:13px;color:var(--txt-3)">
+                    📝 @Model.Notas
+                </div>
+            }
+        </div>
+
+        <div class="card">
+            <div class="card-hd">
+                <div class="card-title">Apiarios notificados</div>
+                <span class="pill @(Model.Notificaciones.Any() ? "p-red" : "p-ghost")">@Model.Notificaciones.Count apiario@(Model.Notificaciones.Count != 1 ? "s" : "")</span>
+            </div>
+            @if (!Model.Notificaciones.Any())
+            {
+                <div style="padding:20px;text-align:center;color:var(--txt-4);font-size:13px">
+                    Ningún apiario registrado estaba dentro del radio de @Model.RadioKm km al momento de la alerta.
+                </div>
+            }
+            else
+            {
+                @foreach (var notif in Model.Notificaciones.OrderBy(n => n.DistanciaKm))
+                {
+                    var maxDist = Model.RadioKm > 0 ? Model.RadioKm : 1;
+                    <div class="prod-row">
+                        <div class="prod-name">
+                            <div style="font-weight:600;color:var(--txt-1)">@notif.ApiarioNombre</div>
+                            <div style="font-size:11px;color:var(--txt-4)">Notificado @notif.FechaEnvio.ToString("dd MMM yyyy")</div>
+                        </div>
+                        <div class="prod-bar">
+                            <div class="prod-fill" style="width:@(notif.DistanciaKm * 100 / maxDist)%;background:var(--amber)"></div>
+                        </div>
+                        <div class="prod-val" style="color:var(--amber)">@notif.DistanciaKm km</div>
+                        @if (notif.Leida)
+                        { <span class="pill p-ghost" style="font-size:11px">✓ Visto</span> }
+                        else
+                        { <span class="pill p-amber" style="font-size:11px">Pendiente</span> }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Derecha: mapa con radio y apiarios -->
+    <div>
+        <div class="card-hd" style="margin-bottom:8px">
+            <div class="card-title">Mapa de impacto</div>
+            <span class="pill p-ghost">Radio @Model.RadioKm km</span>
+        </div>
+        <div id="mapa-detalle" style="height:500px;border-radius:var(--r-lg);border:1px solid var(--bdr);background:#aad3df"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const alertaInfo = {
+            lat:   @Model.Latitud,
+            lng:   @Model.Longitud,
+            radio: @(Model.RadioKm * 1000),
+            tipo:  '@Model.TipoAmenaza',
+            titulo: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Titulo))
+        };
+        const apiariosAfectados = @Html.Raw(ViewBag.ApiariosPosJson ?? "[]");
+
+        const colorTipo = { sanitaria:'#F26B6B', plaga:'#F0A835', ambiental:'#52C98B', climatica:'#4A9EDA', otra:'#888' };
+        const color = colorTipo[alertaInfo.tipo] || '#F26B6B';
+
+        const mapa = L.map('mapa-detalle');
+        if (alertaInfo.lat !== 0 || alertaInfo.lng !== 0) {
+            mapa.setView([alertaInfo.lat, alertaInfo.lng], 9);
+        } else {
+            mapa.setView([-32.8, -55.8], 6);
+        }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapa);
+
+        // Círculo de radio
+        L.circle([alertaInfo.lat, alertaInfo.lng], {
+            color, fillColor: color, fillOpacity: 0.12, radius: alertaInfo.radio, weight: 2
+        }).addTo(mapa);
+
+        // Marcador del epicentro
+        const iconEpic = L.divIcon({
+            className: '',
+            html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 4px ${color}44"></div>`,
+            iconSize: [16, 16], iconAnchor: [8, 8]
+        });
+        L.marker([alertaInfo.lat, alertaInfo.lng], { icon: iconEpic })
+            .addTo(mapa)
+            .bindPopup(`<b>⚠ ${alertaInfo.titulo}</b>`);
+
+        // Marcadores de apiarios afectados
+        apiariosAfectados.forEach(api => {
+            const iconApi = L.divIcon({
+                className: '',
+                html: `<div style="background:#F0A835;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>`,
+                iconSize: [12, 12], iconAnchor: [6, 6]
+            });
+            L.marker([api.lat, api.lng], { icon: iconApi })
+                .addTo(mapa)
+                .bindPopup(`<b>🏠 ${api.nombre}</b>`);
+        });
+
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+    </script>
+}

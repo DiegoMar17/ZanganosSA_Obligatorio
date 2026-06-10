@@ -1,0 +1,142 @@
+@model IEnumerable<ColmenaEmpresa.Models.AlertaComunitaria>
+@{
+    ViewData["Title"] = "Alertas Comunitarias";
+    int activas = (int)(ViewBag.Activas ?? 0);
+    ViewData["Subtitle"] = activas + " alerta" + (activas != 1 ? "s" : "") + " activa" + (activas != 1 ? "s" : "");
+}
+
+@section Actions {
+    <a class="btn btn-primary btn-sm" asp-action="Crear">🚨 Reportar amenaza</a>
+}
+
+@if (TempData["Exito"] is string exito)
+{
+    <div style="background:rgba(82,201,139,.12);border:1px solid var(--green);border-radius:var(--r-md);padding:12px 16px;color:var(--green);font-size:13.5px;margin-bottom:20px">✓ @exito</div>
+}
+
+<div class="g4 mb-6">
+    <div class="stat-card">
+        <div class="stat-lbl">Total alertas</div>
+        <div class="stat-val">@ViewBag.Total</div>
+        <div class="stat-meta">Historial completo</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Activas ahora</div>
+        <div class="stat-val" style="color:var(--red)">@ViewBag.Activas</div>
+        <div class="stat-meta">Requieren atención</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Resueltas</div>
+        <div class="stat-val c-green">@ViewBag.Resueltas</div>
+        <div class="stat-meta">Confirmadas controladas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-lbl">Apiarios en zona de alerta</div>
+        <div class="stat-val" style="color:var(--amber)">@ViewBag.ApiariosCercanos</div>
+        <div class="stat-meta">Dentro de radios activos</div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<div id="mapa-alertas" class="mb-6" style="height:300px;border-radius:var(--r-lg);border:1px solid var(--bdr);z-index:1;background:#aad3df"></div>
+
+@if (!Model.Any())
+{
+    <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:40px;margin-bottom:12px">🟢</div>
+        <div style="font-size:16px;font-weight:600;color:var(--txt-2);margin-bottom:6px">Sin alertas registradas</div>
+        <div style="font-size:13px;color:var(--txt-4)">Tu zona no tiene amenazas reportadas. Registrá una si detectás algún riesgo.</div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-hd">
+            <div class="card-title">Alertas registradas</div>
+            <span class="pill p-ghost">@Model.Count() total</span>
+        </div>
+        @foreach (var alerta in Model)
+        {
+            var tipoPill = alerta.TipoAmenaza switch {
+                "sanitaria" => "p-red",
+                "plaga"     => "p-amber",
+                "ambiental" => "p-green",
+                "climatica" => "p-blue",
+                _           => "p-ghost"
+            };
+            var tipoIcon = alerta.TipoAmenaza switch {
+                "sanitaria" => "🦠",
+                "plaga"     => "🐛",
+                "ambiental" => "☣",
+                "climatica" => "🌩",
+                _           => "⚠"
+            };
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--surface)">
+                <div style="font-size:22px;padding-top:2px;flex-shrink:0">@tipoIcon</div>
+                <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                        <div style="font-weight:600;color:var(--txt-1);font-size:14px">@alerta.Titulo</div>
+                        <span class="pill @tipoPill">@alerta.TipoAmenaza</span>
+                        @if (alerta.Estado == "activa")
+                        { <span class="pill p-red">Activa</span> }
+                        else
+                        { <span class="pill p-ghost">Resuelta</span> }
+                    </div>
+                    <div style="font-size:12.5px;color:var(--txt-3);margin-bottom:5px">@alerta.Descripcion.Substring(0, Math.Min(130, alerta.Descripcion.Length))@(alerta.Descripcion.Length > 130 ? "…" : "")</div>
+                    <div style="font-size:11px;color:var(--txt-4)">
+                        📍 @alerta.Ubicacion &nbsp;·&nbsp;
+                        📏 @alerta.RadioKm km &nbsp;·&nbsp;
+                        🏠 @alerta.Notificaciones.Count apiarios &nbsp;·&nbsp;
+                        @alerta.FechaCreacion.ToString("dd MMM yyyy")
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;flex-shrink:0">
+                    <a class="btn btn-xs btn-icon" asp-action="Detalle" asp-route-id="@alerta.Id" title="Ver detalle">👁</a>
+                    <form asp-action="Eliminar" asp-route-id="@alerta.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar esta alerta?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const alertasData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Select(a => new {
+                titulo    = a.Titulo,
+                tipo      = a.TipoAmenaza,
+                estado    = a.Estado,
+                lat       = a.Latitud,
+                lng       = a.Longitud,
+                radio     = a.RadioKm * 1000,
+                ubicacion = a.Ubicacion,
+                count     = a.Notificaciones.Count
+            })
+        ));
+
+        const mapa = L.map('mapa-alertas').setView([-32.8, -55.8], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapa);
+
+        const colorTipo = { sanitaria:'#F26B6B', plaga:'#F0A835', ambiental:'#52C98B', climatica:'#4A9EDA', otra:'#888' };
+
+        if (alertasData.length) {
+            const bounds = [];
+            alertasData.forEach(a => {
+                if (a.lat === 0 && a.lng === 0) return;
+                const color = a.estado === 'activa' ? (colorTipo[a.tipo] || '#F26B6B') : '#888';
+                L.circle([a.lat, a.lng], { color, fillColor: color, fillOpacity: 0.14, radius: a.radio, weight: 2 })
+                    .addTo(mapa)
+                    .bindPopup(`<b>${a.titulo}</b><br><i>${a.tipo}</i> · ${a.ubicacion}<br>🏠 ${a.count} apiarios notificados`);
+                L.circleMarker([a.lat, a.lng], { radius:8, color:'#fff', fillColor:color, fillOpacity:1, weight:2 }).addTo(mapa);
+                bounds.push([a.lat, a.lng]);
+            });
+            if (bounds.length) mapa.fitBounds(bounds, { padding:[50,50], maxZoom:9 });
+        }
+        setTimeout(() => mapa.invalidateSize(), 200);
+        window.addEventListener('load', () => mapa.invalidateSize());
+    </script>
+}
