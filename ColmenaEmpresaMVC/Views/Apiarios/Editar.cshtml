@@ -41,17 +41,17 @@
 
         <div class="fs">Ubicación en el mapa</div>
         <div class="fhint mb-4">Hacé click en el mapa para mover la ubicación del apiario.</div>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
         <div id="mapa-pick" style="height:280px;border-radius:var(--r-md);border:1px solid var(--bdr);z-index:1" class="mb-4"></div>
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Latitud</label>
-                <input asp-for="Latitud" class="fc" placeholder="-34.4567" step="any">
+                <input asp-for="Latitud" class="fc" type="number" placeholder="-34.4567" step="0.000001">
                 <span asp-validation-for="Latitud" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Longitud</label>
-                <input asp-for="Longitud" class="fc" placeholder="-56.2345" step="any">
+                <input asp-for="Longitud" class="fc" type="number" placeholder="-56.2345" step="0.000001">
                 <span asp-validation-for="Longitud" class="fhint" style="color:var(--red)"></span>
             </div>
         </div>
@@ -96,16 +96,16 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
         const inLat = document.getElementById('Latitud');
         const inLng = document.getElementById('Longitud');
 
-        const lat0 = parseFloat(inLat.value) || -32.8;
-        const lng0 = parseFloat(inLng.value) || -55.8;
-        const tieneCoord = inLat.value && inLng.value;
+        const lat0 = inLat.value !== '' ? parseFloat(inLat.value) : NaN;
+        const lng0 = inLng.value !== '' ? parseFloat(inLng.value) : NaN;
+        const tieneCoord = !isNaN(lat0) && !isNaN(lng0);
 
-        const mapa = L.map('mapa-pick').setView([lat0, lng0], tieneCoord ? 12 : 6);
+        const mapa = L.map('mapa-pick').setView(tieneCoord ? [lat0, lng0] : [-32.8, -55.8], tieneCoord ? 12 : 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap', maxZoom: 18
         }).addTo(mapa);

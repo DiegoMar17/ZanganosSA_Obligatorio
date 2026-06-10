@@ -8,7 +8,7 @@
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo apiario</a>
 }
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
 <div id="mapa" class="mb-6" style="height:340px;border-radius:var(--r-lg);border:1px solid var(--bdr);z-index:1;background:#aad3df"></div>
 
 <div class="sec-head mb-4">
@@ -57,7 +57,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
         const apiarios = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
             Model.Where(a => a.Latitud.HasValue && a.Longitud.HasValue)

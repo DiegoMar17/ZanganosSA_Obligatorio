@@ -18,7 +18,7 @@
     };
 }
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
 
 @section Actions {
     <a class="btn btn-sm" asp-action="Index">← Volver</a>
@@ -138,15 +138,15 @@
 </div>
 
 @section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
-        const alertaInfo = {
-            lat:   @Model.Latitud,
-            lng:   @Model.Longitud,
-            radio: @(Model.RadioKm * 1000),
-            tipo:  '@Model.TipoAmenaza',
-            titulo: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Titulo))
-        };
+        const alertaInfo = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+            lat    = Model.Latitud,
+            lng    = Model.Longitud,
+            radio  = Model.RadioKm * 1000.0,
+            tipo   = Model.TipoAmenaza,
+            titulo = Model.Titulo
+        }));
         const apiariosAfectados = @Html.Raw(ViewBag.ApiariosPosJson ?? "[]");
 
         const colorTipo = { sanitaria:'#F26B6B', plaga:'#F0A835', ambiental:'#52C98B', climatica:'#4A9EDA', otra:'#888' };

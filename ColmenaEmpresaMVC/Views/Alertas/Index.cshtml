@@ -37,7 +37,7 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
 <div id="mapa-alertas" class="mb-6" style="height:300px;border-radius:var(--r-lg);border:1px solid var(--bdr);z-index:1;background:#aad3df"></div>
 
 @if (!Model.Any())
@@ -103,7 +103,7 @@ else
 }
 
 @section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
         const alertasData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
             Model.Select(a => new {

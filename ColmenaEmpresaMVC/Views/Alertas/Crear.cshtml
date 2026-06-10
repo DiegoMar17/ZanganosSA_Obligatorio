@@ -4,7 +4,7 @@
     ViewData["Subtitle"] = "Sistema de Alerta Comunitaria";
 }
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
 
 <div class="g2" style="align-items:start">
     <!-- Columna izquierda: mapa + coordenadas -->
@@ -43,7 +43,7 @@
                         <option value="">— Seleccioná un apiario —</option>
                         @foreach (var api in apiarios)
                         {
-                            <option value="@api.Latitud,@api.Longitud">@api.Nombre (@api.Departamento)</option>
+                            <option value="@api.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture)|@api.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture)">@api.Nombre (@api.Departamento)</option>
                         }
                     </select>
                 </div>
@@ -98,7 +98,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
         const mapa = L.map('mapa-crear').setView([-32.8, -55.8], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapa);
@@ -129,7 +129,7 @@
 
         function usarApiario(sel) {
             if (!sel.value) return;
-            const [lat, lng] = sel.value.split(',').map(parseFloat);
+            const [lat, lng] = sel.value.split('|').map(parseFloat);
             document.getElementById('inp-lat').value = lat.toFixed(6);
             document.getElementById('inp-lng').value = lng.toFixed(6);
             mapa.setView([lat, lng], 10);
