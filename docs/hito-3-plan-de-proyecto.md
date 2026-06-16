@@ -66,8 +66,8 @@ El equipo está formado por dos integrantes:
 
 | Integrante | Usuario GitHub |
 |---|---|
-| 〚Nombre completo〛 | DiegoMar17 |
-| 〚Nombre completo〛 | ericVignolo |
+| 〚Diego Martinez〛 | DiegoMar17 |
+| 〚Eric Vignolo〛 | ericVignolo |
 
 > Completar con los nombres reales antes de la entrega.
 
