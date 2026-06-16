@@ -457,3 +457,5 @@ C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\Z
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\bin\Debug\net9.0\publish\ColmenaEmpresa.staticwebassets.endpoints.json
 C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\42ufp6ra4q-{0}-eg0l4nodnv-eg0l4nodnv.gz
 C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-m4tdokco65.gz
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\ni2njo0kur-6qdyai55ly.gz
+C:\CTC\SEMESTRE - 3\ObligatorioGeneral\ColmenaEmpresa\ColmenaEmpresaMVC\obj\Debug\net9.0\compressed\dtswzvy56p-l2a51lab31.gz

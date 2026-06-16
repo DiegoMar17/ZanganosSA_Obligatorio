@@ -38,10 +38,7 @@
             </div>
         </div>
 
-        <div class="fs">Ubicación en el mapa</div>
-        <div class="fhint mb-4">Hacé click en el mapa para marcar la ubicación del apiario, o usá «Detectar ubicación».</div>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
-        <div id="mapa-pick" style="height:280px;border-radius:var(--r-md);border:1px solid var(--bdr);z-index:1" class="mb-4"></div>
+        <div class="fs">Coordenadas GPS</div>
         <div class="fg">
             <div class="fgrp">
                 <label class="flbl">Latitud</label>
@@ -99,39 +96,12 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
-        const inLat = document.getElementById('Latitud');
-        const inLng = document.getElementById('Longitud');
-        const status = document.getElementById('gps-status');
-
-        // Mapa centrado en Uruguay
-        const mapa = L.map('mapa-pick').setView([-32.8, -55.8], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap', maxZoom: 18
-        }).addTo(mapa);
-        setTimeout(() => mapa.invalidateSize(), 200);
-        window.addEventListener('load', () => mapa.invalidateSize());
-
-        let marcador = null;
-        function ponerPin(lat, lng, zoom) {
-            inLat.value = lat.toFixed(6);
-            inLng.value = lng.toFixed(6);
-            if (marcador) marcador.setLatLng([lat, lng]);
-            else marcador = L.marker([lat, lng]).addTo(mapa);
-            if (zoom) mapa.setView([lat, lng], zoom);
-        }
-
-        // Click en el mapa coloca el pin
-        mapa.on('click', e => ponerPin(e.latlng.lat, e.latlng.lng));
-
-        // Si ya hay valores cargados (ej: al volver por validación), mostrar el pin
-        if (inLat.value && inLng.value) {
-            ponerPin(parseFloat(inLat.value), parseFloat(inLng.value), 12);
-        }
-
-        // Detectar ubicación del navegador
+        // Detectar ubicación del navegador y rellenar los campos de coordenadas
         document.getElementById('btn-gps').addEventListener('click', function () {
+            const inLat = document.getElementById('Latitud');
+            const inLng = document.getElementById('Longitud');
+            const status = document.getElementById('gps-status');
             if (!navigator.geolocation) {
                 status.textContent = 'Tu navegador no soporta geolocalización.';
                 return;
@@ -139,12 +109,13 @@
             status.textContent = 'Detectando ubicación…';
             navigator.geolocation.getCurrentPosition(
                 pos => {
-                    ponerPin(pos.coords.latitude, pos.coords.longitude, 13);
+                    inLat.value = pos.coords.latitude.toFixed(6);
+                    inLng.value = pos.coords.longitude.toFixed(6);
                     status.textContent = '✓ Ubicación detectada.';
                     status.style.color = 'var(--green)';
                 },
                 () => {
-                    status.textContent = '⚠ No se pudo detectar. Marcá el punto en el mapa.';
+                    status.textContent = '⚠ No se pudo detectar. Ingresá las coordenadas manualmente.';
                     status.style.color = 'var(--red)';
                 }
             );

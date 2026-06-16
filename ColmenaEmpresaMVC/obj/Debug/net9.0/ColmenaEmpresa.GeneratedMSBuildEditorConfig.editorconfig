@@ -32,6 +32,18 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Alertas/Crear.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxlcnRhc1xDcmVhci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Alertas/Detalle.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxlcnRhc1xEZXRhbGxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Alertas/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWxlcnRhc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Apiarios/Crear.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXBpYXJpb3NcQ3JlYXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -86,10 +98,6 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Home/Landing.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxMYW5kaW5nLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Home/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/CTC/SEMESTRE - 3/ObligatorioGeneral/ColmenaEmpresa/ColmenaEmpresaMVC/Views/Inspecciones/Crear.cshtml]
