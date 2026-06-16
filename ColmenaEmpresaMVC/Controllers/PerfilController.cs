@@ -21,10 +21,33 @@ namespace ColmenaEmpresa.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _users.GetUserAsync(User);
-            ViewBag.TotalApiarios = _ctx.Apiarios.Count();
-            ViewBag.TotalColmenas = _ctx.Colmenas.Count();
-            ViewBag.TotalCosechas = _ctx.Cosechas.Count();
-            ViewBag.CosechaTotal  = Math.Round(_ctx.Cosechas.ToList().Sum(c => c.PesoNeto) / 1000.0, 1);
+            var esAdmin = User.IsInRole("ADMIN");
+
+            if (esAdmin)
+            {
+                ViewBag.TotalApiarios = _ctx.Apiarios.Count();
+                ViewBag.TotalColmenas = _ctx.Colmenas.Count();
+                ViewBag.TotalCosechas = _ctx.Cosechas.Count();
+                ViewBag.CosechaTotal  = Math.Round(_ctx.Cosechas.ToList().Sum(c => c.PesoNeto) / 1000.0, 1);
+            }
+            else
+            {
+                var sectorId = user?.ApiarioAsignadoId;
+                ViewBag.TotalApiarios = sectorId.HasValue ? 1 : 0;
+                ViewBag.TotalColmenas = sectorId.HasValue ? _ctx.Colmenas.Count(c => c.ApiarioId == sectorId.Value) : 0;
+                ViewBag.TotalCosechas = sectorId.HasValue ? _ctx.Cosechas.Count(c => c.ApiarioId == sectorId.Value) : 0;
+                ViewBag.CosechaTotal  = sectorId.HasValue
+                    ? Math.Round(_ctx.Cosechas.Where(c => c.ApiarioId == sectorId.Value).ToList().Sum(c => c.PesoNeto) / 1000.0, 1)
+                    : 0;
+            }
+
+            ViewBag.EsAdmin       = esAdmin;
+            ViewBag.Rol           = user?.Rol ?? "EMPLEADO";
+            ViewBag.PinActivo     = user?.PinActivo ?? false;
+            ViewBag.TienePin      = !string.IsNullOrEmpty(user?.PinHash);
+            ViewBag.SectorNombre  = user?.ApiarioAsignadoId.HasValue == true
+                ? _ctx.Apiarios.Find(user.ApiarioAsignadoId.Value)?.Nombre
+                : null;
             return View(user);
         }
 

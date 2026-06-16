@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
@@ -9,18 +10,38 @@ namespace ColmenaEmpresa.Controllers
     public class HomeController : Controller
     {
         private readonly AppDbContext _ctx;
+        private readonly UserManager<ApplicationUser> _users;
 
-        public HomeController(AppDbContext ctx) => _ctx = ctx;
+        public HomeController(AppDbContext ctx, UserManager<ApplicationUser> users)
+        {
+            _ctx   = ctx;
+            _users = users;
+        }
 
         [AllowAnonymous]
         public IActionResult Landing() => View();
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var esAdmin = User.IsInRole("ADMIN");
+            var currentUser = await _users.GetUserAsync(User);
+            var sectorId = currentUser?.ApiarioAsignadoId;
+
             var colmenas     = _ctx.Colmenas.ToList();
             var cosechas     = _ctx.Cosechas.ToList();
             var inspecciones = _ctx.Inspecciones.ToList();
             var transhumancias = _ctx.Transhumancias.ToList();
+
+            if (!esAdmin)
+            {
+                var sectorNombre = sectorId.HasValue ? _ctx.Apiarios.Find(sectorId.Value)?.Nombre : null;
+                colmenas     = sectorId.HasValue ? colmenas.Where(c => c.ApiarioId == sectorId.Value).ToList() : new List<Colmena>();
+                cosechas     = sectorId.HasValue ? cosechas.Where(c => c.ApiarioId == sectorId.Value).ToList() : new List<Cosecha>();
+                inspecciones = sectorId.HasValue ? inspecciones.Where(i => i.ApiarioId == sectorId.Value).ToList() : new List<Inspeccion>();
+                transhumancias = sectorNombre is not null
+                    ? transhumancias.Where(t => t.ApiarioOrigen == sectorNombre || t.ApiarioDestino == sectorNombre).ToList()
+                    : new List<Transhumancia>();
+            }
 
             var maxKg = cosechas.Any() ? cosechas.Max(c => c.PesoNeto) : 1.0;
 
@@ -50,11 +71,28 @@ namespace ColmenaEmpresa.Controllers
 
             var ahora = DateTime.Now;
 
+            int tareasPendientes;
+            int empleadosActivos = 0;
+            int controlesVencidos = 0;
+            var ultimosAuditoria = new List<Auditoria>();
+
+            if (esAdmin)
+            {
+                tareasPendientes = _ctx.Tareas.Count(t => !t.Completada);
+                empleadosActivos = (await _users.GetUsersInRoleAsync("EMPLEADO")).Count(e => e.PinActivo);
+                controlesVencidos = _ctx.ControlesSanitarios.Count(c => c.Estado == "en_tratamiento" && c.Fecha < DateTime.Today.AddDays(-30));
+                ultimosAuditoria = _ctx.Auditorias.OrderByDescending(a => a.FechaHora).Take(5).ToList();
+            }
+            else
+            {
+                tareasPendientes = _ctx.Tareas.Count(t => t.AsignadoAId == currentUser!.Id && !t.Completada);
+            }
+
             var vm = new DashboardViewModel
             {
                 TotalColmenas          = colmenas.Count,
                 ColmenasNuevasMes      = colmenas.Count(c => c.FechaInstalacion.Month == ahora.Month && c.FechaInstalacion.Year == ahora.Year),
-                TotalApiarios          = _ctx.Apiarios.Count(),
+                TotalApiarios          = esAdmin ? _ctx.Apiarios.Count() : (sectorId.HasValue ? 1 : 0),
                 EnTranshumancia        = transhumancias.Count(t => t.Estado == "en_curso"),
                 InspeccionesPendientes = inspecciones.Count(i => i.Estado == "pendiente" || i.Estado == "vencida"),
                 CosechaTotal           = $"{Math.Round(cosechas.Sum(c => c.PesoNeto) / 1000.0, 1):F1} t",
@@ -62,7 +100,12 @@ namespace ColmenaEmpresa.Controllers
                 ColmenasAmarillo       = colmenas.Count(c => c.EstadoSemaforo == "amarillo"),
                 ColmenasRojo           = colmenas.Count(c => c.EstadoSemaforo == "rojo"),
                 Alertas                = alertas,
-                ProduccionMensual      = produccionMensual
+                ProduccionMensual      = produccionMensual,
+                EsAdmin                = esAdmin,
+                TareasPendientesCount  = tareasPendientes,
+                EmpleadosActivos       = empleadosActivos,
+                ControlesVencidos      = controlesVencidos,
+                UltimosAuditoria       = ultimosAuditoria
             };
 
             return View(vm);

@@ -1,18 +1,28 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
+using ColmenaEmpresa.Services;
 
 namespace ColmenaEmpresa.Controllers
 {
     public class InspeccionesController : Controller
     {
         private readonly AppDbContext _ctx;
+        private readonly UserManager<ApplicationUser> _users;
+        private readonly AuditoriaService _auditoria;
         private const int PageSize = 10;
 
-        public InspeccionesController(AppDbContext ctx) => _ctx = ctx;
+        public InspeccionesController(AppDbContext ctx, UserManager<ApplicationUser> users, AuditoriaService auditoria)
+        {
+            _ctx       = ctx;
+            _users     = users;
+            _auditoria = auditoria;
+        }
 
-        public IActionResult Index(int page = 1, string? q = null)
+        public async Task<IActionResult> Index(int page = 1, string? q = null)
         {
             // Auto-vencida: pendientes con fecha pasada
             var vencibles = _ctx.Inspecciones
@@ -25,6 +35,13 @@ namespace ColmenaEmpresa.Controllers
             }
 
             var todas = _ctx.Inspecciones.ToList();
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var sectorId = (await _users.GetUserAsync(User))?.ApiarioAsignadoId;
+                todas = sectorId.HasValue ? todas.Where(i => i.ApiarioId == sectorId.Value).ToList() : new List<Inspeccion>();
+            }
+
             ViewBag.Pendientes  = todas.Count(i => i.Estado == "pendiente");
             ViewBag.Vencidas    = todas.Count(i => i.Estado == "vencida");
             ViewBag.EsteMes     = todas.Count(i => i.Fecha.Month == DateTime.Now.Month && i.Fecha.Year == DateTime.Now.Year);
@@ -46,12 +63,23 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        private void CargarDatos()
+        private async Task CargarDatosAsync()
         {
-            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
-            ViewBag.Colmenas = _ctx.Colmenas.OrderBy(c => c.ApiarioNombre).ThenBy(c => c.Codigo).ToList();
+            var apiarios = _ctx.Apiarios.OrderBy(a => a.Nombre).ToList();
+            var colmenas = _ctx.Colmenas.OrderBy(c => c.ApiarioNombre).ThenBy(c => c.Codigo).ToList();
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var sectorId = (await _users.GetUserAsync(User))?.ApiarioAsignadoId;
+                apiarios = sectorId.HasValue ? apiarios.Where(a => a.Id == sectorId.Value).ToList() : new List<Apiario>();
+                colmenas = sectorId.HasValue ? colmenas.Where(c => c.ApiarioId == sectorId.Value).ToList() : new List<Colmena>();
+            }
+
+            ViewBag.Apiarios = new SelectList(apiarios, "Id", "Nombre");
+            ViewBag.Colmenas = colmenas;
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Exportar()
         {
             var inspecciones = _ctx.Inspecciones.OrderBy(i => i.Fecha).ToList();
@@ -62,10 +90,10 @@ namespace ColmenaEmpresa.Controllers
             return View(inspecciones);
         }
 
-        public IActionResult Crear() { CargarDatos(); return View(new Inspeccion { Fecha = DateTime.Today }); }
+        public async Task<IActionResult> Crear() { await CargarDatosAsync(); return View(new Inspeccion { Fecha = DateTime.Today }); }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Crear(Inspeccion inspeccion)
+        public async Task<IActionResult> Crear(Inspeccion inspeccion)
         {
             inspeccion.Estado = "pendiente";
             inspeccion.ColmenasInspeccionadas = 0;
@@ -90,7 +118,14 @@ namespace ColmenaEmpresa.Controllers
                 ModelState.Remove(nameof(Inspeccion.ColmenaId));
             }
 
-            if (!ModelState.IsValid) { CargarDatos(); return View(inspeccion); }
+            var user = await _users.GetUserAsync(User);
+            if (!User.IsInRole("ADMIN") && user?.ApiarioAsignadoId != inspeccion.ApiarioId)
+            {
+                TempData["Error"] = "Solo podés registrar inspecciones en tu sector asignado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!ModelState.IsValid) { await CargarDatosAsync(); return View(inspeccion); }
 
             _ctx.Inspecciones.Add(inspeccion);
 
@@ -100,10 +135,12 @@ namespace ColmenaEmpresa.Controllers
                 c.UltimaVisita = inspeccion.Fecha;
 
             _ctx.SaveChanges();
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "Inspecciones", inspeccion.ApiarioNombre);
             TempData["Exito"] = "Inspección registrada.";
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Editar(int id)
         {
             var i = _ctx.Inspecciones.Find(id);
@@ -112,7 +149,8 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Editar(int id, Inspeccion inspeccion)
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> Editar(int id, Inspeccion inspeccion)
         {
             if (id != inspeccion.Id) return BadRequest();
             if (!ModelState.IsValid) return View(inspeccion);
@@ -128,29 +166,44 @@ namespace ColmenaEmpresa.Controllers
                 c.UltimaVisita = inspeccion.Fecha;
 
             _ctx.SaveChanges();
+            var user = await _users.GetUserAsync(User);
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Inspecciones", inspeccion.ApiarioNombre);
             TempData["Exito"] = "Inspección actualizada.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Completar(int id)
+        public async Task<IActionResult> Completar(int id)
         {
             var i = _ctx.Inspecciones.Find(id);
             if (i is not null)
             {
+                var user = await _users.GetUserAsync(User);
+                if (!User.IsInRole("ADMIN") && user?.ApiarioAsignadoId != i.ApiarioId)
+                    return Forbid();
+
                 i.Estado = "completa";
                 i.ColmenasInspeccionadas = i.TotalColmenas;
                 _ctx.SaveChanges();
+                _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Inspecciones", $"Completar #{id}");
                 TempData["Exito"] = "Inspección marcada como completada.";
             }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Eliminar(int id)
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> Eliminar(int id)
         {
             var i = _ctx.Inspecciones.Find(id);
-            if (i is not null) { _ctx.Inspecciones.Remove(i); _ctx.SaveChanges(); TempData["Exito"] = "Inspección eliminada."; }
+            if (i is not null)
+            {
+                _ctx.Inspecciones.Remove(i);
+                _ctx.SaveChanges();
+                var user = await _users.GetUserAsync(User);
+                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "Inspecciones", i.ApiarioNombre);
+                TempData["Exito"] = "Inspección eliminada.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }

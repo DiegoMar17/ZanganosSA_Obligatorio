@@ -20,5 +20,7 @@ namespace ColmenaEmpresa.Models
         public bool Completada { get; set; }
 
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
+        public string? AsignadoAId { get; set; }
+        public string AsignadoNombre { get; set; } = string.Empty;
     }
 }

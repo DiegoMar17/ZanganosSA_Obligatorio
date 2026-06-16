@@ -1,9 +1,11 @@
 @model IEnumerable<ColmenaEmpresa.Models.Visita>
 @{
     ViewData["Title"] = "Planificación";
-    var tareas  = (List<ColmenaEmpresa.Models.Tarea>)ViewBag.Tareas;
-    var pendT   = (int)ViewBag.Pendientes;
-    var pendV   = (int)ViewBag.VisitasPend;
+    var tareas    = (List<ColmenaEmpresa.Models.Tarea>)ViewBag.Tareas;
+    var pendT     = (int)ViewBag.Pendientes;
+    var pendV     = (int)ViewBag.VisitasPend;
+    var esAdmin   = (bool)(ViewBag.EsAdmin ?? false);
+    var empleados = ViewBag.Empleados as List<ColmenaEmpresa.Models.ApplicationUser>;
     ViewData["Subtitle"] = $"{pendT} tareas · {pendV} visitas pendientes";
 }
 
@@ -41,6 +43,19 @@
                     <label class="flbl">Fecha límite (opcional)</label>
                     <input type="date" name="fechaVencimiento" class="fc">
                 </div>
+                @if (esAdmin && empleados != null && empleados.Any())
+                {
+                    <div class="fgrp fg-full">
+                        <label class="flbl">Asignar a empleado (opcional)</label>
+                        <select name="asignadoAId" class="fc">
+                            <option value="">Sin asignar específico</option>
+                            @foreach (var emp in empleados)
+                            {
+                                <option value="@emp.Id">@emp.NombreCompleto</option>
+                            }
+                        </select>
+                    </div>
+                }
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Agregar tarea</button>
         </form>
@@ -99,6 +114,10 @@
                         {
                             var v = t.FechaVencimiento.Value.Date < DateTime.Today && !t.Completada;
                             <span class="chip" style="@(v ? "color:var(--red)" : "")">@t.FechaVencimiento.Value.ToString("dd MMM") @(v ? "⚠" : "")</span>
+                        }
+                        @if (!string.IsNullOrEmpty(t.AsignadoNombre))
+                        {
+                            <span class="chip" style="color:var(--gold);border-color:rgba(242,190,48,.3);background:rgba(242,190,48,.08)">👷 @t.AsignadoNombre</span>
                         }
                     </div>
                 </div>

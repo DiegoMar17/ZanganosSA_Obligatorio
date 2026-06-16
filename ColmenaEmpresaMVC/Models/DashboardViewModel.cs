@@ -23,6 +23,13 @@ namespace ColmenaEmpresa.Models
 
         // ── Producción mensual (últimos 7 meses) ───────────────────────────
         public List<ProduccionMensual> ProduccionMensual { get; set; } = new();
+
+        // ── Panel admin ────────────────────────────────────────────────────
+        public bool EsAdmin { get; set; }
+        public int TareasPendientesCount { get; set; }
+        public int EmpleadosActivos { get; set; }
+        public int ControlesVencidos { get; set; }
+        public List<Auditoria> UltimosAuditoria { get; set; } = new();
     }
 
     public class AlertaDashboard

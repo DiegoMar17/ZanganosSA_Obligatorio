@@ -1,0 +1,71 @@
+@model ColmenaEmpresa.Models.PagedResult<ColmenaEmpresa.Models.HistorialAcceso>
+@{
+    ViewData["Title"]    = "Historial de Accesos";
+    ViewData["Subtitle"] = "Registro de logins al sistema";
+    var usuarios   = ViewBag.Usuarios as List<ColmenaEmpresa.Models.ApplicationUser> ?? new();
+    var filtroUser = ViewBag.FiltroUserId as string;
+}
+
+@section Actions {
+    <a asp-action="Index" class="btn-action-sm">📝 Auditoría</a>
+}
+
+<form method="get" style="margin-bottom:20px;display:flex;gap:10px;align-items:flex-end">
+    <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:12px;font-weight:600;color:var(--txt-3)">Usuario</label>
+        <select name="userId" style="background:var(--bg-1);border:1px solid var(--bdr);border-radius:8px;color:var(--txt-1);font-size:13px;padding:8px 10px;min-width:160px">
+            <option value="">Todos</option>
+            @foreach (var u in usuarios)
+            {
+                <option value="@u.Id" selected="@(filtroUser == u.Id ? "selected" : null)">@u.NombreCompleto</option>
+            }
+        </select>
+    </div>
+    <button type="submit" style="padding:9px 16px;background:var(--gold);color:#0C0A07;font-weight:700;border:none;border-radius:9px;cursor:pointer;font-size:13px">Filtrar</button>
+    <a asp-action="HistorialAccesos" style="padding:9px 12px;border:1px solid var(--bdr);border-radius:9px;color:var(--txt-3);font-size:13px;text-decoration:none">✕ Limpiar</a>
+</form>
+
+<div class="tbl-wrap">
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Fecha / Hora</th>
+                <th>Usuario</th>
+                <th>Estado</th>
+                <th>IP</th>
+                <th>Dispositivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var h in Model.Items)
+            {
+                <tr>
+                    <td style="color:var(--txt-3);font-size:13px;white-space:nowrap">@h.FechaHora.ToString("dd/MM/yy HH:mm:ss")</td>
+                    <td><strong style="font-size:13px">@h.NombreUsuario</strong></td>
+                    <td>
+                        @if (h.Exitoso)
+                        {
+                            <span class="pill p-g" style="font-size:11px">✓ Exitoso</span>
+                        }
+                        else
+                        {
+                            <span class="pill p-r" style="font-size:11px">✕ Fallido</span>
+                        }
+                    </td>
+                    <td style="color:var(--txt-4);font-size:13px">@(h.Ip ?? "—")</td>
+                    <td style="color:var(--txt-4);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@h.Dispositivo">@(h.Dispositivo ?? "—")</td>
+                </tr>
+            }
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="5" style="text-align:center;color:var(--txt-4);padding:32px">Sin accesos registrados.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@await Html.PartialAsync("_Pagination", Model)
+
+<style>
+.btn-action-sm { padding:9px 16px; background:var(--gold); color:#0C0A07; font-weight:700; border:none; border-radius:9px; cursor:pointer; font-size:13px; text-decoration:none; display:inline-block; }
+</style>

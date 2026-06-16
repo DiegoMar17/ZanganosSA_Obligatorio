@@ -12,7 +12,15 @@
             <div style="font-family:var(--serif);font-size:20px;color:var(--txt-1);margin-bottom:4px">
                 @(string.IsNullOrEmpty(Model?.NombreCompleto) ? Model?.Email : Model?.NombreCompleto)
             </div>
-            <div style="font-size:13px;color:var(--txt-4);margin-bottom:20px">@Model?.Email</div>
+            <div style="font-size:13px;color:var(--txt-4);margin-bottom:8px">@Model?.Email</div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+                <span class="pill @(ViewBag.EsAdmin ? "p-amber" : "p-blue")">@(ViewBag.EsAdmin ? "👑 ADMIN" : "🔑 EMPLEADO")</span>
+                @if (!ViewBag.EsAdmin)
+                {
+                    <span class="pill p-ghost">@(ViewBag.SectorNombre ?? "Sin sector asignado")</span>
+                    <span class="pill @(ViewBag.PinActivo ? "p-green" : "p-red")">@(ViewBag.TienePin ? (ViewBag.PinActivo ? "PIN activo" : "PIN revocado") : "Sin PIN")</span>
+                }
+            </div>
             <div class="g4" style="gap:8px">
                 <div style="text-align:center">
                     <div style="font-family:var(--serif);font-size:22px;color:var(--gold)">@ViewBag.TotalApiarios</div>
@@ -106,7 +114,10 @@
                 Descargá tus registros en formato CSV para abrir en Excel.
             </p>
             <div style="display:flex;gap:10px">
-                <a class="btn btn-sm" asp-controller="Finanzas" asp-action="ExportarCsv">⬇ Finanzas CSV</a>
+                @if (ViewBag.EsAdmin)
+                {
+                    <a class="btn btn-sm" asp-controller="Finanzas" asp-action="ExportarCsv">⬇ Finanzas CSV</a>
+                }
                 <a class="btn btn-sm" asp-controller="Produccion" asp-action="ExportarCsv">⬇ Producción CSV</a>
             </div>
         </div>
