@@ -1,10 +1,12 @@
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
 namespace ColmenaEmpresa.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class FinanzasController : Controller
     {
         private readonly AppDbContext _ctx;

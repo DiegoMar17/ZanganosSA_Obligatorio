@@ -5,7 +5,10 @@
 }
 
 @section Actions {
-    <a class="btn btn-sm" asp-action="Exportar" target="_blank">⬇ Exportar</a>
+    @if (User.IsInRole("ADMIN"))
+    {
+        <a class="btn btn-sm" asp-action="Exportar" target="_blank">⬇ Exportar</a>
+    }
     <a class="btn btn-primary btn-sm" asp-action="Crear">+ Control sanitario</a>
 }
 
@@ -60,11 +63,14 @@
                     <td>@item.Fecha.ToString("dd MMM yyyy")</td>
                     <td><span class="pill p-@(item.Estado == "limpio" ? "green" : "amber")">@(item.Estado == "limpio" ? "Limpio" : "En tratamiento")</span></td>
                     <td style="display:flex;gap:6px">
-                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este control?')">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-                        </form>
+                        @if (User.IsInRole("ADMIN"))
+                        {
+                            <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                            <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este control?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

@@ -1,5 +1,6 @@
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
+using ColmenaEmpresa.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -24,9 +25,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/Login";
+    options.LoginPath       = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccesoDenegado";
 });
+
+builder.Services.AddScoped<AuditoriaService>();
 
 // Require authentication globally — use [AllowAnonymous] para excluir rutas
 builder.Services.AddControllersWithViews(options =>
@@ -41,16 +44,52 @@ using (var scope = app.Services.CreateScope())
 {
     var db          = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
     db.Database.EnsureCreated();
 
-    // ALTER TABLE idempotente — agrega columnas nuevas sin perder datos
+    // Crear roles si no existen
+    if (!await roleManager.RoleExistsAsync("ADMIN"))
+        await roleManager.CreateAsync(new IdentityRole("ADMIN"));
+    if (!await roleManager.RoleExistsAsync("EMPLEADO"))
+        await roleManager.CreateAsync(new IdentityRole("EMPLEADO"));
+
+    // ALTER TABLE idempotente — nuevas columnas en ApplicationUser (AspNetUsers)
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN Rol TEXT NOT NULL DEFAULT 'EMPLEADO'"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN PinHash TEXT NULL"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN PinActivo INTEGER NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN ApiarioAsignadoId INTEGER NULL"); } catch { }
+
+    // Nuevas columnas en Tareas
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Tareas ADD COLUMN AsignadoAId TEXT NULL"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Tareas ADD COLUMN AsignadoNombre TEXT NOT NULL DEFAULT ''"); } catch { }
+
+    // ALTER TABLE idempotente — columnas previas en otras tablas
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN TipoInspeccion TEXT NOT NULL DEFAULT 'apiario'"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaId INTEGER NULL"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaCodigo TEXT NOT NULL DEFAULT ''"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE RegistrosFinancieros ADD COLUMN CosechaId INTEGER NULL"); } catch { }
 
-    // Tablas nuevas — idempotente para bases existentes
+    // Tablas nuevas de roles
+    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS Auditorias (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        UserId TEXT NOT NULL DEFAULT '',
+        NombreUsuario TEXT NOT NULL DEFAULT '',
+        Accion TEXT NOT NULL DEFAULT '',
+        Tabla TEXT NOT NULL DEFAULT '',
+        FechaHora TEXT NOT NULL DEFAULT '',
+        Detalle TEXT NULL)"); } catch { }
+
+    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS HistorialesAcceso (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        UserId TEXT NOT NULL DEFAULT '',
+        NombreUsuario TEXT NOT NULL DEFAULT '',
+        FechaHora TEXT NOT NULL DEFAULT '',
+        Ip TEXT NULL,
+        Dispositivo TEXT NULL,
+        Exitoso INTEGER NOT NULL DEFAULT 1)"); } catch { }
+
+    // Tablas previas — idempotentes
     try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS AlertasComunitarias (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
         Titulo TEXT NOT NULL DEFAULT '',
@@ -79,12 +118,25 @@ using (var scope = app.Services.CreateScope())
     {
         var admin = new ApplicationUser
         {
-            UserName      = "admin@colmena.com",
-            Email         = "admin@colmena.com",
+            UserName       = "admin@colmena.com",
+            Email          = "admin@colmena.com",
             NombreCompleto = "Carlos Bentancur",
-            EmailConfirmed = true
+            EmailConfirmed = true,
+            Rol            = "ADMIN"
         };
         await userManager.CreateAsync(admin, "colmena123");
+        await userManager.AddToRoleAsync(admin, "ADMIN");
+    }
+    else
+    {
+        // Asegurar que el admin existente tenga su rol
+        var admin = await userManager.FindByEmailAsync("admin@colmena.com");
+        if (admin is not null && !await userManager.IsInRoleAsync(admin, "ADMIN"))
+        {
+            admin.Rol = "ADMIN";
+            await userManager.UpdateAsync(admin);
+            await userManager.AddToRoleAsync(admin, "ADMIN");
+        }
     }
 
     // Seed datos de ejemplo

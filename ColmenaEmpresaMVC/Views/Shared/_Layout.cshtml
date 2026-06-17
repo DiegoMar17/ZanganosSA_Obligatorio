@@ -1,4 +1,22 @@
 @inject ColmenaEmpresa.Data.AppDbContext _db
+@inject Microsoft.AspNetCore.Identity.UserManager<ColmenaEmpresa.Models.ApplicationUser> _userMgr
+@{
+    var esAdmin   = User.IsInRole("ADMIN");
+    var currentUserId = _userMgr.GetUserId(User);
+    var rolLabel  = esAdmin ? "Administrador" : "Empleado";
+    var rolEmoji  = esAdmin ? "👑" : "👷";
+    var tareasUsuario = esAdmin
+        ? 0
+        : _db.Tareas.Count(t => !t.Completada && t.AsignadoAId == currentUserId);
+    int? sectorId = esAdmin ? null : _userMgr.Users.Where(u => u.Id == currentUserId).Select(u => u.ApiarioAsignadoId).FirstOrDefault();
+    var apiariosCount = esAdmin ? _db.Apiarios.Count() : (sectorId.HasValue ? 1 : 0);
+    var inspeccionesPendientesQ = esAdmin
+        ? _db.Inspecciones.Where(i => i.Estado == "pendiente" || i.Estado == "vencida")
+        : _db.Inspecciones.Where(i => (i.Estado == "pendiente" || i.Estado == "vencida") && sectorId.HasValue && i.ApiarioId == sectorId.Value);
+    var colmenasRojoQ = esAdmin
+        ? _db.Colmenas.Where(c => c.EstadoSemaforo == "rojo")
+        : _db.Colmenas.Where(c => c.EstadoSemaforo == "rojo" && sectorId.HasValue && c.ApiarioId == sectorId.Value);
+}
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -26,59 +44,76 @@
         <nav class="sb-nav">
             <div class="sb-group-label">Principal</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
-                <span class="sb-ico">◈</span>Dashboard
+                <span class="sb-ico">◈</span><span class="sb-label">Dashboard</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Apiarios" ? "active" : "")" asp-controller="Apiarios" asp-action="Index">
-                <span class="sb-ico">📍</span>Apiarios<span class="sb-badge sb-badge-g">@_db.Apiarios.Count()</span>
+                <span class="sb-ico">📍</span><span class="sb-label">Apiarios</span><span class="sb-badge sb-badge-g">@apiariosCount</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Colmenas" ? "active" : "")" asp-controller="Colmenas" asp-action="Index">
-                <span class="sb-ico">🏠</span>Colmenas
+                <span class="sb-ico">🏠</span><span class="sb-label">Colmenas</span>
             </a>
 
             <div class="sb-group-label">Gestión</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inspecciones" ? "active" : "")" asp-controller="Inspecciones" asp-action="Index">
-                <span class="sb-ico">🔍</span>Inspecciones<span class="sb-badge sb-badge-r">@_db.Inspecciones.Count(i => i.Estado == "pendiente" || i.Estado == "vencida")</span>
+                <span class="sb-ico">🔍</span><span class="sb-label">Inspecciones</span><span class="sb-badge sb-badge-r">@inspeccionesPendientesQ.Count()</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Transhumancia" ? "active" : "")" asp-controller="Transhumancia" asp-action="Index">
-                <span class="sb-ico">🚚</span>Transhumancia
+                <span class="sb-ico">🚚</span><span class="sb-label">Transhumancia</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sanidad" ? "active" : "")" asp-controller="Sanidad" asp-action="Index">
-                <span class="sb-ico">🩺</span>Sanidad
+                <span class="sb-ico">🩺</span><span class="sb-label">Sanidad</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Alertas" ? "active" : "")" asp-controller="Alertas" asp-action="Index">
-                <span class="sb-ico">🚨</span>Alertas<span class="sb-badge sb-badge-r">@_db.AlertasComunitarias.Count(a => a.Estado == "activa")</span>
+                <span class="sb-ico">🚨</span><span class="sb-label">Alertas</span><span class="sb-badge sb-badge-r">@_db.AlertasComunitarias.Count(a => a.Estado == "activa")</span>
             </a>
 
             <div class="sb-group-label">Planificación</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Calendario" ? "active" : "")" asp-controller="Calendario" asp-action="Index">
-                <span class="sb-ico">📅</span>Calendario
+                <span class="sb-ico">📅</span><span class="sb-label">Calendario</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Planificacion" ? "active" : "")" asp-controller="Planificacion" asp-action="Index">
-                <span class="sb-ico">📋</span>Tareas y visitas
+                <span class="sb-ico">📋</span><span class="sb-label">Tareas y visitas</span>@if (tareasUsuario > 0) { <span class="sb-badge sb-badge-r">@tareasUsuario</span> }
             </a>
 
             <div class="sb-group-label">Recursos</div>
-            <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Finanzas" ? "active" : "")" asp-controller="Finanzas" asp-action="Index">
-                <span class="sb-ico">💰</span>Finanzas
-            </a>
+            @if (esAdmin)
+            {
+                <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Finanzas" ? "active" : "")" asp-controller="Finanzas" asp-action="Index">
+                    <span class="sb-ico">💰</span><span class="sb-label">Finanzas</span>
+                </a>
+            }
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventario" ? "active" : "")" asp-controller="Inventario" asp-action="Index">
-                <span class="sb-ico">📦</span>Inventario
+                <span class="sb-ico">📦</span><span class="sb-label">Inventario</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produccion" ? "active" : "")" asp-controller="Produccion" asp-action="Index">
-                <span class="sb-ico">🍯</span>Producción
+                <span class="sb-ico">🍯</span><span class="sb-label">Producción</span>
             </a>
+
+            @if (esAdmin)
+            {
+                <div class="sb-group-label">Administración</div>
+                <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Equipo" ? "active" : "")" asp-controller="Equipo" asp-action="Index">
+                    <span class="sb-ico">👥</span><span class="sb-label">Mi equipo</span>
+                </a>
+                <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pin" ? "active" : "")" asp-controller="Pin" asp-action="Index">
+                    <span class="sb-ico">🔑</span><span class="sb-label">Gestión de PINs</span>
+                </a>
+                <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Auditoria" ? "active" : "")" asp-controller="Auditoria" asp-action="Index">
+                    <span class="sb-ico">📝</span><span class="sb-label">Auditoría</span>
+                </a>
+            }
 
             <div class="sb-group-label">Sistema</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Perfil" ? "active" : "")" asp-controller="Perfil" asp-action="Index">
-                <span class="sb-ico">👤</span>Perfil
+                <span class="sb-ico">👤</span><span class="sb-label">Perfil</span>
             </a>
         </nav>
 
         <div class="sb-footer">
-            <div class="sb-avatar">👨‍🌾</div>
+            <div class="sb-avatar">@rolEmoji</div>
             <div>
                 <div class="sb-user-name">@User.Identity?.Name?.Split('@')[0]</div>
-                <div class="sb-user-role">Apicultor principal</div>
+                <div class="sb-user-role">@rolLabel</div>
             </div>
             <form asp-controller="Account" asp-action="Logout" method="post" style="margin-left:auto">
                 @Html.AntiForgeryToken()
@@ -111,12 +146,18 @@
     <div class="notif-panel" id="notif-panel">
         <div class="np-hd">
             <div class="np-title">Notificaciones</div>
-            <span class="pill p-red" style="font-size:10.5px">5 nuevas</span>
+            <span class="pill p-red" style="font-size:10.5px">@(tareasUsuario > 0 ? tareasUsuario : inspeccionesPendientesQ.Count()) nuevas</span>
             <button class="np-close" onclick="toggleNotifPanel()">✕</button>
         </div>
         <div class="np-list">
-            <div class="np-item unread"><div class="np-ico a-red">⚠</div><div class="np-content"><div class="np-title2">Inspección vencida — La Rinconada</div><div class="np-body">12 días sin visita.</div><div class="np-time">Hace 2 horas</div></div></div>
-            <div class="np-item unread"><div class="np-ico a-amber">🩺</div><div class="np-content"><div class="np-title2">Control Varroa pendiente — C-82</div><div class="np-body">Tratamiento no registrado.</div><div class="np-time">Hace 5 horas</div></div></div>
+            @foreach (var c in colmenasRojoQ.Take(3).ToList())
+            {
+                <div class="np-item unread"><div class="np-ico a-red">⚠</div><div class="np-content"><div class="np-title2">Colmena @c.Codigo en estado crítico</div><div class="np-body">@c.ApiarioNombre</div></div></div>
+            }
+            @foreach (var i in inspeccionesPendientesQ.Take(3).ToList())
+            {
+                <div class="np-item unread"><div class="np-ico a-amber">🔍</div><div class="np-content"><div class="np-title2">Inspección @i.Estado — @i.ApiarioNombre</div><div class="np-body">@i.Fecha.ToString("dd MMM yyyy")</div></div></div>
+            }
         </div>
     </div>
 

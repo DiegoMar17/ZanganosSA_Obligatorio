@@ -1,0 +1,181 @@
+@model IEnumerable<ColmenaEmpresa.Controllers.EmpleadoPinViewModel>
+@{
+    ViewData["Title"]    = "Gestión de PINs";
+    ViewData["Subtitle"] = "Administración de accesos por empleado";
+    var apiarios = ViewBag.Apiarios as List<ColmenaEmpresa.Models.Apiario> ?? new();
+    var pinGenerado = ViewBag.PinGenerado as string;
+    var pinUsuario  = ViewBag.PinUsuario  as string;
+}
+
+@section Actions {
+    <button class="btn-action" onclick="document.getElementById('modal-nuevo').showModal()">+ Nuevo empleado</button>
+}
+
+@if (!string.IsNullOrEmpty(pinGenerado))
+{
+    <div style="background:rgba(242,190,48,.12);border:1.5px solid rgba(242,190,48,.4);border-radius:14px;padding:20px 24px;margin-bottom:24px;display:flex;gap:16px;align-items:center;">
+        <div style="font-size:32px">🔑</div>
+        <div>
+            <div style="font-size:13px;color:var(--txt-3);margin-bottom:4px">PIN generado para <strong style="color:var(--txt-1)">@pinUsuario</strong> — mostrarlo <strong style="color:var(--red)">una sola vez</strong></div>
+            <div style="font-size:28px;font-weight:700;letter-spacing:.4em;color:var(--gold);font-family:monospace">@pinGenerado</div>
+            <div style="font-size:12px;color:var(--txt-4);margin-top:6px">Anotalo y entregáselo al empleado. No se vuelve a mostrar.</div>
+        </div>
+    </div>
+}
+
+<div class="card-grid" style="grid-template-columns:1fr;gap:0">
+    <div class="tbl-wrap">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Email</th>
+                    <th>Sector asignado</th>
+                    <th>Estado PIN</th>
+                    <th>Último acceso</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td><strong>@e.NombreCompleto</strong></td>
+                        <td style="color:var(--txt-3);font-size:13px">@e.Email</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(e.ApiarioNombre))
+                            {
+                                <span class="pill p-g">📍 @e.ApiarioNombre</span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--txt-4);font-size:12px">Sin asignar</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!e.TienePin)
+                            {
+                                <span class="pill" style="background:rgba(90,77,53,.3);color:var(--txt-3)">Sin PIN</span>
+                            }
+                            else if (e.PinActivo)
+                            {
+                                <span class="pill p-g">● Activo</span>
+                            }
+                            else
+                            {
+                                <span class="pill p-r">✕ Revocado</span>
+                            }
+                        </td>
+                        <td style="color:var(--txt-3);font-size:13px">
+                            @(e.UltimoAcceso.HasValue ? e.UltimoAcceso.Value.ToString("dd/MM/yy HH:mm") : "Nunca")
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                <form method="post" asp-action="GenerarPin" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@e.UserId">
+                                    <button type="submit" class="btn-sm" title="@(e.TienePin ? "Regenerar" : "Generar") PIN">
+                                        @(e.TienePin ? "↻ Regenerar" : "+ Generar PIN")
+                                    </button>
+                                </form>
+                                @if (e.PinActivo)
+                                {
+                                    <form method="post" asp-action="RevocarPin" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@e.UserId">
+                                        <button type="submit" class="btn-sm btn-danger">✕ Revocar</button>
+                                    </form>
+                                }
+                                else if (e.TienePin)
+                                {
+                                    <form method="post" asp-action="HabilitarPin" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@e.UserId">
+                                        <button type="submit" class="btn-sm btn-ok">✓ Habilitar</button>
+                                    </form>
+                                }
+                                <button class="btn-sm" onclick="abrirSector('@e.UserId','@(e.ApiarioAsignadoId?.ToString() ?? "")')">📍 Sector</button>
+                                <form method="post" asp-action="EliminarEmpleado" style="display:inline" onsubmit="return confirm('¿Eliminar empleado @e.NombreCompleto?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@e.UserId">
+                                    <button type="submit" class="btn-sm btn-danger">🗑</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" style="text-align:center;color:var(--txt-4);padding:32px">No hay empleados registrados. Creá el primero.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal nuevo empleado -->
+<dialog id="modal-nuevo" style="background:var(--bg-1);border:1px solid var(--bdr-2);border-radius:18px;padding:32px;min-width:360px;color:var(--txt-1)">
+    <h3 style="font-family:var(--serif);color:var(--gold);margin-bottom:20px">Nuevo empleado</h3>
+    <form method="post" asp-action="CrearEmpleado">
+        @Html.AntiForgeryToken()
+        <div class="fgrp" style="margin-bottom:14px">
+            <label class="flbl">Nombre completo</label>
+            <input type="text" name="nombreCompleto" class="fc" placeholder="Ana García" required>
+        </div>
+        <div class="fgrp" style="margin-bottom:20px">
+            <label class="flbl">Email</label>
+            <input type="email" name="email" class="fc" placeholder="ana@colmena.com" required>
+        </div>
+        <div style="display:flex;gap:10px">
+            <button type="submit" class="btn-action">Crear empleado</button>
+            <button type="button" class="btn-sm" onclick="document.getElementById('modal-nuevo').close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Modal asignar sector -->
+<dialog id="modal-sector" style="background:var(--bg-1);border:1px solid var(--bdr-2);border-radius:18px;padding:32px;min-width:340px;color:var(--txt-1)">
+    <h3 style="font-family:var(--serif);color:var(--gold);margin-bottom:20px">Asignar sector (apiario)</h3>
+    <form method="post" asp-action="AsignarApiario" id="form-sector">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="userId" id="sector-userId">
+        <div class="fgrp" style="margin-bottom:20px">
+            <label class="flbl">Apiario asignado</label>
+            <select name="apiarioId" id="sector-apiarioId" class="fc">
+                <option value="">Sin asignar</option>
+                @foreach (var a in apiarios)
+                {
+                    <option value="@a.Id">@a.Nombre</option>
+                }
+            </select>
+        </div>
+        <div style="display:flex;gap:10px">
+            <button type="submit" class="btn-action">Guardar</button>
+            <button type="button" class="btn-sm" onclick="document.getElementById('modal-sector').close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+
+<style>
+.fgrp { display:flex; flex-direction:column; gap:6px; }
+.flbl { font-size:12.5px; font-weight:600; color:var(--txt-2); }
+.fc { background:var(--bg); border:1.5px solid var(--bdr); border-radius:10px; color:var(--txt-1); font-size:14px; padding:10px 13px; outline:none; }
+.fc:focus { border-color:var(--gold); }
+.btn-sm { padding:6px 12px; border:1px solid var(--bdr-2); border-radius:8px; background:transparent; color:var(--txt-2); font-size:12px; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btn-sm:hover { background:var(--bg-2); color:var(--txt-1); }
+.btn-danger { border-color:rgba(242,107,107,.3); color:var(--red); }
+.btn-danger:hover { background:var(--red-bg); }
+.btn-ok { border-color:rgba(86,200,140,.3); color:#56C88C; }
+.btn-ok:hover { background:rgba(86,200,140,.1); }
+.btn-action { padding:10px 20px; background:var(--gold); color:#0C0A07; font-weight:700; border:none; border-radius:10px; cursor:pointer; font-size:14px; }
+</style>
+
+@section Scripts {
+<script>
+function abrirSector(userId, apiarioId) {
+    document.getElementById('sector-userId').value = userId;
+    document.getElementById('sector-apiarioId').value = apiarioId || '';
+    document.getElementById('modal-sector').showModal();
+}
+</script>
+}

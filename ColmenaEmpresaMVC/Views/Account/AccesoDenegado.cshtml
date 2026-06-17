@@ -1,0 +1,55 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado — ZanganosSA</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #F2BE30; --gold-glow: rgba(242,190,48,.2); --gold-dim: rgba(242,190,48,.10);
+            --bg: #0C0A07; --bg-1: #131008; --bg-2: #1A1509;
+            --txt-1: #F5EDD5; --txt-2: #C8AD78; --txt-4: #5A4D35;
+            --bdr: rgba(242,190,48,.14); --bdr-2: rgba(242,190,48,.32);
+            --red: #F26B6B; --red-bg: rgba(242,107,107,.12);
+            --sans: 'DM Sans', system-ui, sans-serif;
+            --serif: 'DM Serif Display', Georgia, serif;
+        }
+        html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--txt-1); }
+        .page { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .card {
+            background: rgba(19,16,8,.88); border: 1px solid var(--bdr-2); border-radius: 24px;
+            padding: 48px 44px; width: 100%; max-width: 420px; text-align: center;
+            backdrop-filter: blur(20px); box-shadow: 0 32px 80px rgba(0,0,0,.6);
+        }
+        .ico { font-size: 56px; margin-bottom: 20px; }
+        h1 { font-family: var(--serif); font-size: 24px; color: var(--red); margin-bottom: 12px; }
+        p { color: var(--txt-2); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+        .btn {
+            display: inline-block; padding: 12px 28px;
+            background: var(--gold); color: #0C0A07;
+            font-family: var(--sans); font-size: 14px; font-weight: 700;
+            border-radius: 10px; text-decoration: none;
+            transition: all .2s; box-shadow: 0 4px 20px var(--gold-glow);
+        }
+        .btn:hover { filter: brightness(1.08); transform: translateY(-2px); }
+        .back { display: block; margin-top: 16px; font-size: 13px; color: var(--txt-4); text-decoration: none; }
+        .back:hover { color: var(--txt-2); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <div class="ico">🔒</div>
+            <h1>Acceso Denegado</h1>
+            <p>No tenés permisos para acceder a esta sección. Si creés que es un error, contactá al administrador.</p>
+            <a href="/Home/Index" class="btn">Ir al Dashboard</a>
+            <a href="/Account/Login" class="back">← Cambiar cuenta</a>
+        </div>
+    </div>
+</body>
+</html>

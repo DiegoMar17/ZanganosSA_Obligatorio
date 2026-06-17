@@ -90,3 +90,14 @@ document.getElementById('theme-btn')?.addEventListener('click', () => {
     localStorage.setItem('theme', next);
     document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
 });
+
+// Mantener la posición de scroll de la barra lateral entre navegaciones
+(function () {
+    const nav = document.querySelector('.sb-nav');
+    if (!nav) return;
+    const saved = sessionStorage.getItem('sbNavScroll');
+    if (saved !== null) nav.scrollTop = parseInt(saved, 10);
+    nav.addEventListener('scroll', () => {
+        sessionStorage.setItem('sbNavScroll', nav.scrollTop);
+    });
+})();

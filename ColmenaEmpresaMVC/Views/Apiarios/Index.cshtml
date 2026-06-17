@@ -5,7 +5,10 @@
 }
 
 @section Actions {
-    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo apiario</a>
+    @if (User.IsInRole("ADMIN"))
+    {
+        <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo apiario</a>
+    }
 }
 
 <div class="sec-head mb-4">
@@ -43,11 +46,14 @@
             <div class="ap-footer">
                 <span class="pill @pillCls">@pillTxt</span>
                 <div class="ap-stat" style="margin-left:auto"><span>🏠</span>@item.TotalColmenas colmenas</div>
-                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" onclick="event.stopPropagation()" title="Editar">✏</a>
-                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')" onclick="event.stopPropagation()">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-                </form>
+                @if (User.IsInRole("ADMIN"))
+                {
+                    <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" onclick="event.stopPropagation()" title="Editar">✏</a>
+                    <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar el apiario @item.Nombre?')" onclick="event.stopPropagation()">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                    </form>
+                }
             </div>
         </div>
     }

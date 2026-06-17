@@ -1,11 +1,14 @@
 @model ColmenaEmpresa.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    ViewData["Subtitle"] = "Vista general de tu operación apícola";
+    ViewData["Subtitle"] = Model.EsAdmin ? "Vista general de tu operación apícola" : "Vista general de tu sector asignado";
 }
 
 @section Actions {
-    <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear">+ Nueva colmena</a>
+    @if (Model.EsAdmin)
+    {
+        <a class="btn btn-primary btn-sm" asp-controller="Colmenas" asp-action="Crear">+ Nueva colmena</a>
+    }
 }
 
 <div class="g4 mb-6">
@@ -93,3 +96,71 @@
         }
     </div>
 </div>
+
+@if (Model.EsAdmin)
+{
+    <div class="g4 mb-6" style="margin-top:24px">
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--gold-dim)">📋</div>
+            <div class="stat-lbl">Tareas pendientes</div>
+            <div class="stat-val c-gold">@Model.TareasPendientesCount</div>
+            <div class="stat-meta">En todo el sistema</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--green-bg)">👷</div>
+            <div class="stat-lbl">Empleados con acceso</div>
+            <div class="stat-val c-green">@Model.EmpleadosActivos</div>
+            <div class="stat-meta">PIN habilitado</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--red-bg)">🧪</div>
+            <div class="stat-lbl">Controles vencidos</div>
+            <div class="stat-val c-red">@Model.ControlesVencidos</div>
+            <div class="stat-meta">+30 días en tratamiento</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--amber-bg)">📜</div>
+            <div class="stat-lbl">Auditoría</div>
+            <div class="stat-val c-amber">@Model.UltimosAuditoria.Count</div>
+            <div class="stat-meta"><a asp-controller="Auditoria" asp-action="Index" style="color:var(--txt-3)">Ver registro completo →</a></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-hd"><div class="card-title">Últimos registros de auditoría</div><a asp-controller="Auditoria" asp-action="Index" class="pill p-ghost">Ver todo</a></div>
+        @if (!Model.UltimosAuditoria.Any())
+        {
+            <div style="padding:32px;text-align:center;color:var(--txt-4);font-size:13px">Sin actividad registrada todavía.</div>
+        }
+        else
+        {
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Tabla</th><th>Detalle</th></tr></thead>
+                    <tbody>
+                        @foreach (var a in Model.UltimosAuditoria)
+                        {
+                            <tr>
+                                <td class="td-1">@a.FechaHora.ToString("dd MMM HH:mm")</td>
+                                <td>@a.NombreUsuario</td>
+                                <td><span class="pill @(a.Accion == "CREATE" ? "p-green" : a.Accion == "DELETE" ? "p-red" : "p-amber")">@a.Accion</span></td>
+                                <td>@a.Tabla</td>
+                                <td>@a.Detalle</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card" style="margin-top:24px">
+        <div class="card-hd"><div class="card-title">Mis tareas</div><a asp-controller="Planificacion" asp-action="Index" class="pill p-ghost">Ver todas</a></div>
+        <div style="padding:20px 4px">
+            <div class="stat-lbl">Pendientes asignadas a mí</div>
+            <div class="stat-val c-gold">@Model.TareasPendientesCount</div>
+        </div>
+    </div>
+}

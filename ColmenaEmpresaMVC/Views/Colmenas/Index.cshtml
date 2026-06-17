@@ -6,7 +6,10 @@
 }
 
 @section Actions {
-    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nueva colmena</a>
+    @if (User.IsInRole("ADMIN"))
+    {
+        <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nueva colmena</a>
+    }
 }
 
 <div class="g4 mb-6">
@@ -75,11 +78,14 @@
                     </td>
                     <td class="td-1">@item.CantidadAlzas</td>
                     <td style="display:flex;gap:6px">
-                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar la colmena @item.Codigo?')">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-                        </form>
+                        @if (User.IsInRole("ADMIN"))
+                        {
+                            <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                            <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar la colmena @item.Codigo?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }
