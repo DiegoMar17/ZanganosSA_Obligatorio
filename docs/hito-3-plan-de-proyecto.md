@@ -66,10 +66,8 @@ El equipo está formado por dos integrantes:
 
 | Integrante | Usuario GitHub |
 |---|---|
-| 〚Nombre completo〛 | DiegoMar17 |
-| 〚Nombre completo〛 | ericVignolo |
-
-> Completar con los nombres reales antes de la entrega.
+| 〚Diego Martinez〛 | DiegoMar17 |
+| 〚Eric Vignolo〛 | ericVignolo |
 
 No nos repartimos el trabajo en roles fijos. Vamos resolviendo las tareas a medida que aparecen: lo que haya pendiente lo toma el que esté disponible, y muchas veces lo hacemos juntos sobre la misma parte (uno escribe, el otro revisa o prueba). Tanto el backend (controllers, EF Core, base de datos) como el frontend (vistas, estilos, interacción) y las pruebas las hicimos los dos, según lo que pidiera cada etapa.
 
