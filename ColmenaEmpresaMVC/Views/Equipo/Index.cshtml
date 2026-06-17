@@ -6,18 +6,24 @@
     var activos = (int)ViewBag.EmpleadosActivos;
 }
 
-<div class="kpi-row" style="margin-bottom:24px">
-    <div class="kpi-card">
-        <div class="kpi-label">Total empleados</div>
-        <div class="kpi-val">@total</div>
+<div class="g3 mb-6">
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--gold-dim)">👥</div>
+        <div class="stat-lbl">Total empleados</div>
+        <div class="stat-val c-gold">@total</div>
+        <div class="stat-meta">Registrados en el equipo</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Acceso activo</div>
-        <div class="kpi-val" style="color:var(--green)">@activos</div>
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--green-bg)">●</div>
+        <div class="stat-lbl">Acceso activo</div>
+        <div class="stat-val c-green">@activos</div>
+        <div class="stat-meta">Con PIN habilitado</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Sin PIN / revocado</div>
-        <div class="kpi-val" style="color:var(--red)">@(total - activos)</div>
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--red-bg)">✕</div>
+        <div class="stat-lbl">Sin PIN / revocado</div>
+        <div class="stat-val c-red">@(total - activos)</div>
+        <div class="stat-meta">Requieren atención</div>
     </div>
 </div>
 
@@ -60,7 +66,8 @@
                     <span style="color:var(--txt-2)">@(e.UltimoAcceso.HasValue ? e.UltimoAcceso.Value.ToString("dd/MM/yy HH:mm") : "Nunca")</span>
                 </div>
             </div>
-            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr)">
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;gap:10px">
+                <a asp-controller="Equipo" asp-action="Detalle" asp-route-id="@e.UserId" style="font-size:12px;color:var(--gold);text-decoration:none;font-weight:600">👤 Ver perfil →</a>
                 <a asp-controller="Pin" asp-action="Index" style="font-size:12px;color:var(--txt-3);text-decoration:none;">🔑 Gestionar PIN →</a>
             </div>
         </div>

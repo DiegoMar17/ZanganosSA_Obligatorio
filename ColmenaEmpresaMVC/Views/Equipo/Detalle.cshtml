@@ -1,0 +1,105 @@
+@model ColmenaEmpresa.Controllers.EmpleadoDetalleViewModel
+@{
+    ViewData["Title"]    = Model.NombreCompleto;
+    ViewData["Subtitle"] = "Perfil de empleado";
+}
+
+@section Actions {
+    <a class="btn btn-sm" asp-controller="Equipo" asp-action="Index">← Volver al equipo</a>
+}
+
+<div class="g2 mb-6">
+    <div class="card" style="text-align:center;padding:32px 24px">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--bdr-2);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px">👷</div>
+        <div style="font-family:var(--serif);font-size:20px;color:var(--txt-1);margin-bottom:4px">@Model.NombreCompleto</div>
+        <div style="font-size:13px;color:var(--txt-4);margin-bottom:14px">@Model.Email</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+            <span class="pill p-ghost">@(string.IsNullOrEmpty(Model.ApiarioNombre) ? "Sin sector asignado" : Model.ApiarioNombre)</span>
+            <span class="pill @(Model.PinActivo ? "p-green" : Model.TienePin ? "p-red" : "p-ghost")">@Model.EstadoAcceso</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-hd"><div class="card-title">Actividad</div></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="flex-between">
+                <span style="font-size:13px;color:var(--txt-3)">Sector / Apiario</span>
+                @if (Model.ApiarioId.HasValue)
+                {
+                    <a asp-controller="Apiarios" asp-action="Detalle" asp-route-id="@Model.ApiarioId" style="font-size:13px;color:var(--gold);font-weight:600">@Model.ApiarioNombre →</a>
+                }
+                else
+                {
+                    <span style="font-size:13px;color:var(--txt-1)">Sin asignar</span>
+                }
+            </div>
+            <div class="flex-between">
+                <span style="font-size:13px;color:var(--txt-3)">Registros esta semana</span>
+                <span style="font-size:13px;color:var(--gold);font-weight:600">@Model.RegistrosSemana</span>
+            </div>
+            <div class="flex-between">
+                <span style="font-size:13px;color:var(--txt-3)">Último acceso</span>
+                <span style="font-size:13px;color:var(--txt-2)">@(Model.UltimoAcceso.HasValue ? Model.UltimoAcceso.Value.ToString("dd/MM/yy HH:mm") : "Nunca")</span>
+            </div>
+            <div class="flex-between">
+                <a asp-controller="Pin" asp-action="Index" style="font-size:12px;color:var(--txt-3)">🔑 Gestionar PIN →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="g3 mb-6">
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--gold-dim)">📋</div>
+        <div class="stat-lbl">Tareas asignadas</div>
+        <div class="stat-val c-gold">@Model.TareasAsignadas</div>
+        <div class="stat-meta">Total histórico</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--amber-bg)">⏳</div>
+        <div class="stat-lbl">En proceso</div>
+        <div class="stat-val c-amber">@Model.TareasPendientes</div>
+        <div class="stat-meta">Sin completar</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-accent" style="background:var(--green-bg)">✓</div>
+        <div class="stat-lbl">Completadas</div>
+        <div class="stat-val c-green">@Model.TareasCompletadas</div>
+        <div class="stat-meta">Finalizadas</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-hd">
+        <div class="panel-title">Tareas de @Model.NombreCompleto.Split(' ')[0]</div>
+        <span class="panel-cnt">@Model.TareasAsignadas total</span>
+    </div>
+    @if (!Model.Tareas.Any())
+    {
+        <div style="padding:28px;text-align:center;color:var(--txt-4);font-size:13px">Sin tareas asignadas todavía.</div>
+    }
+    @foreach (var t in Model.Tareas)
+    {
+        <div class="task-row @(t.Completada ? "done" : "")">
+            <form asp-action="CompletarTarea" asp-route-id="@t.Id" asp-route-userId="@Model.UserId" method="post" style="display:contents">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="chk @(t.Completada ? "on" : "")"
+                        style="background:none;border:2px solid var(--bdr-2);border-radius:6px;cursor:pointer;flex-shrink:0;width:20px;height:20px;padding:0">
+                </button>
+            </form>
+            <div class="t-info">
+                <div class="t-name @(t.Completada ? "t-done" : "")">@t.Nombre</div>
+                <div class="t-tags">
+                    <span class="chip">@t.Categoria</span>
+                    <span class="chip" style="@(t.Prioridad == "alta" ? "color:var(--red);border-color:var(--red-bdr);background:var(--red-bg)" : t.Prioridad == "media" ? "color:var(--amber);border-color:var(--amber-bdr);background:var(--amber-bg)" : "")">@t.Prioridad</span>
+                    @if (t.FechaVencimiento.HasValue)
+                    {
+                        var v = t.FechaVencimiento.Value.Date < DateTime.Today && !t.Completada;
+                        <span class="chip" style="@(v ? "color:var(--red)" : "")">@t.FechaVencimiento.Value.ToString("dd MMM") @(v ? "⚠" : "")</span>
+                    }
+                </div>
+            </div>
+            <span class="pill @(t.Completada ? "p-green" : "p-amber")" style="font-size:11px;flex-shrink:0">@(t.Completada ? "Completada" : "En proceso")</span>
+        </div>
+    }
+</div>

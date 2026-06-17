@@ -44,68 +44,68 @@
         <nav class="sb-nav">
             <div class="sb-group-label">Principal</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
-                <span class="sb-ico">◈</span>Dashboard
+                <span class="sb-ico">◈</span><span class="sb-label">Dashboard</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Apiarios" ? "active" : "")" asp-controller="Apiarios" asp-action="Index">
-                <span class="sb-ico">📍</span>Apiarios<span class="sb-badge sb-badge-g">@apiariosCount</span>
+                <span class="sb-ico">📍</span><span class="sb-label">Apiarios</span><span class="sb-badge sb-badge-g">@apiariosCount</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Colmenas" ? "active" : "")" asp-controller="Colmenas" asp-action="Index">
-                <span class="sb-ico">🏠</span>Colmenas
+                <span class="sb-ico">🏠</span><span class="sb-label">Colmenas</span>
             </a>
 
             <div class="sb-group-label">Gestión</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inspecciones" ? "active" : "")" asp-controller="Inspecciones" asp-action="Index">
-                <span class="sb-ico">🔍</span>Inspecciones<span class="sb-badge sb-badge-r">@inspeccionesPendientesQ.Count()</span>
+                <span class="sb-ico">🔍</span><span class="sb-label">Inspecciones</span><span class="sb-badge sb-badge-r">@inspeccionesPendientesQ.Count()</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Transhumancia" ? "active" : "")" asp-controller="Transhumancia" asp-action="Index">
-                <span class="sb-ico">🚚</span>Transhumancia
+                <span class="sb-ico">🚚</span><span class="sb-label">Transhumancia</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sanidad" ? "active" : "")" asp-controller="Sanidad" asp-action="Index">
-                <span class="sb-ico">🩺</span>Sanidad
+                <span class="sb-ico">🩺</span><span class="sb-label">Sanidad</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Alertas" ? "active" : "")" asp-controller="Alertas" asp-action="Index">
-                <span class="sb-ico">🚨</span>Alertas<span class="sb-badge sb-badge-r">@_db.AlertasComunitarias.Count(a => a.Estado == "activa")</span>
+                <span class="sb-ico">🚨</span><span class="sb-label">Alertas</span><span class="sb-badge sb-badge-r">@_db.AlertasComunitarias.Count(a => a.Estado == "activa")</span>
             </a>
 
             <div class="sb-group-label">Planificación</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Calendario" ? "active" : "")" asp-controller="Calendario" asp-action="Index">
-                <span class="sb-ico">📅</span>Calendario
+                <span class="sb-ico">📅</span><span class="sb-label">Calendario</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Planificacion" ? "active" : "")" asp-controller="Planificacion" asp-action="Index">
-                <span class="sb-ico">📋</span>Tareas y visitas@if (tareasUsuario > 0) { <span class="sb-badge sb-badge-r">@tareasUsuario</span> }
+                <span class="sb-ico">📋</span><span class="sb-label">Tareas y visitas</span>@if (tareasUsuario > 0) { <span class="sb-badge sb-badge-r">@tareasUsuario</span> }
             </a>
 
             <div class="sb-group-label">Recursos</div>
             @if (esAdmin)
             {
                 <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Finanzas" ? "active" : "")" asp-controller="Finanzas" asp-action="Index">
-                    <span class="sb-ico">💰</span>Finanzas
+                    <span class="sb-ico">💰</span><span class="sb-label">Finanzas</span>
                 </a>
             }
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventario" ? "active" : "")" asp-controller="Inventario" asp-action="Index">
-                <span class="sb-ico">📦</span>Inventario
+                <span class="sb-ico">📦</span><span class="sb-label">Inventario</span>
             </a>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produccion" ? "active" : "")" asp-controller="Produccion" asp-action="Index">
-                <span class="sb-ico">🍯</span>Producción
+                <span class="sb-ico">🍯</span><span class="sb-label">Producción</span>
             </a>
 
             @if (esAdmin)
             {
                 <div class="sb-group-label">Administración</div>
                 <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Equipo" ? "active" : "")" asp-controller="Equipo" asp-action="Index">
-                    <span class="sb-ico">👥</span>Mi equipo
+                    <span class="sb-ico">👥</span><span class="sb-label">Mi equipo</span>
                 </a>
                 <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pin" ? "active" : "")" asp-controller="Pin" asp-action="Index">
-                    <span class="sb-ico">🔑</span>Gestión de PINs
+                    <span class="sb-ico">🔑</span><span class="sb-label">Gestión de PINs</span>
                 </a>
                 <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Auditoria" ? "active" : "")" asp-controller="Auditoria" asp-action="Index">
-                    <span class="sb-ico">📝</span>Auditoría
+                    <span class="sb-ico">📝</span><span class="sb-label">Auditoría</span>
                 </a>
             }
 
             <div class="sb-group-label">Sistema</div>
             <a class="sb-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Perfil" ? "active" : "")" asp-controller="Perfil" asp-action="Index">
-                <span class="sb-ico">👤</span>Perfil
+                <span class="sb-ico">👤</span><span class="sb-label">Perfil</span>
             </a>
         </nav>
 
