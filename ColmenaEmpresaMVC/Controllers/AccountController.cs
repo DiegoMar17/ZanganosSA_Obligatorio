@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ColmenaEmpresa.Controllers
 {
-    [AllowAnonymous]
     public class AccountController : Controller
     {
         private readonly SignInManager<ApplicationUser> _signIn;
@@ -21,6 +20,7 @@ namespace ColmenaEmpresa.Controllers
             _ctx    = ctx;
         }
 
+        [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
             if (_signIn.IsSignedIn(User)) return RedirectToAction("Index", "Home");
@@ -29,6 +29,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
         {
@@ -48,6 +49,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPin(string email, string pin, string? returnUrl = null)
         {
@@ -89,6 +91,7 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction("Landing", "Home");
         }
 
+        [AllowAnonymous]
         public IActionResult AccesoDenegado() => View();
 
         private void RegistrarAcceso(ApplicationUser user, bool exitoso)

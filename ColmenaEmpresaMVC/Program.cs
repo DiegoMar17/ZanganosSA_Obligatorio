@@ -70,6 +70,10 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaCodigo TEXT NOT NULL DEFAULT ''"); } catch { }
     try { db.Database.ExecuteSqlRaw("ALTER TABLE RegistrosFinancieros ADD COLUMN CosechaId INTEGER NULL"); } catch { }
 
+    // Columna huérfana de una iteración anterior del modelo Cosecha (pre-Vendida/PrecioPorKg).
+    // EF Core ya no la conoce, pero seguía NOT NULL en bases existentes y rompía todo INSERT en Cosechas.
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Cosechas DROP COLUMN CrearRegistroIngreso"); } catch { }
+
     // Tablas nuevas de roles
     try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS Auditorias (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,

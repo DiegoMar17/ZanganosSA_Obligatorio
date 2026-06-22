@@ -1,5 +1,6 @@
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ColmenaEmpresa.Controllers
@@ -7,10 +8,15 @@ namespace ColmenaEmpresa.Controllers
     public class CalendarioController : Controller
     {
         private readonly AppDbContext _ctx;
+        private readonly UserManager<ApplicationUser> _users;
 
-        public CalendarioController(AppDbContext ctx) => _ctx = ctx;
+        public CalendarioController(AppDbContext ctx, UserManager<ApplicationUser> users)
+        {
+            _ctx   = ctx;
+            _users = users;
+        }
 
-        public IActionResult Index(int? year, int? month)
+        public async Task<IActionResult> Index(int? year, int? month)
         {
             var now = DateTime.Now;
             var y = year ?? now.Year;
@@ -19,9 +25,23 @@ namespace ColmenaEmpresa.Controllers
             var desde = new DateTime(y, m, 1);
             var hasta = desde.AddMonths(1);
 
+            // Empleado: solo eventos de su sector asignado. Admin: todo.
+            int? sectorId = null;
+            string? sectorNombre = null;
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                sectorId = user?.ApiarioAsignadoId;
+                sectorNombre = sectorId.HasValue ? _ctx.Apiarios.Find(sectorId.Value)?.Nombre : null;
+                if (!sectorId.HasValue)
+                    return View(new CalendarioViewModel { Year = y, Month = m, Eventos = new List<EventoCalendario>() });
+            }
+
             var eventos = new List<EventoCalendario>();
 
-            foreach (var i in _ctx.Inspecciones.Where(i => i.Fecha >= desde && i.Fecha < hasta).ToList())
+            var inspecciones = _ctx.Inspecciones.Where(i => i.Fecha >= desde && i.Fecha < hasta);
+            if (sectorId.HasValue) inspecciones = inspecciones.Where(i => i.ApiarioId == sectorId.Value);
+            foreach (var i in inspecciones.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = i.Fecha.Day, Tipo = "inspeccion",
@@ -29,7 +49,9 @@ namespace ColmenaEmpresa.Controllers
                     Meta = $"{i.ColmenasInspeccionadas}/{i.TotalColmenas} colmenas · {i.Estado}"
                 });
 
-            foreach (var c in _ctx.Cosechas.Where(c => c.Fecha >= desde && c.Fecha < hasta).ToList())
+            var cosechas = _ctx.Cosechas.Where(c => c.Fecha >= desde && c.Fecha < hasta);
+            if (sectorId.HasValue) cosechas = cosechas.Where(c => c.ApiarioId == sectorId.Value);
+            foreach (var c in cosechas.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = c.Fecha.Day, Tipo = "cosecha",
@@ -37,7 +59,9 @@ namespace ColmenaEmpresa.Controllers
                     Meta = $"{c.PesoNeto} kg netos · {c.TipoMiel}"
                 });
 
-            foreach (var cs in _ctx.ControlesSanitarios.Where(cs => cs.Fecha >= desde && cs.Fecha < hasta).ToList())
+            var controles = _ctx.ControlesSanitarios.Where(cs => cs.Fecha >= desde && cs.Fecha < hasta);
+            if (sectorId.HasValue) controles = controles.Where(cs => cs.ApiarioId == sectorId.Value);
+            foreach (var cs in controles.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = cs.Fecha.Day, Tipo = "sanidad",
@@ -45,7 +69,11 @@ namespace ColmenaEmpresa.Controllers
                     Meta = $"Resultado: {cs.Resultado}"
                 });
 
-            foreach (var t in _ctx.Transhumancias.Where(t => t.FechaSalida >= desde && t.FechaSalida < hasta).ToList())
+            // Transhumancia no tiene FK a Apiario (Origen/Destino son texto libre) — se compara por nombre.
+            var traslados = _ctx.Transhumancias.Where(t => t.FechaSalida >= desde && t.FechaSalida < hasta);
+            if (sectorNombre is not null)
+                traslados = traslados.Where(t => t.ApiarioOrigen == sectorNombre || t.ApiarioDestino == sectorNombre);
+            foreach (var t in traslados.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = t.FechaSalida.Day, Tipo = "traslado",
@@ -53,9 +81,15 @@ namespace ColmenaEmpresa.Controllers
                     Meta = $"{t.ApiarioOrigen} → {t.ApiarioDestino}"
                 });
 
-            // Tareas de planificación con fecha límite
-            foreach (var ta in _ctx.Tareas.Where(t => t.FechaVencimiento != null
-                        && t.FechaVencimiento >= desde && t.FechaVencimiento < hasta).ToList())
+            // Tareas de planificación con fecha límite — al empleado solo le importan las suyas.
+            var tareas = _ctx.Tareas.Where(t => t.FechaVencimiento != null
+                        && t.FechaVencimiento >= desde && t.FechaVencimiento < hasta);
+            if (!User.IsInRole("ADMIN"))
+            {
+                var userId = _users.GetUserId(User);
+                tareas = tareas.Where(t => t.AsignadoAId == userId);
+            }
+            foreach (var ta in tareas.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = ta.FechaVencimiento!.Value.Day, Tipo = "tarea",
@@ -63,8 +97,10 @@ namespace ColmenaEmpresa.Controllers
                     Meta = $"{ta.Categoria} · prioridad {ta.Prioridad}" + (ta.Completada ? " · ✓ completada" : "")
                 });
 
-            // Visitas planificadas
-            foreach (var v in _ctx.Visitas.Where(v => v.FechaPlanificada >= desde && v.FechaPlanificada < hasta).ToList())
+            // Visitas planificadas — Visita tampoco tiene FK a Apiario, se compara por nombre.
+            var visitas = _ctx.Visitas.Where(v => v.FechaPlanificada >= desde && v.FechaPlanificada < hasta);
+            if (sectorNombre is not null) visitas = visitas.Where(v => v.ApiarioNombre == sectorNombre);
+            foreach (var v in visitas.ToList())
                 eventos.Add(new EventoCalendario
                 {
                     Dia = v.FechaPlanificada.Day, Tipo = "visita",

@@ -11,6 +11,8 @@ Sistema de gestión apícola · ASP.NET MVC · C# · .NET 9 · SQLite · Entity 
 | [ZanganosSA_Hitos_1_y_2.docx](ZanganosSA_Hitos_1_y_2.docx) | Entrega de los hitos 1 y 2 |
 | [ObligatorioMER.pdf](ObligatorioMER.pdf) | Modelo Entidad-Relación de la base de datos |
 | [prompt-roles-zanganos.md](prompt-roles-zanganos.md) | Diseño del sistema de roles |
+| [ZanganosSA_DB_SQLServer.sql](ZanganosSA_DB_SQLServer.sql) | Script SQL Server actualizado — refleja el modelo real implementado en `colmena.db`, reemplaza al diseño original (Apicultor/Propietario_Predio) |
+| [Analisis-Profundo-Prioridades.md](Analisis-Profundo-Prioridades.md) | Auditoría técnica QA: funcional, accesibilidad y seguridad, con prioridades de fix |
 
 ---
 

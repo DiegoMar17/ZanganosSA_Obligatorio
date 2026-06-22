@@ -7,7 +7,10 @@
 }
 
 @section Actions {
-    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo traslado</a>
+    @if (User.IsInRole("ADMIN"))
+    {
+        <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo traslado</a>
+    }
 }
 
 <div class="g2">
@@ -27,11 +30,14 @@
                     <div class="card-title">@item.Nombre</div>
                     <div style="display:flex;gap:6px;align-items:center">
                         <span class="pill @pillCls">@pillTxt</span>
-                        <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-                        <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este traslado?')">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-                        </form>
+                        @if (User.IsInRole("ADMIN"))
+                        {
+                            <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                            <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar este traslado?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                            </form>
+                        }
                     </div>
                 </div>
                 <div class="g2 mb-4">

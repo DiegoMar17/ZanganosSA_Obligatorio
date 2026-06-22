@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
@@ -15,9 +16,11 @@ namespace ColmenaEmpresa.Controllers
         private void CargarApiarios() =>
             ViewBag.NombresApiarios = _ctx.Apiarios.OrderBy(a => a.Nombre).Select(a => a.Nombre).ToList();
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Crear() { CargarApiarios(); return View(new Transhumancia { FechaSalida = DateTime.Today }); }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(Transhumancia traslado)
         {
@@ -29,6 +32,7 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Editar(int id)
         {
             var traslado = _ctx.Transhumancias.Find(id);
@@ -37,6 +41,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Editar(int id, Transhumancia traslado)
         {
@@ -49,6 +54,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Eliminar(int id)
         {

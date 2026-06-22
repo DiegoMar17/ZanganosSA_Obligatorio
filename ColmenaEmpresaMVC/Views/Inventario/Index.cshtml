@@ -6,7 +6,10 @@
 
 @section Actions {
     <a class="btn btn-sm" asp-action="Exportar" target="_blank">⬇ Exportar</a>
-    <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo ítem</a>
+    @if (User.IsInRole("ADMIN"))
+    {
+        <a class="btn btn-primary btn-sm" asp-action="Crear">+ Nuevo ítem</a>
+    }
 }
 
 <div class="g3 mb-6">
@@ -35,11 +38,14 @@
             <div class="inv-bar"><div class="inv-fill" style="width:@(item.PorcentajeStock)%;background:@barColor"></div></div>
             <div class="inv-qty">@item.CantidadActual @item.Unidad</div>
             <span class="pill @pillCls">@pillTxt</span>
-            <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
-            <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar @item.Nombre del inventario?')">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
-            </form>
+            @if (User.IsInRole("ADMIN"))
+            {
+                <a class="btn btn-xs btn-icon" asp-action="Editar" asp-route-id="@item.Id" title="Editar">✏</a>
+                <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline" onsubmit="return confirm('¿Eliminar @item.Nombre del inventario?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-xs btn-icon" style="color:var(--red)" title="Eliminar">🗑</button>
+                </form>
+            }
         </div>
     }
 </div>

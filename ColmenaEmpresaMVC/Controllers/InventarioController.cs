@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
@@ -29,9 +30,11 @@ namespace ColmenaEmpresa.Controllers
             return View(items);
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Crear() => View(new ItemInventario());
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Crear(ItemInventario item)
         {
@@ -42,6 +45,7 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Editar(int id)
         {
             var item = _ctx.ItemsInventario.Find(id);
@@ -50,6 +54,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Editar(int id, ItemInventario item)
         {
@@ -62,6 +67,7 @@ namespace ColmenaEmpresa.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public IActionResult Eliminar(int id)
         {
