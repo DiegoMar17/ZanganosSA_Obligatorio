@@ -386,6 +386,19 @@ input, select, textarea { font-family: var(--sans); }
 .flex-row { display:flex; align-items:center; gap:12px; }
 .flex-between { display:flex; align-items:center; justify-content:space-between; }
 
+/* ── Cards de gestión (Equipo / PINs) — glass sólido, no transparente ── */
+.card-grid { display: grid; gap: 18px; }
+.info-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bdr-2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition);
+}
+.info-card:hover { border-color: var(--bdr-3); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+
 .card {
   background: var(--bg-1);
   border: 1px solid var(--bdr);

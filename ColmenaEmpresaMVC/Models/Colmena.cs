@@ -38,5 +38,9 @@ namespace ColmenaEmpresa.Models
 
         [StringLength(500)]
         public string Observaciones { get; set; } = string.Empty;
+
+        // ── Asignación a empleado (gestionada desde la ficha del empleado) ──
+        public string? AsignadoAId { get; set; }
+        public string AsignadoNombre { get; set; } = string.Empty;
     }
 }

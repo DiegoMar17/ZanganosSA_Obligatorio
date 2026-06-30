@@ -22,16 +22,16 @@
     <div class="card">
         <div class="card-hd"><div class="card-title">Actividad</div></div>
         <div style="display:flex;flex-direction:column;gap:12px">
-            <div class="flex-between">
-                <span style="font-size:13px;color:var(--txt-3)">Sector / Apiario</span>
-                @if (Model.ApiarioId.HasValue)
-                {
-                    <a asp-controller="Apiarios" asp-action="Detalle" asp-route-id="@Model.ApiarioId" style="font-size:13px;color:var(--gold);font-weight:600">@Model.ApiarioNombre →</a>
-                }
-                else
-                {
-                    <span style="font-size:13px;color:var(--txt-1)">Sin asignar</span>
-                }
+            <div class="flex-between" style="align-items:flex-start">
+                <span style="font-size:13px;color:var(--txt-3);padding-top:8px">Sector / Apiario</span>
+                <form asp-action="AsignarApiario" method="post" style="display:flex;gap:6px;align-items:center">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@Model.UserId">
+                    <select name="apiarioId" asp-items="ViewBag.Apiarios" class="fc" style="font-size:13px;padding:6px 10px;min-width:160px">
+                        <option value="">Sin asignar</option>
+                    </select>
+                    <button type="submit" class="btn btn-xs">Guardar</button>
+                </form>
             </div>
             <div class="flex-between">
                 <span style="font-size:13px;color:var(--txt-3)">Registros esta semana</span>
@@ -43,9 +43,66 @@
             </div>
             <div class="flex-between">
                 <a asp-controller="Pin" asp-action="Index" style="font-size:12px;color:var(--txt-3)">🔑 Gestionar PIN →</a>
+                @if (Model.ApiarioId.HasValue)
+                {
+                    <a asp-controller="Apiarios" asp-action="Detalle" asp-route-id="@Model.ApiarioId" style="font-size:12px;color:var(--gold)">📍 Ver apiario →</a>
+                }
             </div>
         </div>
     </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-hd">
+        <div class="card-title">Colmenas asignadas</div>
+        <span class="pill p-ghost">@Model.ColmenasAsignadas.Count</span>
+    </div>
+
+    @if (!Model.ApiarioId.HasValue)
+    {
+        <div style="padding:18px 0;text-align:center;color:var(--txt-4);font-size:13px">Asigná primero un sector para poder vincular colmenas.</div>
+    }
+    else
+    {
+        @if (Model.ColmenasDisponibles.Any())
+        {
+            <form asp-action="AsignarColmena" method="post" style="display:flex;gap:8px;margin-bottom:16px">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" value="@Model.UserId">
+                <select name="colmenaId" class="fc" style="flex:1;font-size:13px;padding:8px 10px" required>
+                    <option value="">Seleccioná una colmena del sector…</option>
+                    @foreach (var c in Model.ColmenasDisponibles)
+                    {
+                        <option value="@c.Id">@c.Codigo</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">+ Asignar</button>
+            </form>
+        }
+
+        @if (!Model.ColmenasAsignadas.Any())
+        {
+            <div style="padding:8px 0;text-align:center;color:var(--txt-4);font-size:13px">Sin colmenas asignadas todavía.</div>
+        }
+        else
+        {
+            <div style="display:flex;flex-direction:column;gap:8px">
+                @foreach (var c in Model.ColmenasAsignadas)
+                {
+                    <div class="flex-between" style="padding:10px 14px;border:1px solid var(--bdr);border-radius:var(--r-sm)">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span class="chip">@c.Codigo</span>
+                            <span style="font-size:12.5px;color:var(--txt-3)">@c.Tipo · reina @c.EstadoReina.Replace("_", " ")</span>
+                        </div>
+                        <form asp-action="QuitarColmena" asp-route-userId="@Model.UserId" asp-route-colmenaId="@c.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-xs btn-icon" style="color:var(--txt-4)" title="Quitar asignación">✕</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+    }
 </div>
 
 <div class="g3 mb-6">
@@ -74,6 +131,26 @@
         <div class="panel-title">Tareas de @Model.NombreCompleto.Split(' ')[0]</div>
         <span class="panel-cnt">@Model.TareasAsignadas total</span>
     </div>
+    <form asp-action="CrearTarea" method="post" style="display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--bdr);flex-wrap:wrap">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="userId" value="@Model.UserId">
+        <input type="text" name="nombre" class="fc" style="flex:2;min-width:160px;font-size:13px;padding:8px 10px" placeholder="Nueva tarea para @Model.NombreCompleto.Split(' ')[0]…" required>
+        <select name="categoria" class="fc" style="font-size:13px;padding:8px 10px">
+            <option>Sanidad</option>
+            <option>Inspección</option>
+            <option>Alimentación</option>
+            <option>Mantenimiento</option>
+            <option>Cosecha</option>
+            <option selected>General</option>
+        </select>
+        <select name="prioridad" class="fc" style="font-size:13px;padding:8px 10px">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Media</option>
+            <option value="baja">Baja</option>
+        </select>
+        <input type="date" name="fechaVencimiento" class="fc" style="font-size:13px;padding:8px 10px">
+        <button type="submit" class="btn btn-sm btn-primary">+ Asignar tarea</button>
+    </form>
     @if (!Model.Tareas.Any())
     {
         <div style="padding:28px;text-align:center;color:var(--txt-4);font-size:13px">Sin tareas asignadas todavía.</div>

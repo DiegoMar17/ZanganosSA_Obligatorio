@@ -74,6 +74,10 @@ using (var scope = app.Services.CreateScope())
     // EF Core ya no la conoce, pero seguía NOT NULL en bases existentes y rompía todo INSERT en Cosechas.
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Cosechas DROP COLUMN CrearRegistroIngreso"); } catch { }
 
+    // Asignación de colmenas a empleados, gestionada desde la ficha del empleado (Equipo)
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Colmenas ADD COLUMN AsignadoAId TEXT NULL"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Colmenas ADD COLUMN AsignadoNombre TEXT NOT NULL DEFAULT ''"); } catch { }
+
     // Tablas nuevas de roles
     try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS Auditorias (
         Id INTEGER PRIMARY KEY AUTOINCREMENT,

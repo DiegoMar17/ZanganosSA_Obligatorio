@@ -65,23 +65,56 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        private void CargarApiarios() =>
-            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
+        private void CargarApiarios(ApplicationUser? user = null)
+        {
+            var apiarios = user is not null && !User.IsInRole("ADMIN")
+                ? _ctx.Apiarios.Where(a => a.Id == user.ApiarioAsignadoId).ToList()
+                : _ctx.Apiarios.OrderBy(a => a.Nombre).ToList();
+            ViewBag.Apiarios = new SelectList(apiarios, "Id", "Nombre");
+        }
 
-        [Authorize(Roles = "ADMIN")]
-        public IActionResult Crear() { CargarApiarios(); return View(new Colmena { FechaInstalacion = DateTime.Today }); }
+        public async Task<IActionResult> Crear()
+        {
+            var user = await _users.GetUserAsync(User);
+            if (!User.IsInRole("ADMIN") && user?.ApiarioAsignadoId is null)
+            {
+                TempData["Error"] = "No tenés un sector asignado: pedile al administrador que te asigne un apiario primero.";
+                return RedirectToAction(nameof(Index));
+            }
+            CargarApiarios(user);
+            var colmena = new Colmena { FechaInstalacion = DateTime.Today };
+            if (!User.IsInRole("ADMIN")) colmena.ApiarioId = user!.ApiarioAsignadoId!.Value;
+            return View(colmena);
+        }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Colmena colmena)
         {
-            if (!ModelState.IsValid) { CargarApiarios(); return View(colmena); }
+            var user = await _users.GetUserAsync(User);
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                if (user?.ApiarioAsignadoId is null || colmena.ApiarioId != user.ApiarioAsignadoId.Value)
+                {
+                    TempData["Error"] = "Solo podés registrar colmenas dentro de tu sector asignado.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            if (!ModelState.IsValid) { CargarApiarios(user); return View(colmena); }
             var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
             colmena.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                // El empleado queda como responsable de la colmena que registra
+                colmena.AsignadoAId    = user!.Id;
+                colmena.AsignadoNombre = user.NombreCompleto;
+            }
+
             _ctx.Colmenas.Add(colmena);
             _ctx.SaveChanges();
-            var user = await _users.GetUserAsync(User);
             _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "Colmenas", colmena.Codigo);
             TempData["Exito"] = $"Colmena '{colmena.Codigo}' registrada.";
             return RedirectToAction(nameof(Index));
@@ -101,9 +134,23 @@ namespace ColmenaEmpresa.Controllers
         {
             if (id != colmena.Id) return BadRequest();
             if (!ModelState.IsValid) { CargarApiarios(); return View(colmena); }
+
+            var existente = _ctx.Colmenas.Find(id);
+            if (existente is null) return NotFound();
+
             var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
-            colmena.ApiarioNombre = apiario?.Nombre ?? string.Empty;
-            _ctx.Colmenas.Update(colmena);
+            existente.Codigo           = colmena.Codigo;
+            existente.ApiarioId        = colmena.ApiarioId;
+            existente.ApiarioNombre    = apiario?.Nombre ?? string.Empty;
+            existente.Tipo             = colmena.Tipo;
+            existente.FechaInstalacion = colmena.FechaInstalacion;
+            existente.Origen           = colmena.Origen;
+            existente.EstadoReina      = colmena.EstadoReina;
+            existente.CantidadAlzas    = colmena.CantidadAlzas;
+            existente.MarcosConCria    = colmena.MarcosConCria;
+            existente.EstadoSemaforo   = colmena.EstadoSemaforo;
+            existente.Observaciones    = colmena.Observaciones;
+            // AsignadoAId / AsignadoNombre / UltimaVisita no viajan en este formulario: se preservan tal cual.
             _ctx.SaveChanges();
             var user = await _users.GetUserAsync(User);
             _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Colmenas", colmena.Codigo);
