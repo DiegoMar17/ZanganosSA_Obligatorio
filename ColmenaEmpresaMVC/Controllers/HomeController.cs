@@ -28,20 +28,27 @@ namespace ColmenaEmpresa.Controllers
             var currentUser = await _users.GetUserAsync(User);
             var sectorId    = currentUser?.ApiarioAsignadoId;
 
-            var colmenas     = _ctx.Colmenas.Include(c => c.Apiario).ToList();
-            var cosechas     = _ctx.Cosechas.ToList();
-            var inspecciones = _ctx.Inspecciones.Include(i => i.Apiario).ToList();
-            var traslados    = _ctx.Traslados.ToList();
+            var colmenasQ     = _ctx.Colmenas.Include(c => c.Apiario).AsQueryable();
+            var cosechasQ     = _ctx.Cosechas.AsQueryable();
+            var inspeccionesQ = _ctx.Inspecciones.Include(i => i.Apiario).AsQueryable();
+            var trasladosQ    = _ctx.Traslados.Include(t => t.ApiarioOrigen).Include(t => t.ApiarioDestino).AsQueryable();
 
             if (!esAdmin)
             {
-                colmenas     = sectorId.HasValue ? colmenas.Where(c => c.ApiarioId == sectorId.Value).ToList()     : new List<Colmena>();
-                cosechas     = sectorId.HasValue ? cosechas.Where(c => c.ApiarioId == sectorId.Value).ToList()     : new List<Cosecha>();
-                inspecciones = sectorId.HasValue ? inspecciones.Where(i => i.ApiarioId == sectorId.Value).ToList() : new List<Inspeccion>();
-                traslados    = sectorId.HasValue
-                    ? traslados.Where(t => t.ApiarioOrigenId == sectorId.Value || t.ApiarioDestinoId == sectorId.Value).ToList()
-                    : new List<Traslado>();
+                if (!sectorId.HasValue)
+                {
+                    return View(new DashboardViewModel());
+                }
+                colmenasQ     = colmenasQ.Where(c => c.ApiarioId == sectorId.Value);
+                cosechasQ     = cosechasQ.Where(c => c.ApiarioId == sectorId.Value);
+                inspeccionesQ = inspeccionesQ.Where(i => i.ApiarioId == sectorId.Value);
+                trasladosQ    = trasladosQ.Where(t => t.ApiarioOrigenId == sectorId.Value || t.ApiarioDestinoId == sectorId.Value);
             }
+
+            var colmenas     = colmenasQ.ToList();
+            var cosechas     = cosechasQ.ToList();
+            var inspecciones = inspeccionesQ.ToList();
+            var traslados    = trasladosQ.ToList();
 
             var maxKg = cosechas.Any() ? cosechas.Max(c => c.PesoNeto) : 1.0;
 

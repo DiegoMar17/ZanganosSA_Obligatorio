@@ -8,8 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' no encontrada. " +
+        "Configurala en appsettings.Development.json o como variable de entorno.");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -136,7 +141,8 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
 
         var adminUser = await userManager.FindByEmailAsync("admin@colmena.com");
-        var adminId   = adminUser?.Id;
+        var adminId   = adminUser?.Id ?? throw new InvalidOperationException(
+            "No se pudo obtener el ID del admin para el seed de alertas.");
 
         static double SeedHav(double la1, double lo1, double la2, double lo2)
         {

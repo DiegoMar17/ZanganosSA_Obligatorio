@@ -131,11 +131,18 @@ namespace ColmenaEmpresa.Controllers
             var apiario = _ctx.Apiarios.Find(id);
             if (apiario is not null)
             {
-                _ctx.Apiarios.Remove(apiario);
-                _ctx.SaveChanges();
-                var user = await _users.GetUserAsync(User);
-                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "Apiarios", apiario.Nombre);
-                TempData["Exito"] = "Apiario eliminado.";
+                try
+                {
+                    _ctx.Apiarios.Remove(apiario);
+                    _ctx.SaveChanges();
+                    var user = await _users.GetUserAsync(User);
+                    _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "Apiarios", apiario.Nombre);
+                    TempData["Exito"] = "Apiario eliminado.";
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+                {
+                    TempData["Error"] = $"No se puede eliminar '{apiario.Nombre}' porque tiene inspecciones o traslados asociados. Eliminá primero esos registros.";
+                }
             }
             return RedirectToAction(nameof(Index));
         }

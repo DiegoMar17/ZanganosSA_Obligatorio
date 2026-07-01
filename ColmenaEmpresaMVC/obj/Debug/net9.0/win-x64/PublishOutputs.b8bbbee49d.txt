@@ -1,5 +1,0 @@
-C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\publish\appsettings.Development.json
-C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\publish\appsettings.json
-C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\publish\ColmenaEmpresa.pdb
-C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\publish\e_sqlite3.dll
-C:\Users\eric0\OneDrive\Desktop\Obligatorio_Prog3\obligatorio-integrado-prueba\ZanganosSA_Obligatorio\ColmenaEmpresaMVC\publish\ColmenaEmpresa.exe

@@ -22,14 +22,21 @@ namespace ColmenaEmpresa.Controllers
             ViewBag.Apiarios = new SelectList(apiarios, "Id", "Nombre");
         }
 
+        private bool ValidarOrigenDestino(Traslado traslado)
+        {
+            if (traslado.ApiarioOrigenId != traslado.ApiarioDestinoId) return true;
+            ModelState.AddModelError(nameof(traslado.ApiarioDestinoId),
+                "El apiario de destino debe ser diferente al de origen.");
+            return false;
+        }
+
         [Authorize(Roles = "ADMIN")]
         public IActionResult Crear() { CargarApiarios(); return View(new Traslado { FechaSalida = DateTime.Today }); }
 
         [HttpPost, Authorize(Roles = "ADMIN"), ValidateAntiForgeryToken]
         public IActionResult Crear(Traslado traslado)
         {
-            if (traslado.ApiarioOrigenId == traslado.ApiarioDestinoId)
-                ModelState.AddModelError(nameof(traslado.ApiarioDestinoId), "El apiario de destino debe ser diferente al de origen.");
+            ValidarOrigenDestino(traslado);
             if (!ModelState.IsValid) { CargarApiarios(); return View(traslado); }
             traslado.Estado = "planificado";
             _ctx.Traslados.Add(traslado);
@@ -50,8 +57,7 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Editar(int id, Traslado traslado)
         {
             if (id != traslado.Id) return BadRequest();
-            if (traslado.ApiarioOrigenId == traslado.ApiarioDestinoId)
-                ModelState.AddModelError(nameof(traslado.ApiarioDestinoId), "El apiario de destino debe ser diferente al de origen.");
+            ValidarOrigenDestino(traslado);
             if (!ModelState.IsValid) { CargarApiarios(); return View(traslado); }
             _ctx.Traslados.Update(traslado);
             _ctx.SaveChanges();
