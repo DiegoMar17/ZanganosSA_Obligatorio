@@ -1,22 +1,32 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ColmenaEmpresa.Models
 {
     public class Visita
     {
+        [Column("Vis_ID")]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "El apiario es obligatorio.")]
-        [StringLength(100)]
-        public string ApiarioNombre { get; set; } = string.Empty;
+        [Range(1, int.MaxValue, ErrorMessage = "Seleccioná un apiario.")]
+        [Column("Vis_IDApi")]
+        public int ApiarioId { get; set; }
+        public Apiario? Apiario { get; set; }
 
         [Required(ErrorMessage = "La fecha es obligatoria.")]
+        [Column("Vis_FecPlan")]
         public DateTime FechaPlanificada { get; set; }
 
-        [StringLength(300)]
-        public string Materiales { get; set; } = string.Empty;
+        [Column("Vis_FecReal")]
+        public DateTime? FechaReal { get; set; }
 
-        public string Estado { get; set; } = "planificada"; // planificada | completada
+        [StringLength(300)]
+        [Column("Vis_Mat")]
+        public string? Materiales { get; set; }
+
+        [Column("Vis_Est")]
+        public string Estado { get; set; } = "planificada";
 
         public bool EstaVencida => Estado == "planificada" && FechaPlanificada.Date < DateTime.Today;
     }

@@ -1,4 +1,4 @@
-@model IEnumerable<ColmenaEmpresa.Models.Transhumancia>
+@model IEnumerable<ColmenaEmpresa.Models.Traslado>
 @{
     ViewData["Title"] = "Transhumancia";
     var activos     = Model.Where(m => m.Estado == "en_curso" || m.Estado == "planificado").ToList();
@@ -41,8 +41,8 @@
                     </div>
                 </div>
                 <div class="g2 mb-4">
-                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Origen</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioOrigen</div></div>
-                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Destino</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioDestino</div></div>
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Origen</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioOrigen?.Nombre</div></div>
+                    <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Destino</div><div style="font-size:14px;font-weight:600;color:var(--txt-1)">@item.ApiarioDestino?.Nombre</div></div>
                     <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Colmenas</div><div class="stat-val c-gold" style="font-size:26px">@item.CantidadColmenas</div></div>
                     <div><div style="font-size:11px;color:var(--txt-4);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Distancia</div><div class="stat-val c-gold" style="font-size:26px">@item.DistanciaKm km</div></div>
                 </div>
@@ -68,7 +68,7 @@
                 </div>
                 <div class="tl-body">
                     <div class="tl-t">@item.Nombre — @item.CantidadColmenas colmenas</div>
-                    <div class="tl-d">@item.ApiarioOrigen → @item.ApiarioDestino · @item.DistanciaKm km</div>
+                    <div class="tl-d">@item.ApiarioOrigen?.Nombre → @item.ApiarioDestino?.Nombre · @item.DistanciaKm km</div>
                 </div>
             </div>
         }

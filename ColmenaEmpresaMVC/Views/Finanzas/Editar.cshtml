@@ -62,12 +62,7 @@
             </div>
             <div class="fgrp">
                 <label class="flbl">Apiario</label>
-                <select asp-for="ApiarioNombre" class="fc">
-                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
-                    {
-                        <option>@n</option>
-                    }
-                </select>
+                <select asp-for="ApiarioId" asp-items="ViewBag.Apiarios" class="fc"></select>
             </div>
             <div class="fgrp fg-full">
                 <label class="flbl">Descripción <span class="req">*</span></label>

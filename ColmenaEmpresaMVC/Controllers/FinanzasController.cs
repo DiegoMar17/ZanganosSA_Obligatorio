@@ -1,6 +1,8 @@
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
@@ -16,7 +18,7 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Index(int page = 1, string? q = null)
         {
-            var todos = _ctx.RegistrosFinancieros.ToList();
+            var todos = _ctx.RegistrosFinancieros.Include(r => r.Apiario).ToList();
             ViewBag.TotalIngresos = todos.Where(r => r.TipoMovimiento == "ingreso").Sum(r => r.Monto);
             ViewBag.TotalGastos   = todos.Where(r => r.TipoMovimiento != "ingreso").Sum(r => r.Monto);
             ViewBag.Balance       = (decimal)ViewBag.TotalIngresos - (decimal)ViewBag.TotalGastos;
@@ -26,7 +28,7 @@ namespace ColmenaEmpresa.Controllers
                 query = query.Where(r =>
                     r.Descripcion.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                     r.Categoria.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    r.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase));
+                    (r.Apiario != null && r.Apiario.Nombre.Contains(q, StringComparison.OrdinalIgnoreCase)));
 
             var total = query.Count();
             var items = query.OrderByDescending(r => r.Fecha).Skip((page - 1) * PageSize).Take(PageSize).ToList();
@@ -37,12 +39,15 @@ namespace ColmenaEmpresa.Controllers
             });
         }
 
-        // Lista de apiarios reales + opción "General"
         private void CargarApiarios()
         {
-            var nombres = new List<string> { "General" };
-            nombres.AddRange(_ctx.Apiarios.OrderBy(a => a.Nombre).Select(a => a.Nombre));
-            ViewBag.NombresApiarios = nombres;
+            var apiarios = _ctx.Apiarios.OrderBy(a => a.Nombre).ToList();
+            var items = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "General (sin apiario)" }
+            };
+            items.AddRange(apiarios.Select(a => new SelectListItem { Value = a.Id.ToString(), Text = a.Nombre }));
+            ViewBag.Apiarios = items;
         }
 
         public IActionResult Crear() { CargarApiarios(); return View(new RegistroFinanciero { Fecha = DateTime.Today }); }
@@ -85,7 +90,7 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Exportar()
         {
-            var registros = _ctx.RegistrosFinancieros.OrderBy(r => r.Fecha).ToList();
+            var registros = _ctx.RegistrosFinancieros.Include(r => r.Apiario).OrderBy(r => r.Fecha).ToList();
             var ingresos  = registros.Where(r => r.TipoMovimiento == "ingreso").Sum(r => r.Monto);
             var gastos    = registros.Where(r => r.TipoMovimiento != "ingreso").Sum(r => r.Monto);
             ViewBag.TotalIngresos = ingresos;
@@ -97,11 +102,11 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult ExportarCsv()
         {
-            var registros = _ctx.RegistrosFinancieros.OrderByDescending(r => r.Fecha).ToList();
+            var registros = _ctx.RegistrosFinancieros.Include(r => r.Apiario).OrderByDescending(r => r.Fecha).ToList();
             var sb = new StringBuilder();
             sb.AppendLine("Tipo,Categoría,Descripción,Fecha,Monto,Apiario");
             foreach (var r in registros)
-                sb.AppendLine($"{r.TipoMovimiento},{r.Categoria},\"{r.Descripcion}\",{r.Fecha:dd/MM/yyyy},{r.Monto},{r.ApiarioNombre}");
+                sb.AppendLine($"{r.TipoMovimiento},{r.Categoria},\"{r.Descripcion}\",{r.Fecha:dd/MM/yyyy},{r.Monto},{r.Apiario?.Nombre ?? "General"}");
             return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"finanzas_{DateTime.Now:yyyyMMdd}.csv");
         }
     }

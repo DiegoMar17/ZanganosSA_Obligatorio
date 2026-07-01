@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 using ColmenaEmpresa.Services;
@@ -24,7 +25,7 @@ namespace ColmenaEmpresa.Controllers
 
         public async Task<IActionResult> Index(int page = 1, string? q = null)
         {
-            var todos = _ctx.ControlesSanitarios.ToList();
+            var todos = _ctx.ControlesSanitarios.Include(c => c.Apiario).ToList();
 
             if (!User.IsInRole("ADMIN"))
             {
@@ -39,9 +40,9 @@ namespace ColmenaEmpresa.Controllers
             var query = todos.AsQueryable();
             if (!string.IsNullOrWhiteSpace(q))
                 query = query.Where(c =>
-                    c.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Apiario!.Nombre).Contains(q, StringComparison.OrdinalIgnoreCase) ||
                     c.TipoControl.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    c.ColmenasAfectadas.Contains(q, StringComparison.OrdinalIgnoreCase));
+                    (c.ColmenasAfectadas ?? "").Contains(q, StringComparison.OrdinalIgnoreCase));
 
             var total = query.Count();
             var items = query.OrderByDescending(c => c.Fecha).Skip((page - 1) * PageSize).Take(PageSize).ToList();
@@ -66,11 +67,11 @@ namespace ColmenaEmpresa.Controllers
         [Authorize(Roles = "ADMIN")]
         public IActionResult Exportar()
         {
-            var controles = _ctx.ControlesSanitarios.OrderBy(c => c.Fecha).ToList();
+            var controles = _ctx.ControlesSanitarios.Include(c => c.Apiario).OrderBy(c => c.Fecha).ToList();
             ViewBag.Aplicados  = controles.Count(c => c.Estado == "limpio");
             ViewBag.Pendientes = controles.Count(c => c.Estado == "en_tratamiento");
             ViewBag.MasUsado   = controles.GroupBy(c => c.Tratamiento).OrderByDescending(g => g.Count()).FirstOrDefault()?.Key ?? "—";
-            ViewBag.Afectadas  = controles.SelectMany(c => c.ColmenasAfectadas.Split(',', StringSplitOptions.RemoveEmptyEntries)).Distinct().Count();
+            ViewBag.Afectadas  = controles.SelectMany(c => (c.ColmenasAfectadas ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)).Distinct().Count();
             return View(controles);
         }
 
@@ -89,10 +90,9 @@ namespace ColmenaEmpresa.Controllers
 
             if (!ModelState.IsValid) { await CargarApiariosAsync(); return View(control); }
             var apiario = _ctx.Apiarios.Find(control.ApiarioId);
-            control.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.ControlesSanitarios.Add(control);
             _ctx.SaveChanges();
-            _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "ControlesSanitarios", control.ApiarioNombre);
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "ControlesSanitarios", apiario?.Nombre ?? "");
             TempData["Exito"] = "Control sanitario registrado.";
             return RedirectToAction(nameof(Index));
         }
@@ -117,11 +117,10 @@ namespace ColmenaEmpresa.Controllers
                 return View(control);
             }
             var apiario = _ctx.Apiarios.Find(control.ApiarioId);
-            control.ApiarioNombre = apiario?.Nombre ?? string.Empty;
             _ctx.ControlesSanitarios.Update(control);
             _ctx.SaveChanges();
             var user = await _users.GetUserAsync(User);
-            _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "ControlesSanitarios", control.ApiarioNombre);
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "ControlesSanitarios", apiario?.Nombre ?? "");
             TempData["Exito"] = "Control sanitario actualizado.";
             return RedirectToAction(nameof(Index));
         }
@@ -130,13 +129,14 @@ namespace ColmenaEmpresa.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Eliminar(int id)
         {
-            var c = _ctx.ControlesSanitarios.Find(id);
+            var c = _ctx.ControlesSanitarios.Include(cs => cs.Apiario).FirstOrDefault(cs => cs.Id == id);
             if (c is not null)
             {
+                var nombre = c.Apiario?.Nombre ?? "";
                 _ctx.ControlesSanitarios.Remove(c);
                 _ctx.SaveChanges();
                 var user = await _users.GetUserAsync(User);
-                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "ControlesSanitarios", c.ApiarioNombre);
+                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "ControlesSanitarios", nombre);
                 TempData["Exito"] = "Control eliminado.";
             }
             return RedirectToAction(nameof(Index));

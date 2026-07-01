@@ -14,9 +14,7 @@
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="TipoInspeccion" />
         <input type="hidden" asp-for="ApiarioId" />
-        <input type="hidden" asp-for="ApiarioNombre" />
         <input type="hidden" asp-for="ColmenaId" />
-        <input type="hidden" asp-for="ColmenaCodigo" />
         <input type="hidden" asp-for="TotalColmenas" />
         <input type="hidden" asp-for="ColmenasInspeccionadas" />
 
@@ -34,12 +32,12 @@
                 <div class="fc" style="background:var(--surface);color:var(--txt-3);cursor:default">
                     @if (esColmena)
                     {
-                        <span>@Model.ColmenaCodigo</span>
-                        <span style="color:var(--txt-4);font-size:11px;margin-left:6px">· @Model.ApiarioNombre</span>
+                        <span>@Model.Colmena?.Codigo</span>
+                        <span style="color:var(--txt-4);font-size:11px;margin-left:6px">· @Model.Apiario?.Nombre</span>
                     }
                     else
                     {
-                        <span>@Model.ApiarioNombre</span>
+                        <span>@Model.Apiario?.Nombre</span>
                         <span style="color:var(--txt-4);font-size:11px;margin-left:6px">· @Model.TotalColmenas colmenas</span>
                     }
                 </div>

@@ -83,7 +83,7 @@ tr:nth-child(odd) td{background:#F0E5D0}
           <tr>
             <td class="td-id">@i.ToString("D3")</td>
             <td>@ins.Fecha.ToString("dd/MM/yyyy")</td>
-            <td class="td-b">@ins.ApiarioNombre</td>
+            <td class="td-b">@ins.Apiario?.Nombre</td>
             <td>@ins.ColmenasInspeccionadas / @ins.TotalColmenas</td>
             <td>@ins.Clima</td>
             <td>@ins.Temperatura°C</td>

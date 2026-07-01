@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
@@ -8,7 +10,8 @@ namespace ColmenaEmpresa.Controllers
     public class AlertasController : Controller
     {
         private readonly AppDbContext _ctx;
-        public AlertasController(AppDbContext ctx) => _ctx = ctx;
+        private readonly UserManager<ApplicationUser> _users;
+        public AlertasController(AppDbContext ctx, UserManager<ApplicationUser> users) { _ctx = ctx; _users = users; }
 
         public IActionResult Index()
         {
@@ -27,6 +30,7 @@ namespace ColmenaEmpresa.Controllers
             return View(alertas);
         }
 
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Crear()
         {
             ViewBag.Apiarios = _ctx.Apiarios
@@ -35,7 +39,7 @@ namespace ColmenaEmpresa.Controllers
             return View(new AlertaComunitaria { RadioKm = 10, FechaCreacion = DateTime.Now });
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "ADMIN")]
         public IActionResult Crear(AlertaComunitaria alerta)
         {
             if (!ModelState.IsValid)
@@ -44,9 +48,9 @@ namespace ColmenaEmpresa.Controllers
                 return View(alerta);
             }
 
-            alerta.FechaCreacion = DateTime.Now;
-            alerta.ReportadoPor  = User.Identity?.Name ?? "Sistema";
-            alerta.Estado        = "activa";
+            alerta.FechaCreacion  = DateTime.Now;
+            alerta.ReportadoPorId = _users.GetUserId(User);
+            alerta.Estado         = "activa";
 
             var apiarios = _ctx.Apiarios
                 .Where(a => a.Latitud.HasValue && a.Longitud.HasValue)
@@ -59,10 +63,9 @@ namespace ColmenaEmpresa.Controllers
                 {
                     alerta.Notificaciones.Add(new NotificacionAlerta
                     {
-                        ApiarioId     = api.Id,
-                        ApiarioNombre = api.Nombre,
-                        DistanciaKm   = Math.Round(dist, 2),
-                        FechaEnvio    = DateTime.Now
+                        ApiarioId   = api.Id,
+                        DistanciaKm = Math.Round(dist, 2),
+                        FechaEnvio  = DateTime.Now
                     });
                 }
             }
@@ -78,7 +81,7 @@ namespace ColmenaEmpresa.Controllers
         public IActionResult Detalle(int id)
         {
             var alerta = _ctx.AlertasComunitarias
-                .Include(a => a.Notificaciones)
+                .Include(a => a.Notificaciones).ThenInclude(n => n.Apiario)
                 .FirstOrDefault(a => a.Id == id);
             if (alerta == null) return NotFound();
 
@@ -93,7 +96,7 @@ namespace ColmenaEmpresa.Controllers
             return View(alerta);
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "ADMIN")]
         public IActionResult Resolver(int id)
         {
             var alerta = _ctx.AlertasComunitarias.Find(id);
@@ -105,7 +108,7 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "ADMIN")]
         public IActionResult Eliminar(int id)
         {
             var alerta = _ctx.AlertasComunitarias

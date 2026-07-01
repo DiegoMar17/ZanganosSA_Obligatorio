@@ -1,6 +1,8 @@
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 
@@ -9,17 +11,41 @@ namespace ColmenaEmpresa.Controllers
     public class ProduccionController : Controller
     {
         private readonly AppDbContext _ctx;
+        private readonly UserManager<ApplicationUser> _users;
 
-        public ProduccionController(AppDbContext ctx) => _ctx = ctx;
-
-        private void CargarApiarios() =>
-            ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
-
-        public IActionResult Index()
+        public ProduccionController(AppDbContext ctx, UserManager<ApplicationUser> users)
         {
-            var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
+            _ctx   = ctx;
+            _users = users;
+        }
+
+        private void CargarApiarios(int? soloApiarioId = null)
+        {
+            var query = _ctx.Apiarios.OrderBy(a => a.Nombre);
+            var lista = soloApiarioId.HasValue
+                ? query.Where(a => a.Id == soloApiarioId.Value).ToList()
+                : query.ToList();
+            ViewBag.Apiarios = new SelectList(lista, "Id", "Nombre");
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var query = _ctx.Cosechas.Include(c => c.Apiario).AsQueryable();
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                if (user?.ApiarioAsignadoId is null)
+                {
+                    TempData["Error"] = "No tenés un sector asignado.";
+                    return RedirectToAction("Index", "Home");
+                }
+                query = query.Where(c => c.ApiarioId == user.ApiarioAsignadoId.Value);
+            }
+
+            var cosechas = query.OrderByDescending(c => c.Fecha).ToList();
             var vendidas = cosechas.Where(c => c.Vendida).ToList();
-            var mejor    = cosechas.GroupBy(c => c.ApiarioNombre)
+            var mejor    = cosechas.GroupBy(c => c.Apiario?.Nombre ?? "")
                                    .OrderByDescending(g => g.Sum(c => c.PesoNeto))
                                    .FirstOrDefault();
 
@@ -32,42 +58,64 @@ namespace ColmenaEmpresa.Controllers
             return View(cosechas);
         }
 
-        public IActionResult Crear() { CargarApiarios(); return View(new Cosecha { Fecha = DateTime.Today }); }
+        public async Task<IActionResult> Crear()
+        {
+            int? soloApiario = null;
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                if (user?.ApiarioAsignadoId is null)
+                {
+                    TempData["Error"] = "No tenés un sector asignado para registrar cosechas.";
+                    return RedirectToAction(nameof(Index));
+                }
+                soloApiario = user.ApiarioAsignadoId;
+            }
+            CargarApiarios(soloApiario);
+            return View(new Cosecha { Fecha = DateTime.Today });
+        }
 
-        // Crea o actualiza el ingreso en Finanzas vinculado a esta cosecha.
-        // Debe llamarse DESPUÉS de SaveChanges para que cosecha.Id esté disponible.
         private void SincronizarIngreso(Cosecha cosecha)
         {
-            // Eliminar ingreso anterior vinculado (si existe)
-            var anterior = _ctx.RegistrosFinancieros
-                .FirstOrDefault(r => r.CosechaId == cosecha.Id);
-            if (anterior is not null)
-                _ctx.RegistrosFinancieros.Remove(anterior);
+            var anterior = _ctx.RegistrosFinancieros.FirstOrDefault(r => r.CosechaId == cosecha.Id);
+            if (anterior is not null) _ctx.RegistrosFinancieros.Remove(anterior);
 
-            // Crear nuevo ingreso solo si aplica
             if (cosecha.Vendida && cosecha.MontoVenta > 0)
+            {
+                var apiarioNombre = _ctx.Apiarios.Find(cosecha.ApiarioId)?.Nombre ?? "";
                 _ctx.RegistrosFinancieros.Add(new RegistroFinanciero
                 {
                     CosechaId      = cosecha.Id,
                     TipoMovimiento = "ingreso",
                     Categoria      = "Venta de miel",
-                    Descripcion    = $"Venta cosecha {Math.Round(cosecha.PesoNeto, 1)} kg ({cosecha.TipoMiel}) — {cosecha.ApiarioNombre}",
+                    Descripcion    = $"Venta cosecha {Math.Round(cosecha.PesoNeto, 1)} kg ({cosecha.TipoMiel}) — {apiarioNombre}",
                     Fecha          = cosecha.Fecha,
                     Monto          = cosecha.MontoVenta,
-                    ApiarioNombre  = cosecha.ApiarioNombre
+                    ApiarioId      = cosecha.ApiarioId
                 });
+            }
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Crear(Cosecha cosecha)
+        public async Task<IActionResult> Crear(Cosecha cosecha)
         {
-            if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
+            int? soloApiario = null;
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                if (user?.ApiarioAsignadoId is null || cosecha.ApiarioId != user.ApiarioAsignadoId.Value)
+                {
+                    TempData["Error"] = "Solo podés registrar cosechas de tu propio sector.";
+                    CargarApiarios(user?.ApiarioAsignadoId);
+                    return View(cosecha);
+                }
+                soloApiario = user.ApiarioAsignadoId;
+            }
 
-            var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
-            cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
+            if (!ModelState.IsValid) { CargarApiarios(soloApiario); return View(cosecha); }
 
             _ctx.Cosechas.Add(cosecha);
-            _ctx.SaveChanges(); // Necesario para obtener cosecha.Id antes de crear el ingreso
+            _ctx.SaveChanges();
 
             SincronizarIngreso(cosecha);
             _ctx.SaveChanges();
@@ -78,24 +126,39 @@ namespace ColmenaEmpresa.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Editar(int id)
+        public async Task<IActionResult> Editar(int id)
         {
             var cosecha = _ctx.Cosechas.Find(id);
             if (cosecha is null) return NotFound();
-            CargarApiarios(); return View(cosecha);
+
+            int? soloApiario = null;
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                if (user?.ApiarioAsignadoId is null || cosecha.ApiarioId != user.ApiarioAsignadoId.Value)
+                    return Forbid();
+                soloApiario = user.ApiarioAsignadoId;
+            }
+            CargarApiarios(soloApiario);
+            return View(cosecha);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Editar(int id, Cosecha cosecha)
+        public async Task<IActionResult> Editar(int id, Cosecha cosecha)
         {
             if (id != cosecha.Id) return BadRequest();
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user = await _users.GetUserAsync(User);
+                if (user?.ApiarioAsignadoId is null || cosecha.ApiarioId != user.ApiarioAsignadoId.Value)
+                    return Forbid();
+            }
+
             if (!ModelState.IsValid) { CargarApiarios(); return View(cosecha); }
 
-            var apiario = _ctx.Apiarios.Find(cosecha.ApiarioId);
-            cosecha.ApiarioNombre = apiario?.Nombre ?? string.Empty;
-
             _ctx.Cosechas.Update(cosecha);
-            SincronizarIngreso(cosecha); // Elimina el anterior y recrea si aplica
+            SincronizarIngreso(cosecha);
             _ctx.SaveChanges();
 
             TempData["Exito"] = cosecha.Vendida && cosecha.MontoVenta > 0
@@ -110,10 +173,8 @@ namespace ColmenaEmpresa.Controllers
             var cosecha = _ctx.Cosechas.Find(id);
             if (cosecha is not null)
             {
-                // Eliminar ingreso asociado en Finanzas antes de borrar la cosecha
                 var ingreso = _ctx.RegistrosFinancieros.FirstOrDefault(r => r.CosechaId == id);
                 if (ingreso is not null) _ctx.RegistrosFinancieros.Remove(ingreso);
-
                 _ctx.Cosechas.Remove(cosecha);
                 _ctx.SaveChanges();
                 TempData["Exito"] = "Cosecha eliminada.";
@@ -123,21 +184,21 @@ namespace ColmenaEmpresa.Controllers
 
         public IActionResult Exportar()
         {
-            var cosechas = _ctx.Cosechas.OrderBy(c => c.Fecha).ToList();
-            ViewBag.TotalKg      = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
-            ViewBag.Promedio     = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
-            var mejor = cosechas.OrderByDescending(c => c.PesoNeto).FirstOrDefault();
-            ViewBag.MejorCosecha = mejor is not null ? $"{mejor.ApiarioNombre} · {mejor.PesoNeto} kg" : "—";
+            var cosechas = _ctx.Cosechas.Include(c => c.Apiario).OrderBy(c => c.Fecha).ToList();
+            ViewBag.TotalKg  = Math.Round(cosechas.Sum(c => c.PesoNeto), 1);
+            ViewBag.Promedio = cosechas.Any() ? Math.Round(cosechas.Average(c => c.PesoNeto), 1) : 0;
+            var mejor        = cosechas.OrderByDescending(c => c.PesoNeto).FirstOrDefault();
+            ViewBag.MejorCosecha = mejor is not null ? $"{mejor.Apiario?.Nombre ?? ""} · {mejor.PesoNeto} kg" : "—";
             return View(cosechas);
         }
 
         public IActionResult ExportarCsv()
         {
-            var cosechas = _ctx.Cosechas.OrderByDescending(c => c.Fecha).ToList();
+            var cosechas = _ctx.Cosechas.Include(c => c.Apiario).OrderByDescending(c => c.Fecha).ToList();
             var sb = new StringBuilder();
             sb.AppendLine("Apiario,Fecha,Tipo Miel,Alzas,Peso Bruto (kg),Merma (kg),Peso Neto (kg),Humedad (%),HMF,Destino,Vendida,Precio/kg,Ingreso");
             foreach (var c in cosechas)
-                sb.AppendLine($"{c.ApiarioNombre},{c.Fecha:dd/MM/yyyy},{c.TipoMiel},{c.AlzasCosechadas},{c.PesoBruto},{c.Merma},{c.PesoNeto},{c.Humedad},{c.HMF},{c.Destino},{c.Vendida},{c.PrecioPorKg},{(c.Vendida ? c.MontoVenta : 0)}");
+                sb.AppendLine($"{c.Apiario?.Nombre ?? ""},{c.Fecha:dd/MM/yyyy},{c.TipoMiel},{c.AlzasCosechadas},{c.PesoBruto},{c.Merma},{c.PesoNeto},{c.Humedad},{c.HMF},{c.Destino},{c.Vendida},{c.PrecioPorKg},{(c.Vendida ? c.MontoVenta : 0)}");
             return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"produccion_{DateTime.Now:yyyyMMdd}.csv");
         }
     }

@@ -70,10 +70,10 @@
                         { <span style="font-size:12px;color:var(--txt-3)">📍 Apiario</span> }
                     </td>
                     <td class="td-1">
-                        @item.ApiarioNombre
-                        @if (item.TipoInspeccion == "colmena" && !string.IsNullOrEmpty(item.ColmenaCodigo))
+                        @item.Apiario?.Nombre
+                        @if (item.TipoInspeccion == "colmena" && item.Colmena != null)
                         {
-                            <span style="color:var(--txt-4);font-size:11px"> · @item.ColmenaCodigo</span>
+                            <span style="color:var(--txt-4);font-size:11px"> · @item.Colmena.Codigo</span>
                         }
                     </td>
                     <td>@item.ColmenasInspeccionadas / @item.TotalColmenas</td>

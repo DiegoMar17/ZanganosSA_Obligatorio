@@ -115,9 +115,9 @@
                             var v = t.FechaVencimiento.Value.Date < DateTime.Today && !t.Completada;
                             <span class="chip" style="@(v ? "color:var(--red)" : "")">@t.FechaVencimiento.Value.ToString("dd MMM") @(v ? "⚠" : "")</span>
                         }
-                        @if (!string.IsNullOrEmpty(t.AsignadoNombre))
+                        @if (t.AsignadoA != null)
                         {
-                            <span class="chip" style="color:var(--gold);border-color:rgba(242,190,48,.3);background:rgba(242,190,48,.08)">👷 @t.AsignadoNombre</span>
+                            <span class="chip" style="color:var(--gold);border-color:rgba(242,190,48,.3);background:rgba(242,190,48,.08)">👷 @t.AsignadoA.NombreCompleto</span>
                         }
                     </div>
                 </div>
@@ -147,7 +147,7 @@
             <div class="visit-row">
                 <div class="vdot-wrap"><div class="vdot @dotCls"></div></div>
                 <div class="v-info">
-                    <div class="v-place">@v.ApiarioNombre</div>
+                    <div class="v-place">@v.Apiario?.Nombre</div>
                     <div class="v-date">@v.FechaPlanificada.ToString("dd MMM yyyy")</div>
                     @if (!string.IsNullOrWhiteSpace(v.Materiales))
                     {

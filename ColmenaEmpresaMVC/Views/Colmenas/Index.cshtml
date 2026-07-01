@@ -50,11 +50,11 @@
             {
                 <tr>
                     <td class="td-1">@item.Codigo</td>
-                    <td>@item.ApiarioNombre</td>
+                    <td>@item.Apiario?.Nombre</td>
                     <td>
                         @if (!string.IsNullOrEmpty(item.AsignadoAId))
                         {
-                            <span class="pill p-ghost" style="font-size:11px">👷 @item.AsignadoNombre</span>
+                            <span class="pill p-ghost" style="font-size:11px">👷 @item.AsignadoA?.NombreCompleto</span>
                         }
                         else
                         {

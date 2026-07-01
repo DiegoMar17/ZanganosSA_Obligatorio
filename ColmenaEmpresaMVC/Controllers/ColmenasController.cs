@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 using ColmenaEmpresa.Services;
@@ -24,7 +25,7 @@ namespace ColmenaEmpresa.Controllers
 
         public async Task<IActionResult> Index(int page = 1, string? q = null)
         {
-            var todas = _ctx.Colmenas.ToList();
+            var todas = _ctx.Colmenas.Include(c => c.Apiario).Include(c => c.AsignadoA).ToList();
 
             if (!User.IsInRole("ADMIN"))
             {
@@ -32,11 +33,10 @@ namespace ColmenaEmpresa.Controllers
                 todas = sectorId.HasValue ? todas.Where(c => c.ApiarioId == sectorId.Value).ToList() : new List<Colmena>();
             }
 
-            // Códigos únicos de colmenas bajo tratamiento sanitario activo
             var enTratamiento = _ctx.ControlesSanitarios
                 .Where(cs => cs.Estado == "en_tratamiento")
                 .ToList()
-                .SelectMany(cs => cs.ColmenasAfectadas.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .SelectMany(cs => (cs.ColmenasAfectadas ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries))
                 .Select(s => s.Trim())
                 .Distinct()
                 .Count();
@@ -53,7 +53,7 @@ namespace ColmenaEmpresa.Controllers
             if (!string.IsNullOrWhiteSpace(q))
                 query = query.Where(c =>
                     c.Codigo.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    c.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Apiario != null && c.Apiario.Nombre.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                     c.EstadoReina.Contains(q, StringComparison.OrdinalIgnoreCase));
 
             var total = query.Count();
@@ -87,8 +87,7 @@ namespace ColmenaEmpresa.Controllers
             return View(colmena);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Colmena colmena)
         {
             var user = await _users.GetUserAsync(User);
@@ -103,15 +102,9 @@ namespace ColmenaEmpresa.Controllers
             }
 
             if (!ModelState.IsValid) { CargarApiarios(user); return View(colmena); }
-            var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
-            colmena.ApiarioNombre = apiario?.Nombre ?? string.Empty;
 
             if (!User.IsInRole("ADMIN"))
-            {
-                // El empleado queda como responsable de la colmena que registra
-                colmena.AsignadoAId    = user!.Id;
-                colmena.AsignadoNombre = user.NombreCompleto;
-            }
+                colmena.AsignadoAId = user!.Id;
 
             _ctx.Colmenas.Add(colmena);
             _ctx.SaveChanges();
@@ -138,10 +131,8 @@ namespace ColmenaEmpresa.Controllers
             var existente = _ctx.Colmenas.Find(id);
             if (existente is null) return NotFound();
 
-            var apiario = _ctx.Apiarios.Find(colmena.ApiarioId);
             existente.Codigo           = colmena.Codigo;
             existente.ApiarioId        = colmena.ApiarioId;
-            existente.ApiarioNombre    = apiario?.Nombre ?? string.Empty;
             existente.Tipo             = colmena.Tipo;
             existente.FechaInstalacion = colmena.FechaInstalacion;
             existente.Origen           = colmena.Origen;
@@ -150,7 +141,7 @@ namespace ColmenaEmpresa.Controllers
             existente.MarcosConCria    = colmena.MarcosConCria;
             existente.EstadoSemaforo   = colmena.EstadoSemaforo;
             existente.Observaciones    = colmena.Observaciones;
-            // AsignadoAId / AsignadoNombre / UltimaVisita no viajan en este formulario: se preservan tal cual.
+            // AsignadoAId y UltimaVisita no viajan en este form: se preservan tal cual.
             _ctx.SaveChanges();
             var user = await _users.GetUserAsync(User);
             _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Colmenas", colmena.Codigo);

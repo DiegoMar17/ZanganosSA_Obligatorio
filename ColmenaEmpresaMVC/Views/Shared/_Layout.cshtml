@@ -1,3 +1,4 @@
+@using Microsoft.EntityFrameworkCore
 @inject ColmenaEmpresa.Data.AppDbContext _db
 @inject Microsoft.AspNetCore.Identity.UserManager<ColmenaEmpresa.Models.ApplicationUser> _userMgr
 @{
@@ -11,11 +12,11 @@
     int? sectorId = esAdmin ? null : _userMgr.Users.Where(u => u.Id == currentUserId).Select(u => u.ApiarioAsignadoId).FirstOrDefault();
     var apiariosCount = esAdmin ? _db.Apiarios.Count() : (sectorId.HasValue ? 1 : 0);
     var inspeccionesPendientesQ = esAdmin
-        ? _db.Inspecciones.Where(i => i.Estado == "pendiente" || i.Estado == "vencida")
-        : _db.Inspecciones.Where(i => (i.Estado == "pendiente" || i.Estado == "vencida") && sectorId.HasValue && i.ApiarioId == sectorId.Value);
+        ? _db.Inspecciones.Include(i => i.Apiario).Where(i => i.Estado == "pendiente" || i.Estado == "vencida")
+        : _db.Inspecciones.Include(i => i.Apiario).Where(i => (i.Estado == "pendiente" || i.Estado == "vencida") && sectorId.HasValue && i.ApiarioId == sectorId.Value);
     var colmenasRojoQ = esAdmin
-        ? _db.Colmenas.Where(c => c.EstadoSemaforo == "rojo")
-        : _db.Colmenas.Where(c => c.EstadoSemaforo == "rojo" && sectorId.HasValue && c.ApiarioId == sectorId.Value);
+        ? _db.Colmenas.Include(c => c.Apiario).Where(c => c.EstadoSemaforo == "rojo")
+        : _db.Colmenas.Include(c => c.Apiario).Where(c => c.EstadoSemaforo == "rojo" && sectorId.HasValue && c.ApiarioId == sectorId.Value);
 }
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
@@ -152,11 +153,11 @@
         <div class="np-list">
             @foreach (var c in colmenasRojoQ.Take(3).ToList())
             {
-                <div class="np-item unread"><div class="np-ico a-red">⚠</div><div class="np-content"><div class="np-title2">Colmena @c.Codigo en estado crítico</div><div class="np-body">@c.ApiarioNombre</div></div></div>
+                <div class="np-item unread"><div class="np-ico a-red">⚠</div><div class="np-content"><div class="np-title2">Colmena @c.Codigo en estado crítico</div><div class="np-body">@c.Apiario?.Nombre</div></div></div>
             }
             @foreach (var i in inspeccionesPendientesQ.Take(3).ToList())
             {
-                <div class="np-item unread"><div class="np-ico a-amber">🔍</div><div class="np-content"><div class="np-title2">Inspección @i.Estado — @i.ApiarioNombre</div><div class="np-body">@i.Fecha.ToString("dd MMM yyyy")</div></div></div>
+                <div class="np-item unread"><div class="np-ico a-amber">🔍</div><div class="np-content"><div class="np-title2">Inspección @i.Estado — @i.Apiario?.Nombre</div><div class="np-body">@i.Fecha.ToString("dd MMM yyyy")</div></div></div>
             }
         </div>
     </div>
@@ -168,11 +169,11 @@
     @await RenderSectionAsync("Scripts", required: false)
     @if (TempData["Exito"] != null)
     {
-        <script>document.addEventListener('DOMContentLoaded', () => toast('@TempData["Exito"]'));</script>
+        <script>document.addEventListener('DOMContentLoaded', () => toast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Exito"]!.ToString()))));</script>
     }
     @if (TempData["Error"] != null)
     {
-        <script>document.addEventListener('DOMContentLoaded', () => toastError('@TempData["Error"]'));</script>
+        <script>document.addEventListener('DOMContentLoaded', () => toastError(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Error"]!.ToString()))));</script>
     }
 </body>
 </html>

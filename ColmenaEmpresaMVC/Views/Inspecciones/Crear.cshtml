@@ -4,7 +4,7 @@
     ViewData["Title"] = "Nueva Inspección";
     ViewData["Subtitle"] = "Registrar visita de campo";
     var colmenas = (List<Colmena>)ViewBag.Colmenas;
-    var grupos = colmenas.GroupBy(c => c.ApiarioNombre).OrderBy(g => g.Key);
+    var grupos = colmenas.GroupBy(c => c.Apiario?.Nombre ?? "").OrderBy(g => g.Key);
 }
 
 <div class="form-wrap">

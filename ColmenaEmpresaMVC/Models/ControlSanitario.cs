@@ -1,38 +1,48 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ColmenaEmpresa.Models
 {
     public class ControlSanitario
     {
+        [Column("CtrlS_ID")]
         public int Id { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Seleccioná un apiario.")]
+        [Column("CtrlS_IDApi")]
         public int ApiarioId { get; set; }
-
-        public string ApiarioNombre { get; set; } = string.Empty;
+        public Apiario? Apiario { get; set; }
 
         [StringLength(500)]
-        public string ColmenasAfectadas { get; set; } = string.Empty; // CSV de códigos
+        [Column("CtrlS_ColAfect")]
+        public string? ColmenasAfectadas { get; set; }
 
         [Required(ErrorMessage = "El tipo de control es obligatorio.")]
         [StringLength(100)]
+        [Column("CtrlS_TipoCtrl")]
         public string TipoControl { get; set; } = string.Empty;
 
         [StringLength(50)]
-        public string Resultado { get; set; } = string.Empty; // positivo | negativo | dudoso
+        [Column("CtrlS_Resul")]
+        public string? Resultado { get; set; }
 
         [StringLength(200)]
-        public string Tratamiento { get; set; } = string.Empty;
+        [Column("CtrlS_Trat")]
+        public string? Tratamiento { get; set; }
 
         [StringLength(100)]
-        public string Dosis { get; set; } = string.Empty;
+        [Column("CtrlS_Dos")]
+        public string? Dosis { get; set; }
 
         [Required(ErrorMessage = "La fecha es obligatoria.")]
+        [Column("CtrlS_Fec")]
         public DateTime Fecha { get; set; }
 
-        public string Estado { get; set; } = "en_tratamiento"; // en_tratamiento | limpio
+        [Column("CtrlS_Est")]
+        public string Estado { get; set; } = "en_tratamiento";
 
         [StringLength(1000)]
-        public string Observaciones { get; set; } = string.Empty;
+        [Column("CtrlS_Obs")]
+        public string? Observaciones { get; set; }
     }
 }

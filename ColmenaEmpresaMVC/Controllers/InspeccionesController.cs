@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ColmenaEmpresa.Data;
 using ColmenaEmpresa.Models;
 using ColmenaEmpresa.Services;
@@ -24,7 +25,6 @@ namespace ColmenaEmpresa.Controllers
 
         public async Task<IActionResult> Index(int page = 1, string? q = null)
         {
-            // Auto-vencida: pendientes con fecha pasada
             var vencibles = _ctx.Inspecciones
                 .Where(i => i.Estado == "pendiente" && i.Fecha < DateTime.Today)
                 .ToList();
@@ -34,7 +34,7 @@ namespace ColmenaEmpresa.Controllers
                 _ctx.SaveChanges();
             }
 
-            var todas = _ctx.Inspecciones.ToList();
+            var todas = _ctx.Inspecciones.Include(i => i.Apiario).ToList();
 
             if (!User.IsInRole("ADMIN"))
             {
@@ -50,9 +50,9 @@ namespace ColmenaEmpresa.Controllers
             var query = todas.AsQueryable();
             if (!string.IsNullOrWhiteSpace(q))
                 query = query.Where(i =>
-                    i.ApiarioNombre.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    (i.Apiario!.Nombre).Contains(q, StringComparison.OrdinalIgnoreCase) ||
                     i.Estado.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                    i.Clima.Contains(q, StringComparison.OrdinalIgnoreCase));
+                    (i.Clima ?? "").Contains(q, StringComparison.OrdinalIgnoreCase));
 
             var total = query.Count();
             var items = query.OrderByDescending(i => i.Fecha).Skip((page - 1) * PageSize).Take(PageSize).ToList();
@@ -66,7 +66,7 @@ namespace ColmenaEmpresa.Controllers
         private async Task CargarDatosAsync()
         {
             var apiarios = _ctx.Apiarios.OrderBy(a => a.Nombre).ToList();
-            var colmenas = _ctx.Colmenas.OrderBy(c => c.ApiarioNombre).ThenBy(c => c.Codigo).ToList();
+            var colmenas = _ctx.Colmenas.Include(c => c.Apiario).OrderBy(c => c.Apiario!.Nombre).ThenBy(c => c.Codigo).ToList();
 
             if (!User.IsInRole("ADMIN"))
             {
@@ -82,7 +82,7 @@ namespace ColmenaEmpresa.Controllers
         [Authorize(Roles = "ADMIN")]
         public IActionResult Exportar()
         {
-            var inspecciones = _ctx.Inspecciones.OrderBy(i => i.Fecha).ToList();
+            var inspecciones = _ctx.Inspecciones.Include(i => i.Apiario).OrderBy(i => i.Fecha).ToList();
             ViewBag.Completas  = inspecciones.Count(i => i.Estado == "completa");
             ViewBag.Alertas    = inspecciones.Count(i => i.Estado == "incompleta");
             ViewBag.Criticas   = inspecciones.Count(i => i.Estado == "pendiente");
@@ -104,16 +104,12 @@ namespace ColmenaEmpresa.Controllers
                 if (colmena != null)
                 {
                     inspeccion.ApiarioId     = colmena.ApiarioId;
-                    inspeccion.ApiarioNombre = colmena.ApiarioNombre;
-                    inspeccion.ColmenaCodigo = colmena.Codigo;
                     inspeccion.TotalColmenas = 1;
                     ModelState.Remove(nameof(Inspeccion.ApiarioId));
                 }
             }
             else if (inspeccion.TipoInspeccion == "apiario" && inspeccion.ApiarioId > 0)
             {
-                var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
-                inspeccion.ApiarioNombre = apiario?.Nombre ?? string.Empty;
                 inspeccion.TotalColmenas = _ctx.Colmenas.Count(c => c.ApiarioId == inspeccion.ApiarioId);
                 ModelState.Remove(nameof(Inspeccion.ColmenaId));
             }
@@ -129,13 +125,13 @@ namespace ColmenaEmpresa.Controllers
 
             _ctx.Inspecciones.Add(inspeccion);
 
-            // Actualiza la última visita de las colmenas del apiario inspeccionado
             var colmenas = _ctx.Colmenas.Where(c => c.ApiarioId == inspeccion.ApiarioId).ToList();
             foreach (var c in colmenas)
                 c.UltimaVisita = inspeccion.Fecha;
 
             _ctx.SaveChanges();
-            _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "Inspecciones", inspeccion.ApiarioNombre);
+            var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "CREATE", "Inspecciones", apiario?.Nombre ?? "");
             TempData["Exito"] = "Inspección registrada.";
             return RedirectToAction(nameof(Index));
         }
@@ -143,7 +139,7 @@ namespace ColmenaEmpresa.Controllers
         [Authorize(Roles = "ADMIN")]
         public IActionResult Editar(int id)
         {
-            var i = _ctx.Inspecciones.Find(id);
+            var i = _ctx.Inspecciones.Include(x => x.Apiario).Include(x => x.Colmena).FirstOrDefault(x => x.Id == id);
             if (i is null) return NotFound();
             return View(i);
         }
@@ -160,14 +156,14 @@ namespace ColmenaEmpresa.Controllers
 
             _ctx.Inspecciones.Update(inspeccion);
 
-            // Refresca la última visita de las colmenas del apiario
             var colmenas = _ctx.Colmenas.Where(c => c.ApiarioId == inspeccion.ApiarioId).ToList();
             foreach (var c in colmenas)
                 c.UltimaVisita = inspeccion.Fecha;
 
             _ctx.SaveChanges();
-            var user = await _users.GetUserAsync(User);
-            _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Inspecciones", inspeccion.ApiarioNombre);
+            var user    = await _users.GetUserAsync(User);
+            var apiario = _ctx.Apiarios.Find(inspeccion.ApiarioId);
+            _auditoria.Registrar(user!.Id, user.NombreCompleto, "UPDATE", "Inspecciones", apiario?.Nombre ?? "");
             TempData["Exito"] = "Inspección actualizada.";
             return RedirectToAction(nameof(Index));
         }
@@ -195,13 +191,14 @@ namespace ColmenaEmpresa.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Eliminar(int id)
         {
-            var i = _ctx.Inspecciones.Find(id);
+            var i = _ctx.Inspecciones.Include(x => x.Apiario).FirstOrDefault(x => x.Id == id);
             if (i is not null)
             {
+                var nombre = i.Apiario?.Nombre ?? "";
                 _ctx.Inspecciones.Remove(i);
                 _ctx.SaveChanges();
                 var user = await _users.GetUserAsync(User);
-                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "Inspecciones", i.ApiarioNombre);
+                _auditoria.Registrar(user!.Id, user.NombreCompleto, "DELETE", "Inspecciones", nombre);
                 TempData["Exito"] = "Inspección eliminada.";
             }
             return RedirectToAction(nameof(Index));

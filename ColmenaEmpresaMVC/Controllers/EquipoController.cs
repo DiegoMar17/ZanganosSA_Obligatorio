@@ -58,7 +58,7 @@ namespace ColmenaEmpresa.Controllers
                 };
             }).ToList();
 
-            ViewBag.TotalEmpleados  = vm.Count;
+            ViewBag.TotalEmpleados   = vm.Count;
             ViewBag.EmpleadosActivos = vm.Count(e => e.PinActivo);
             return View(vm);
         }
@@ -86,7 +86,6 @@ namespace ColmenaEmpresa.Controllers
                 .OrderBy(c => c.Codigo)
                 .ToList();
 
-            // Colmenas disponibles para asignar: del sector del empleado, sin asignar todavía
             var colmenasDisponibles = apiario is not null
                 ? _ctx.Colmenas
                     .Where(c => c.ApiarioId == apiario.Id && c.AsignadoAId == null)
@@ -94,9 +93,9 @@ namespace ColmenaEmpresa.Controllers
                     .ToList()
                 : new List<Colmena>();
 
-            var semanaAtras = DateTime.Now.AddDays(-7);
+            var semanaAtras     = DateTime.Now.AddDays(-7);
             var registrosSemana = _ctx.Auditorias.Count(a => a.UserId == empleado.Id && a.FechaHora >= semanaAtras);
-            var ultimoAcceso = _ctx.HistorialesAcceso
+            var ultimoAcceso    = _ctx.HistorialesAcceso
                 .Where(h => h.UserId == empleado.Id && h.Exitoso)
                 .OrderByDescending(h => h.FechaHora)
                 .Select(h => (DateTime?)h.FechaHora)
@@ -104,22 +103,21 @@ namespace ColmenaEmpresa.Controllers
 
             var vm = new EmpleadoDetalleViewModel
             {
-                UserId               = empleado.Id,
-                NombreCompleto       = empleado.NombreCompleto,
-                Email                = empleado.Email ?? string.Empty,
-                ApiarioNombre        = apiario?.Nombre,
-                ApiarioId            = apiario?.Id,
-                PinActivo            = empleado.PinActivo,
-                TienePin             = !string.IsNullOrEmpty(empleado.PinHash),
-                RegistrosSemana      = registrosSemana,
-                UltimoAcceso         = ultimoAcceso,
-                Tareas               = tareas,
-                ColmenasAsignadas    = colmenasAsignadas,
-                ColmenasDisponibles  = colmenasDisponibles
+                UserId              = empleado.Id,
+                NombreCompleto      = empleado.NombreCompleto,
+                Email               = empleado.Email ?? string.Empty,
+                ApiarioNombre       = apiario?.Nombre,
+                ApiarioId           = apiario?.Id,
+                PinActivo           = empleado.PinActivo,
+                TienePin            = !string.IsNullOrEmpty(empleado.PinHash),
+                RegistrosSemana     = registrosSemana,
+                UltimoAcceso        = ultimoAcceso,
+                Tareas              = tareas,
+                ColmenasAsignadas   = colmenasAsignadas,
+                ColmenasDisponibles = colmenasDisponibles
             };
 
             ViewBag.Apiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre", apiario?.Id);
-
             return View(vm);
         }
 
@@ -132,7 +130,7 @@ namespace ColmenaEmpresa.Controllers
                 t.Completada = !t.Completada;
                 _ctx.SaveChanges();
                 var admin = await _users.GetUserAsync(User);
-                _auditoria.Registrar(_users.GetUserId(User)!, admin?.NombreCompleto ?? "Admin", "UPDATE", "Tareas", $"Admin marcó tarea #{id} de {t.AsignadoNombre}");
+                _auditoria.Registrar(_users.GetUserId(User)!, admin?.NombreCompleto ?? "Admin", "UPDATE", "Tareas", $"Admin marcó tarea #{id}");
             }
             return RedirectToAction(nameof(Detalle), new { id = userId });
         }
@@ -152,8 +150,7 @@ namespace ColmenaEmpresa.Controllers
                     Prioridad        = prioridad ?? "media",
                     FechaVencimiento = fechaVencimiento,
                     FechaCreacion    = DateTime.Now,
-                    AsignadoAId      = empleado.Id,
-                    AsignadoNombre   = empleado.NombreCompleto
+                    AsignadoAId      = empleado.Id
                 });
                 _ctx.SaveChanges();
 
@@ -173,22 +170,20 @@ namespace ColmenaEmpresa.Controllers
             empleado.ApiarioAsignadoId = apiarioId;
             await _users.UpdateAsync(empleado);
 
-            // Las colmenas que tenía asignadas fuera del nuevo sector quedan sin asignar
             var colmenasFueraDeSector = _ctx.Colmenas
                 .Where(c => c.AsignadoAId == empleado.Id && c.ApiarioId != apiarioId)
                 .ToList();
-            foreach (var c in colmenasFueraDeSector) { c.AsignadoAId = null; c.AsignadoNombre = string.Empty; }
+            foreach (var c in colmenasFueraDeSector) c.AsignadoAId = null;
 
-            // Las colmenas preexistentes del nuevo sector que aún no tenían responsable pasan a este empleado
             var colmenasSinDueno = apiarioId.HasValue
                 ? _ctx.Colmenas.Where(c => c.ApiarioId == apiarioId.Value && c.AsignadoAId == null).ToList()
                 : new List<Colmena>();
-            foreach (var c in colmenasSinDueno) { c.AsignadoAId = empleado.Id; c.AsignadoNombre = empleado.NombreCompleto; }
+            foreach (var c in colmenasSinDueno) c.AsignadoAId = empleado.Id;
 
             if (colmenasFueraDeSector.Count > 0 || colmenasSinDueno.Count > 0) _ctx.SaveChanges();
 
             var apiario = apiarioId.HasValue ? _ctx.Apiarios.Find(apiarioId.Value) : null;
-            var admin = await _users.GetUserAsync(User);
+            var admin   = await _users.GetUserAsync(User);
             _auditoria.Registrar(_users.GetUserId(User)!, admin?.NombreCompleto ?? "Admin", "UPDATE", "Empleados",
                 $"Sector de {empleado.NombreCompleto} → {apiario?.Nombre ?? "Sin asignar"}");
             TempData["Exito"] = $"Sector actualizado para {empleado.NombreCompleto}.";
@@ -208,8 +203,7 @@ namespace ColmenaEmpresa.Controllers
                 return RedirectToAction(nameof(Detalle), new { id = userId });
             }
 
-            colmena.AsignadoAId    = empleado.Id;
-            colmena.AsignadoNombre = empleado.NombreCompleto;
+            colmena.AsignadoAId = empleado.Id;
             _ctx.SaveChanges();
 
             var admin = await _users.GetUserAsync(User);
@@ -225,14 +219,14 @@ namespace ColmenaEmpresa.Controllers
             var colmena = _ctx.Colmenas.Find(colmenaId);
             if (colmena is not null)
             {
-                var nombreAnterior = colmena.AsignadoNombre;
-                colmena.AsignadoAId    = null;
-                colmena.AsignadoNombre = string.Empty;
+                var anteriorId = colmena.AsignadoAId;
+                colmena.AsignadoAId = null;
                 _ctx.SaveChanges();
 
-                var admin = await _users.GetUserAsync(User);
+                var anterior = anteriorId is not null ? (await _users.FindByIdAsync(anteriorId))?.NombreCompleto ?? anteriorId : "nadie";
+                var admin    = await _users.GetUserAsync(User);
                 _auditoria.Registrar(_users.GetUserId(User)!, admin?.NombreCompleto ?? "Admin", "UPDATE", "Colmenas",
-                    $"Colmena {colmena.Codigo} desasignada de {nombreAnterior}");
+                    $"Colmena {colmena.Codigo} desasignada de {anterior}");
                 TempData["Exito"] = $"Colmena '{colmena.Codigo}' desasignada.";
             }
             return RedirectToAction(nameof(Detalle), new { id = userId });

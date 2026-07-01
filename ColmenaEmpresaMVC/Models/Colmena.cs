@@ -1,46 +1,59 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ColmenaEmpresa.Models
 {
     public class Colmena
     {
+        [Column("Col_ID")]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "El código es obligatorio.")]
         [StringLength(20, ErrorMessage = "Máximo 20 caracteres.")]
+        [Column("Col_Cod")]
         public string Codigo { get; set; } = string.Empty;
 
         [Range(1, int.MaxValue, ErrorMessage = "Seleccioná un apiario.")]
+        [Column("Col_IDApi")]
         public int ApiarioId { get; set; }
-
-        public string ApiarioNombre { get; set; } = string.Empty;
+        public Apiario? Apiario { get; set; }
 
         [Required(ErrorMessage = "El tipo es obligatorio.")]
-        public string Tipo { get; set; } = "Langstroth"; // Langstroth | Núcleo | Otro
+        [Column("Col_Tipo")]
+        public string Tipo { get; set; } = "Langstroth";
 
         [Required(ErrorMessage = "La fecha de instalación es obligatoria.")]
+        [Column("Col_FecIns")]
         public DateTime FechaInstalacion { get; set; }
 
         [StringLength(100)]
-        public string Origen { get; set; } = string.Empty;
+        [Column("Col_Orig")]
+        public string? Origen { get; set; }
 
         [Required(ErrorMessage = "El estado de la reina es obligatorio.")]
-        public string EstadoReina { get; set; } = "vista"; // vista | no_vista | ausente
+        [Column("Col_EstRei")]
+        public string EstadoReina { get; set; } = "vista";
 
         [Range(0, 20, ErrorMessage = "Cantidad de alzas entre 0 y 20.")]
+        [Column("Col_CantAlz")]
         public int CantidadAlzas { get; set; }
 
         [Range(0, 30, ErrorMessage = "Marcos con cría entre 0 y 30.")]
+        [Column("Col_MarCria")]
         public int MarcosConCria { get; set; }
 
-        public string EstadoSemaforo { get; set; } = "verde"; // verde | amarillo | rojo | viaje
+        [Column("Col_EstSem")]
+        public string EstadoSemaforo { get; set; } = "verde";
+
+        [Column("Col_UltVis")]
         public DateTime? UltimaVisita { get; set; }
 
         [StringLength(500)]
-        public string Observaciones { get; set; } = string.Empty;
+        [Column("Col_Obs")]
+        public string? Observaciones { get; set; }
 
-        // ── Asignación a empleado (gestionada desde la ficha del empleado) ──
+        [Column("Col_IDAsig")]
         public string? AsignadoAId { get; set; }
-        public string AsignadoNombre { get; set; } = string.Empty;
+        public ApplicationUser? AsignadoA { get; set; }
     }
 }

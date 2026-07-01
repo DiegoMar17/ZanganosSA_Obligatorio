@@ -94,7 +94,7 @@ tr:nth-child(odd) td{background:#F0E5D0}
             <td>@r.Categoria</td>
             <td class="@(r.TipoMovimiento == "ingreso" ? "td-green" : r.TipoMovimiento == "gasto" ? "td-red" : "td-amber")">$@r.Monto</td>
             <td><span class="pill @(r.TipoMovimiento == "ingreso" ? "pill-g" : r.TipoMovimiento == "gasto" ? "pill-r" : "pill-a")">@(r.TipoMovimiento == "ingreso" ? "Ingreso" : r.TipoMovimiento == "gasto" ? "Gasto" : "Inversión")</span></td>
-            <td>@r.ApiarioNombre</td>
+            <td>@(r.Apiario?.Nombre ?? "General")</td>
           </tr>
           i++;
         }

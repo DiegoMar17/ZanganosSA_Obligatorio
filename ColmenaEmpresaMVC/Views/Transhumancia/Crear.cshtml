@@ -1,7 +1,7 @@
-@model ColmenaEmpresa.Models.Transhumancia
+@model ColmenaEmpresa.Models.Traslado
 @{
     ViewData["Title"] = "Nuevo Traslado";
-    ViewData["Subtitle"] = "Planificar transhumancia";
+    ViewData["Subtitle"] = "Planificar traslado de colmenas";
 }
 
 <div class="form-wrap">
@@ -24,25 +24,17 @@
             </div>
             <div class="fgrp">
                 <label class="flbl">Origen <span class="req">*</span></label>
-                <select asp-for="ApiarioOrigen" class="fc">
+                <select asp-for="ApiarioOrigenId" asp-items="ViewBag.Apiarios" class="fc">
                     <option value="">Seleccionar…</option>
-                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
-                    {
-                        <option>@n</option>
-                    }
                 </select>
-                <span asp-validation-for="ApiarioOrigen" class="fhint" style="color:var(--red)"></span>
+                <span asp-validation-for="ApiarioOrigenId" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Destino <span class="req">*</span></label>
-                <select asp-for="ApiarioDestino" class="fc">
+                <select asp-for="ApiarioDestinoId" asp-items="ViewBag.Apiarios" class="fc">
                     <option value="">Seleccionar…</option>
-                    @foreach (var n in (IEnumerable<string>)ViewBag.NombresApiarios)
-                    {
-                        <option>@n</option>
-                    }
                 </select>
-                <span asp-validation-for="ApiarioDestino" class="fhint" style="color:var(--red)"></span>
+                <span asp-validation-for="ApiarioDestinoId" class="fhint" style="color:var(--red)"></span>
             </div>
             <div class="fgrp">
                 <label class="flbl">Distancia (km)</label>

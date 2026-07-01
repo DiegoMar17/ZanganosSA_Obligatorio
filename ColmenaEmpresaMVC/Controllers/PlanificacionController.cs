@@ -4,6 +4,7 @@ using ColmenaEmpresa.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace ColmenaEmpresa.Controllers
 {
@@ -27,19 +28,19 @@ namespace ColmenaEmpresa.Controllers
 
             IEnumerable<Tarea> tareas;
             if (esAdmin)
-                tareas = _ctx.Tareas.OrderBy(t => t.Completada).ThenByDescending(t => t.FechaCreacion).ToList();
+                tareas = _ctx.Tareas.Include(t => t.AsignadoA).OrderBy(t => t.Completada).ThenByDescending(t => t.FechaCreacion).ToList();
             else
-                tareas = _ctx.Tareas
+                tareas = _ctx.Tareas.Include(t => t.AsignadoA)
                     .Where(t => t.AsignadoAId == userId)
                     .OrderBy(t => t.Completada).ThenByDescending(t => t.FechaCreacion).ToList();
 
-            var visitas = _ctx.Visitas.OrderBy(v => v.Estado).ThenBy(v => v.FechaPlanificada).ToList();
+            var visitas = _ctx.Visitas.Include(v => v.Apiario).OrderBy(v => v.Estado).ThenBy(v => v.FechaPlanificada).ToList();
 
-            ViewBag.Pendientes      = tareas.Count(t => !t.Completada);
-            ViewBag.VisitasPend     = visitas.Count(v => v.Estado == "planificada");
-            ViewBag.Tareas          = tareas;
-            ViewBag.EsAdmin         = esAdmin;
-            ViewBag.NombresApiarios = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Nombre", "Nombre");
+            ViewBag.Pendientes  = tareas.Count(t => !t.Completada);
+            ViewBag.VisitasPend = visitas.Count(v => v.Estado == "planificada");
+            ViewBag.Tareas      = tareas;
+            ViewBag.EsAdmin     = esAdmin;
+            ViewBag.Apiarios    = new SelectList(_ctx.Apiarios.OrderBy(a => a.Nombre).ToList(), "Id", "Nombre");
 
             if (esAdmin)
             {
@@ -58,22 +59,17 @@ namespace ColmenaEmpresa.Controllers
             {
                 var userId = _users.GetUserId(User)!;
                 var user   = await _users.GetUserAsync(User);
-                string nombre2Asignado = string.Empty;
                 string? idAsignado = null;
 
                 if (User.IsInRole("ADMIN") && !string.IsNullOrEmpty(asignadoAId))
                 {
                     var empleado = await _users.FindByIdAsync(asignadoAId);
                     if (empleado is not null)
-                    {
-                        idAsignado     = empleado.Id;
-                        nombre2Asignado = empleado.NombreCompleto;
-                    }
+                        idAsignado = empleado.Id;
                 }
                 else if (!User.IsInRole("ADMIN"))
                 {
-                    idAsignado     = userId;
-                    nombre2Asignado = user?.NombreCompleto ?? string.Empty;
+                    idAsignado = userId;
                 }
 
                 _ctx.Tareas.Add(new Tarea
@@ -83,8 +79,7 @@ namespace ColmenaEmpresa.Controllers
                     Prioridad        = prioridad ?? "media",
                     FechaVencimiento = fechaVencimiento,
                     FechaCreacion    = DateTime.Now,
-                    AsignadoAId      = idAsignado,
-                    AsignadoNombre   = nombre2Asignado
+                    AsignadoAId      = idAsignado
                 });
                 _ctx.SaveChanges();
 
@@ -130,39 +125,38 @@ namespace ColmenaEmpresa.Controllers
 
         // ── Visitas ──
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> CrearVisita(string apiarioNombre, DateTime fechaPlanificada, string? materiales)
+        public async Task<IActionResult> CrearVisita(int apiarioId, DateTime fechaPlanificada, string? materiales)
         {
-            if (!string.IsNullOrWhiteSpace(apiarioNombre))
+            var apiario = _ctx.Apiarios.Find(apiarioId);
+            if (apiario is null)
             {
-                // Verificar que empleado solo cree visitas en su sector
-                if (!User.IsInRole("ADMIN"))
-                {
-                    var user2 = await _users.GetUserAsync(User);
-                    if (user2?.ApiarioAsignadoId.HasValue == true)
-                    {
-                        var apiario = _ctx.Apiarios.Find(user2.ApiarioAsignadoId.Value);
-                        if (apiario is not null && apiario.Nombre != apiarioNombre)
-                        {
-                            TempData["Error"] = "Solo podés registrar visitas en tu sector asignado.";
-                            return RedirectToAction(nameof(Index));
-                        }
-                    }
-                }
-
-                _ctx.Visitas.Add(new Visita
-                {
-                    ApiarioNombre    = apiarioNombre,
-                    FechaPlanificada = fechaPlanificada,
-                    Materiales       = materiales ?? string.Empty,
-                    Estado           = "planificada"
-                });
-                _ctx.SaveChanges();
-
-                var userId = _users.GetUserId(User)!;
-                var user   = await _users.GetUserAsync(User);
-                _auditoria.Registrar(userId, user?.NombreCompleto ?? userId, "CREATE", "Visitas", $"Visita a {apiarioNombre}");
-                TempData["Exito"] = $"Visita a {apiarioNombre} planificada.";
+                TempData["Error"] = "Apiario no encontrado.";
+                return RedirectToAction(nameof(Index));
             }
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var user2 = await _users.GetUserAsync(User);
+                if (user2?.ApiarioAsignadoId != apiarioId)
+                {
+                    TempData["Error"] = "Solo podés registrar visitas en tu sector asignado.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            _ctx.Visitas.Add(new Visita
+            {
+                ApiarioId        = apiarioId,
+                FechaPlanificada = fechaPlanificada,
+                Materiales       = materiales,
+                Estado           = "planificada"
+            });
+            _ctx.SaveChanges();
+
+            var userId = _users.GetUserId(User)!;
+            var user   = await _users.GetUserAsync(User);
+            _auditoria.Registrar(userId, user?.NombreCompleto ?? userId, "CREATE", "Visitas", $"Visita a {apiario.Nombre}");
+            TempData["Exito"] = $"Visita a {apiario.Nombre} planificada.";
             return RedirectToAction(nameof(Index));
         }
 
