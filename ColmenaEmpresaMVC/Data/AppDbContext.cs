@@ -8,7 +8,6 @@ namespace ColmenaEmpresa.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<Propietario> Propietarios { get; set; }
         public DbSet<Apiario> Apiarios { get; set; }
         public DbSet<Colmena> Colmenas { get; set; }
         public DbSet<Visita> Visitas { get; set; }
