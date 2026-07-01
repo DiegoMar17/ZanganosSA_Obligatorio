@@ -9,29 +9,27 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=colmena.db"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
+    options.Password.RequireDigit           = false;
+    options.Password.RequireLowercase       = false;
+    options.Password.RequireUppercase       = false;
     options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength         = 6;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath       = "/Account/Login";
+    options.LoginPath        = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccesoDenegado";
 });
 
 builder.Services.AddScoped<AuditoriaService>();
 
-// Require authentication globally — use [AllowAnonymous] para excluir rutas
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
@@ -39,7 +37,6 @@ builder.Services.AddControllersWithViews(options =>
 
 var app = builder.Build();
 
-// Crear BD, aplicar Identity y sembrar datos
 using (var scope = app.Services.CreateScope())
 {
     var db          = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -48,80 +45,11 @@ using (var scope = app.Services.CreateScope())
 
     db.Database.EnsureCreated();
 
-    // Crear roles si no existen
     if (!await roleManager.RoleExistsAsync("ADMIN"))
         await roleManager.CreateAsync(new IdentityRole("ADMIN"));
     if (!await roleManager.RoleExistsAsync("EMPLEADO"))
         await roleManager.CreateAsync(new IdentityRole("EMPLEADO"));
 
-    // ALTER TABLE idempotente — nuevas columnas en ApplicationUser (AspNetUsers)
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN Rol TEXT NOT NULL DEFAULT 'EMPLEADO'"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN PinHash TEXT NULL"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN PinActivo INTEGER NOT NULL DEFAULT 0"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN ApiarioAsignadoId INTEGER NULL"); } catch { }
-
-    // Nuevas columnas en Tareas
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Tareas ADD COLUMN AsignadoAId TEXT NULL"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Tareas ADD COLUMN AsignadoNombre TEXT NOT NULL DEFAULT ''"); } catch { }
-
-    // ALTER TABLE idempotente — columnas previas en otras tablas
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN TipoInspeccion TEXT NOT NULL DEFAULT 'apiario'"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaId INTEGER NULL"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Inspecciones ADD COLUMN ColmenaCodigo TEXT NOT NULL DEFAULT ''"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE RegistrosFinancieros ADD COLUMN CosechaId INTEGER NULL"); } catch { }
-
-    // Columna huérfana de una iteración anterior del modelo Cosecha (pre-Vendida/PrecioPorKg).
-    // EF Core ya no la conoce, pero seguía NOT NULL en bases existentes y rompía todo INSERT en Cosechas.
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Cosechas DROP COLUMN CrearRegistroIngreso"); } catch { }
-
-    // Asignación de colmenas a empleados, gestionada desde la ficha del empleado (Equipo)
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Colmenas ADD COLUMN AsignadoAId TEXT NULL"); } catch { }
-    try { db.Database.ExecuteSqlRaw("ALTER TABLE Colmenas ADD COLUMN AsignadoNombre TEXT NOT NULL DEFAULT ''"); } catch { }
-
-    // Tablas nuevas de roles
-    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS Auditorias (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        UserId TEXT NOT NULL DEFAULT '',
-        NombreUsuario TEXT NOT NULL DEFAULT '',
-        Accion TEXT NOT NULL DEFAULT '',
-        Tabla TEXT NOT NULL DEFAULT '',
-        FechaHora TEXT NOT NULL DEFAULT '',
-        Detalle TEXT NULL)"); } catch { }
-
-    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS HistorialesAcceso (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        UserId TEXT NOT NULL DEFAULT '',
-        NombreUsuario TEXT NOT NULL DEFAULT '',
-        FechaHora TEXT NOT NULL DEFAULT '',
-        Ip TEXT NULL,
-        Dispositivo TEXT NULL,
-        Exitoso INTEGER NOT NULL DEFAULT 1)"); } catch { }
-
-    // Tablas previas — idempotentes
-    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS AlertasComunitarias (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Titulo TEXT NOT NULL DEFAULT '',
-        Descripcion TEXT NOT NULL DEFAULT '',
-        TipoAmenaza TEXT NOT NULL DEFAULT 'sanitaria',
-        Latitud REAL NOT NULL DEFAULT 0,
-        Longitud REAL NOT NULL DEFAULT 0,
-        RadioKm REAL NOT NULL DEFAULT 10,
-        Ubicacion TEXT NOT NULL DEFAULT '',
-        Estado TEXT NOT NULL DEFAULT 'activa',
-        FechaCreacion TEXT NOT NULL DEFAULT '',
-        FechaResolucion TEXT,
-        ReportadoPor TEXT NOT NULL DEFAULT '',
-        Notas TEXT NOT NULL DEFAULT '')"); } catch { }
-    try { db.Database.ExecuteSqlRaw(@"CREATE TABLE IF NOT EXISTS NotificacionesAlerta (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        AlertaId INTEGER NOT NULL,
-        ApiarioId INTEGER NOT NULL,
-        ApiarioNombre TEXT NOT NULL DEFAULT '',
-        DistanciaKm REAL NOT NULL DEFAULT 0,
-        FechaEnvio TEXT NOT NULL DEFAULT '',
-        Leida INTEGER NOT NULL DEFAULT 0)"); } catch { }
-
-    // Seed usuario admin
     if (!userManager.Users.Any())
     {
         var admin = new ApplicationUser
@@ -137,7 +65,6 @@ using (var scope = app.Services.CreateScope())
     }
     else
     {
-        // Asegurar que el admin existente tenga su rol
         var admin = await userManager.FindByEmailAsync("admin@colmena.com");
         if (admin is not null && !await userManager.IsInRoleAsync(admin, "ADMIN"))
         {
@@ -147,46 +74,46 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed datos de ejemplo
     if (!db.Apiarios.Any())
     {
-        db.Apiarios.AddRange(
-            new Apiario { Nombre="La Rinconada",  Departamento="San José",  Ubicacion="Ruta 3 km 85",  Latitud=-34.337, Longitud=-56.713, Flora="Eucaliptal",   Acceso="Todo tiempo",          CapacidadColmenas=30, TotalColmenas=18, EstadoSemaforo="rojo" },
-            new Apiario { Nombre="Monte Olivo",   Departamento="Canelones", Ubicacion="Ruta 8 km 48",  Latitud=-34.523, Longitud=-56.284, Flora="Monte nativo", Acceso="Todo tiempo",          CapacidadColmenas=40, TotalColmenas=24, EstadoSemaforo="verde" },
-            new Apiario { Nombre="El Eucaliptal", Departamento="Lavalleja", Ubicacion="Ruta 81 km 12", Latitud=-34.375, Longitud=-55.237, Flora="Eucaliptal",   Acceso="Solo con buen tiempo", CapacidadColmenas=25, TotalColmenas=15, EstadoSemaforo="amarillo" },
-            new Apiario { Nombre="Paso Carrasco", Departamento="Rocha",     Ubicacion="Ruta 9 km 220", Latitud=-34.483, Longitud=-54.333, Flora="Pradera",      Acceso="Requiere 4x4",         CapacidadColmenas=35, TotalColmenas=21, EstadoSemaforo="amarillo" }
-        );
+        var rinconada    = new Apiario { Nombre="La Rinconada",  Departamento="San José",  Ubicacion="Ruta 3 km 85",  Latitud=-34.337, Longitud=-56.713, Flora="Eucaliptal",   Acceso="Todo tiempo",          CapacidadColmenas=30, EstadoSemaforo="rojo" };
+        var monteOlivo   = new Apiario { Nombre="Monte Olivo",   Departamento="Canelones", Ubicacion="Ruta 8 km 48",  Latitud=-34.523, Longitud=-56.284, Flora="Monte nativo", Acceso="Todo tiempo",          CapacidadColmenas=40, EstadoSemaforo="verde" };
+        var eucaliptal   = new Apiario { Nombre="El Eucaliptal", Departamento="Lavalleja", Ubicacion="Ruta 81 km 12", Latitud=-34.375, Longitud=-55.237, Flora="Eucaliptal",   Acceso="Solo con buen tiempo", CapacidadColmenas=25, EstadoSemaforo="amarillo" };
+        var pasoCarrasco = new Apiario { Nombre="Paso Carrasco", Departamento="Rocha",     Ubicacion="Ruta 9 km 220", Latitud=-34.483, Longitud=-54.333, Flora="Pradera",      Acceso="Requiere 4x4",         CapacidadColmenas=35, EstadoSemaforo="amarillo" };
+        db.Apiarios.AddRange(rinconada, monteOlivo, eucaliptal, pasoCarrasco);
+        db.SaveChanges();
+
         db.Colmenas.AddRange(
-            new Colmena { Codigo="C-01",  ApiarioId=2, ApiarioNombre="Monte Olivo",   Tipo="Langstroth", FechaInstalacion=new DateTime(2022,9,1),  EstadoReina="vista",    CantidadAlzas=2, MarcosConCria=8, EstadoSemaforo="verde",    UltimaVisita=DateTime.Now.AddDays(-4) },
-            new Colmena { Codigo="C-47",  ApiarioId=1, ApiarioNombre="La Rinconada",  Tipo="Langstroth", FechaInstalacion=new DateTime(2021,3,15), EstadoReina="no_vista", CantidadAlzas=1, MarcosConCria=5, EstadoSemaforo="amarillo", UltimaVisita=DateTime.Now.AddDays(-18) },
-            new Colmena { Codigo="C-82",  ApiarioId=1, ApiarioNombre="La Rinconada",  Tipo="Langstroth", FechaInstalacion=new DateTime(2020,11,1), EstadoReina="ausente",  CantidadAlzas=0, MarcosConCria=2, EstadoSemaforo="rojo",     UltimaVisita=DateTime.Now.AddDays(-25) },
-            new Colmena { Codigo="C-110", ApiarioId=4, ApiarioNombre="Paso Carrasco", Tipo="Núcleo",     FechaInstalacion=new DateTime(2023,10,1), EstadoReina="vista",    CantidadAlzas=1, MarcosConCria=6, EstadoSemaforo="viaje",    UltimaVisita=null }
+            new Colmena { Codigo="C-01",  ApiarioId=monteOlivo.Id,   Tipo="Langstroth", FechaInstalacion=new DateTime(2022,9,1),  EstadoReina="vista",    CantidadAlzas=2, MarcosConCria=8, EstadoSemaforo="verde",    UltimaVisita=DateTime.Now.AddDays(-4) },
+            new Colmena { Codigo="C-47",  ApiarioId=rinconada.Id,    Tipo="Langstroth", FechaInstalacion=new DateTime(2021,3,15), EstadoReina="no_vista", CantidadAlzas=1, MarcosConCria=5, EstadoSemaforo="amarillo", UltimaVisita=DateTime.Now.AddDays(-18) },
+            new Colmena { Codigo="C-82",  ApiarioId=rinconada.Id,    Tipo="Langstroth", FechaInstalacion=new DateTime(2020,11,1), EstadoReina="ausente",  CantidadAlzas=0, MarcosConCria=2, EstadoSemaforo="rojo",     UltimaVisita=DateTime.Now.AddDays(-25) },
+            new Colmena { Codigo="C-110", ApiarioId=pasoCarrasco.Id, Tipo="Núcleo",     FechaInstalacion=new DateTime(2023,10,1), EstadoReina="vista",    CantidadAlzas=1, MarcosConCria=6, EstadoSemaforo="viaje",    UltimaVisita=null }
         );
         db.Inspecciones.AddRange(
-            new Inspeccion { ApiarioId=2, ApiarioNombre="Monte Olivo",   Fecha=new DateTime(2026,4,18), Clima="⛅ Nublado", Temperatura=19, ColmenasInspeccionadas=18, TotalColmenas=24, Estado="completa" },
-            new Inspeccion { ApiarioId=3, ApiarioNombre="El Eucaliptal", Fecha=new DateTime(2026,4,14), Clima="🌧 Lluvia",  Temperatura=15, ColmenasInspeccionadas=12, TotalColmenas=15, Estado="incompleta" },
-            new Inspeccion { ApiarioId=4, ApiarioNombre="Paso Carrasco", Fecha=new DateTime(2026,4,10), Clima="☀ Soleado", Temperatura=24, ColmenasInspeccionadas=21, TotalColmenas=21, Estado="completa" }
+            new Inspeccion { ApiarioId=monteOlivo.Id,   Fecha=new DateTime(2026,4,18), Clima="Nublado",  Temperatura=19, ColmenasInspeccionadas=18, TotalColmenas=24, Estado="completa" },
+            new Inspeccion { ApiarioId=eucaliptal.Id,   Fecha=new DateTime(2026,4,14), Clima="Lluvia",   Temperatura=15, ColmenasInspeccionadas=12, TotalColmenas=15, Estado="incompleta" },
+            new Inspeccion { ApiarioId=pasoCarrasco.Id, Fecha=new DateTime(2026,4,10), Clima="Soleado",  Temperatura=24, ColmenasInspeccionadas=21, TotalColmenas=21, Estado="completa" }
         );
         db.RegistrosFinancieros.AddRange(
-            new RegistroFinanciero { TipoMovimiento="ingreso",   Categoria="Cosecha miel",  Descripcion="Venta primavera 2026",   Fecha=new DateTime(2026,1,15), Monto=1850, ApiarioNombre="Monte Olivo" },
-            new RegistroFinanciero { TipoMovimiento="gasto",     Categoria="Insumos",       Descripcion="Ácido oxálico + frames", Fecha=new DateTime(2026,1,20), Monto=320,  ApiarioNombre="General" },
-            new RegistroFinanciero { TipoMovimiento="inversion", Categoria="Equipamiento",  Descripcion="Extractor nuevo",        Fecha=new DateTime(2026,2,1),  Monto=2100, ApiarioNombre="General" },
-            new RegistroFinanciero { TipoMovimiento="ingreso",   Categoria="Polen",         Descripcion="Venta mercado local",    Fecha=new DateTime(2026,2,10), Monto=480,  ApiarioNombre="General" }
+            new RegistroFinanciero { TipoMovimiento="ingreso",   Categoria="Cosecha miel", Descripcion="Venta primavera 2026",   Fecha=new DateTime(2026,1,15), Monto=1850, ApiarioId=monteOlivo.Id },
+            new RegistroFinanciero { TipoMovimiento="gasto",     Categoria="Insumos",      Descripcion="Ácido oxálico + frames", Fecha=new DateTime(2026,1,20), Monto=320 },
+            new RegistroFinanciero { TipoMovimiento="inversion", Categoria="Equipamiento", Descripcion="Extractor nuevo",        Fecha=new DateTime(2026,2,1),  Monto=2100 },
+            new RegistroFinanciero { TipoMovimiento="ingreso",   Categoria="Polen",        Descripcion="Venta mercado local",    Fecha=new DateTime(2026,2,10), Monto=480 }
         );
         db.Cosechas.AddRange(
-            new Cosecha { ApiarioId=2, ApiarioNombre="Monte Olivo",   Fecha=new DateTime(2026,1,10), TipoMiel="Multifloral",  AlzasCosechadas=12, PesoBruto=855, Merma=15, Humedad=18.2, Destino="Exportación" },
-            new Cosecha { ApiarioId=4, ApiarioNombre="Paso Carrasco", Fecha=new DateTime(2026,1,20), TipoMiel="Eucalipto",    AlzasCosechadas=9,  PesoBruto=640, Merma=10, Humedad=17.8, Destino="Fraccionado local" },
-            new Cosecha { ApiarioId=3, ApiarioNombre="El Eucaliptal", Fecha=new DateTime(2026,2,5),  TipoMiel="Eucalipto",    AlzasCosechadas=8,  PesoBruto=515, Merma=10, Humedad=18.0, Destino="Stock" },
-            new Cosecha { ApiarioId=1, ApiarioNombre="La Rinconada",  Fecha=new DateTime(2026,2,18), TipoMiel="Monte nativo", AlzasCosechadas=7,  PesoBruto=415, Merma=10, Humedad=18.5, Destino="Exportación" }
+            new Cosecha { ApiarioId=monteOlivo.Id,   Fecha=new DateTime(2026,1,10), TipoMiel="Multifloral",  AlzasCosechadas=12, PesoBruto=855, Merma=15, Humedad=18.2, Destino="Exportación" },
+            new Cosecha { ApiarioId=pasoCarrasco.Id, Fecha=new DateTime(2026,1,20), TipoMiel="Eucalipto",    AlzasCosechadas=9,  PesoBruto=640, Merma=10, Humedad=17.8, Destino="Fraccionado local" },
+            new Cosecha { ApiarioId=eucaliptal.Id,   Fecha=new DateTime(2026,2,5),  TipoMiel="Eucalipto",    AlzasCosechadas=8,  PesoBruto=515, Merma=10, Humedad=18.0, Destino="Stock" },
+            new Cosecha { ApiarioId=rinconada.Id,    Fecha=new DateTime(2026,2,18), TipoMiel="Monte nativo", AlzasCosechadas=7,  PesoBruto=415, Merma=10, Humedad=18.5, Destino="Exportación" }
         );
         db.ControlesSanitarios.AddRange(
-            new ControlSanitario { ApiarioId=1, ApiarioNombre="La Rinconada", ColmenasAfectadas="C-47", TipoControl="Varroa — recuento", Resultado="positivo", Tratamiento="Ácido oxálico", Fecha=new DateTime(2026,4,20), Estado="en_tratamiento" },
-            new ControlSanitario { ApiarioId=2, ApiarioNombre="Monte Olivo",  ColmenasAfectadas="C-01", TipoControl="Nosema",            Resultado="negativo", Tratamiento="—",             Fecha=new DateTime(2026,4,18), Estado="limpio" },
-            new ControlSanitario { ApiarioId=1, ApiarioNombre="La Rinconada", ColmenasAfectadas="C-82", TipoControl="Varroa — recuento", Resultado="positivo", Tratamiento="Ácido fórmico", Fecha=new DateTime(2026,4,14), Estado="en_tratamiento" }
+            new ControlSanitario { ApiarioId=rinconada.Id,  ColmenasAfectadas="C-47", TipoControl="Varroa — recuento", Resultado="positivo", Tratamiento="Ácido oxálico", Fecha=new DateTime(2026,4,20), Estado="en_tratamiento" },
+            new ControlSanitario { ApiarioId=monteOlivo.Id, ColmenasAfectadas="C-01", TipoControl="Nosema",            Resultado="negativo", Tratamiento="—",             Fecha=new DateTime(2026,4,18), Estado="limpio" },
+            new ControlSanitario { ApiarioId=rinconada.Id,  ColmenasAfectadas="C-82", TipoControl="Varroa — recuento", Resultado="positivo", Tratamiento="Ácido fórmico", Fecha=new DateTime(2026,4,14), Estado="en_tratamiento" }
         );
-        db.Transhumancias.AddRange(
-            new Transhumancia { Nombre="Verano 2026",    ApiarioOrigen="Paso Carrasco", ApiarioDestino="El Trébol (temp.)", CantidadColmenas=21, DistanciaKm=184, FechaSalida=new DateTime(2026,1,1),  FechaRetorno=new DateTime(2026,6,30), Estado="en_curso",   PorcentajeAvance=45 },
-            new Transhumancia { Nombre="Primavera 2025", ApiarioOrigen="Paso Carrasco", ApiarioDestino="La Rinconada",      CantidadColmenas=18, DistanciaKm=140, FechaSalida=new DateTime(2023,9,1),  FechaRetorno=new DateTime(2023,12,1), Estado="completado", PorcentajeAvance=100 }
+        db.Traslados.AddRange(
+            new Traslado { Nombre="Verano 2026",    ApiarioOrigenId=pasoCarrasco.Id, ApiarioDestinoId=monteOlivo.Id,   CantidadColmenas=21, DistanciaKm=184, FechaSalida=new DateTime(2026,1,1),  FechaRetorno=new DateTime(2026,6,30), Estado="en_curso",   PorcentajeAvance=45 },
+            new Traslado { Nombre="Primavera 2025", ApiarioOrigenId=pasoCarrasco.Id, ApiarioDestinoId=rinconada.Id,    CantidadColmenas=18, DistanciaKm=140, FechaSalida=new DateTime(2023,9,1),  FechaRetorno=new DateTime(2023,12,1), Estado="completado", PorcentajeAvance=100 }
         );
         db.ItemsInventario.AddRange(
             new ItemInventario { Nombre="Alzas de madera",  Unidad="u",  CantidadActual=80,  CantidadMaxima=100, CantidadMinima=20 },
@@ -196,42 +123,45 @@ using (var scope = app.Services.CreateScope())
             new ItemInventario { Nombre="Trajes apícolas",  Unidad="u",  CantidadActual=4,   CantidadMaxima=4,   CantidadMinima=2 }
         );
         db.SaveChanges();
-    }
 
-    if (!db.AlertasComunitarias.Any())
-    {
-        static double SeedHav(double la1, double lo1, double la2, double lo2) {
+        var adminUser = await userManager.FindByEmailAsync("admin@colmena.com");
+        var adminId   = adminUser?.Id;
+
+        static double SeedHav(double la1, double lo1, double la2, double lo2)
+        {
             const double R = 6371;
-            var dL = (la2-la1)*Math.PI/180; var dO = (lo2-lo1)*Math.PI/180;
-            var a = Math.Sin(dL/2)*Math.Sin(dL/2)+Math.Cos(la1*Math.PI/180)*Math.Cos(la2*Math.PI/180)*Math.Sin(dO/2)*Math.Sin(dO/2);
-            return R*2*Math.Atan2(Math.Sqrt(a),Math.Sqrt(1-a));
+            var dL = (la2 - la1) * Math.PI / 180;
+            var dO = (lo2 - lo1) * Math.PI / 180;
+            var a  = Math.Sin(dL/2)*Math.Sin(dL/2) + Math.Cos(la1*Math.PI/180)*Math.Cos(la2*Math.PI/180)*Math.Sin(dO/2)*Math.Sin(dO/2);
+            return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         }
         var apiosGeo = db.Apiarios.Where(a => a.Latitud.HasValue && a.Longitud.HasValue).ToList();
 
         var al1 = new AlertaComunitaria {
-            Titulo="Brote de Varroa detectado — Zona San José",
-            Descripcion="Se confirmó infestación elevada de Varroa destructor en apiarios de la zona. Se recomienda realizar recuentos inmediatos y aplicar tratamiento preventivo con ácido oxálico o ácido fórmico según temperatura.",
-            TipoAmenaza="sanitaria", Latitud=-34.337, Longitud=-56.713, RadioKm=50,
-            Ubicacion="Ruta 3, San José", Estado="activa",
-            FechaCreacion=DateTime.Now.AddDays(-3), ReportadoPor="admin@colmena.com",
-            Notas="Contactar al MGAP para registro oficial del brote. Compartir resultados del recuento."
+            Titulo        = "Brote de Varroa detectado — Zona San José",
+            Descripcion   = "Se confirmó infestación elevada de Varroa destructor en apiarios de la zona. Se recomienda realizar recuentos inmediatos y aplicar tratamiento preventivo con ácido oxálico o ácido fórmico según temperatura.",
+            TipoAmenaza   = "sanitaria", Latitud=-34.337, Longitud=-56.713, RadioKm=50,
+            Ubicacion     = "Ruta 3, San José", Estado="activa",
+            FechaCreacion = DateTime.Now.AddDays(-3), ReportadoPorId=adminId
         };
-        foreach (var ap in apiosGeo) {
+        foreach (var ap in apiosGeo)
+        {
             var d = SeedHav(al1.Latitud, al1.Longitud, ap.Latitud!.Value, ap.Longitud!.Value);
-            if (d <= al1.RadioKm) al1.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, ApiarioNombre=ap.Nombre, DistanciaKm=Math.Round(d,2), FechaEnvio=al1.FechaCreacion });
+            if (d <= al1.RadioKm) al1.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, DistanciaKm=Math.Round(d,2), FechaEnvio=al1.FechaCreacion });
         }
 
         var al2 = new AlertaComunitaria {
-            Titulo="Fumigación aérea de agroquímicos — Canelones",
-            Descripcion="Se reportó aplicación aérea de herbicidas en cultivos de soja adyacentes. Riesgo de intoxicación de colonias por deriva del producto. Se recomienda evitar floración cercana durante 72 horas.",
-            TipoAmenaza="ambiental", Latitud=-34.523, Longitud=-56.284, RadioKm=60,
-            Ubicacion="Ruta 8, Canelones", Estado="resuelta",
-            FechaCreacion=DateTime.Now.AddDays(-10), FechaResolucion=DateTime.Now.AddDays(-7),
-            ReportadoPor="admin@colmena.com"
+            Titulo          = "Fumigación aérea de agroquímicos — Canelones",
+            Descripcion     = "Se reportó aplicación aérea de herbicidas en cultivos de soja adyacentes. Riesgo de intoxicación de colonias por deriva del producto. Se recomienda evitar floración cercana durante 72 horas.",
+            TipoAmenaza     = "ambiental", Latitud=-34.523, Longitud=-56.284, RadioKm=60,
+            Ubicacion       = "Ruta 8, Canelones", Estado="resuelta",
+            FechaCreacion   = DateTime.Now.AddDays(-10), FechaResolucion=DateTime.Now.AddDays(-7),
+            ReportadoPorId  = adminId
         };
-        foreach (var ap in apiosGeo) {
+        foreach (var ap in apiosGeo)
+        {
             var d = SeedHav(al2.Latitud, al2.Longitud, ap.Latitud!.Value, ap.Longitud!.Value);
-            if (d <= al2.RadioKm) al2.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, ApiarioNombre=ap.Nombre, DistanciaKm=Math.Round(d,2), FechaEnvio=al2.FechaCreacion, Leida=true });
+            if (d <= al2.RadioKm) al2.Notificaciones.Add(new NotificacionAlerta { ApiarioId=ap.Id, DistanciaKm=Math.Round(d,2), FechaEnvio=al2.FechaCreacion, Leida=true });
         }
 
         db.AlertasComunitarias.AddRange(al1, al2);
