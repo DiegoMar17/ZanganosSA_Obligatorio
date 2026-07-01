@@ -30,3 +30,4 @@ desktop.ini
 ## Env
 *.env
 appsettings.Production.json
+appsettings.Development.json
