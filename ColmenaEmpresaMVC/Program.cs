@@ -62,6 +62,17 @@ using (var scope = app.Services.CreateScope())
         };
         await userManager.CreateAsync(admin, "colmena123");
         await userManager.AddToRoleAsync(admin, "ADMIN");
+
+        var empleado = new ApplicationUser
+        {
+            UserName       = "empleado@colmena.com",
+            Email          = "empleado@colmena.com",
+            NombreCompleto = "Laura Rodríguez",
+            EmailConfirmed = true,
+            Rol            = "EMPLEADO"
+        };
+        await userManager.CreateAsync(empleado, "colmena123");
+        await userManager.AddToRoleAsync(empleado, "EMPLEADO");
     }
     else
     {
